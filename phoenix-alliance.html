@@ -129,6 +129,7 @@ async function maybeLoadFromSupabase(){
   CONFIG.accentDark=cfg.accentDark||CONFIG.accentDark;
   CONFIG.accentShadow=cfg.accentShadow||CONFIG.accentShadow;
   CONFIG.about=cfg.about||CONFIG.about;
+  CONFIG.values=cfg.values||CONFIG.values;
   CONFIG.quote=cfg.quote||CONFIG.quote;
   CONFIG.leaders=cfg.leaders||CONFIG.leaders;
   CONFIG.events=cfg.events||CONFIG.events;
@@ -191,6 +192,53 @@ async function maybeLoadFromSupabase(){
   body.dark .botnav a.active{background:linear-gradient(180deg,rgba(255,90,24,.18),rgba(255,90,24,.08)); border-color:#ff5a18; color:#ff7a2e;}
   /* fire-ice display font for dark headers */
   body.dark .aname,body.dark .brand b{font-family:'Cinzel','Baloo 2',serif; letter-spacing:.02em;}
+
+  /* ── SNOW THEME (white/icy clean) ─────────────────────────── */
+  body.snow{
+    --sky:#f0f8ff; --sky2:#dcefff; --ice:#c5e4f5; --ice-deep:#6aa8d8;
+    --panel:#ffffff; --panel-edge:#d8ecf8; --ink:#2a4a66; --ink-soft:#5a7a96; --muted:#9ab8d0;
+    background:radial-gradient(ellipse at 50% -5%,#ffffff,transparent 55%),linear-gradient(180deg,#f0f8ff,#dcefff 40%,#c5e4f5);
+  }
+  body.snow .ahero{background:radial-gradient(ellipse at 50% 0%, rgba(160,210,240,.4), transparent 60%);}
+  body.snow .aname{color:#2a4a66; text-shadow:0 2px 12px rgba(160,210,240,.5);}
+
+  /* ── RAINBOW THEME (vibrant gradient) ─────────────────────── */
+  body.rainbow{
+    --ink:#3a2a52; --ink-soft:#6a5a82; --muted:#9a8ab2; --panel:#fdf0ff; --panel-edge:#f0d0f8;
+    background:linear-gradient(135deg,#ffd6e8,#ffe9d6,#fff9d6,#d6ffe0,#d6f0ff,#e8d6ff,#ffd6f5);
+    background-size:400% 400%; animation:rainbowShift 18s ease infinite;
+  }
+  @keyframes rainbowShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+  body.rainbow .ahero{background:linear-gradient(135deg, rgba(255,150,200,.3), rgba(150,200,255,.3), rgba(200,255,180,.3));}
+  body.rainbow .aname{background:linear-gradient(90deg,#ff5fa2,#ff9a3d,#ffd93d,#5fd97f,#5fa8ff,#a45fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  body.rainbow .tab.active{background:linear-gradient(90deg,#ff5fa2,#a45fff);border-color:#ff5fa2;}
+
+  /* ── SKULL THEME (dark gothic) ────────────────────────────── */
+  body.skull{
+    --sky:#0d0d12; --sky2:#141419; --ice:#2a2a33; --ice-deep:#8a8a9a;
+    --panel:#16161d; --panel-edge:#33333f; --ink:#e8e8ee; --ink-soft:#a8a8b8; --muted:#6a6a78;
+    --acc:#c0392b; --acc-d:#922b21; --acc-sh:#641e15; --white:#16161d;
+    background:radial-gradient(ellipse at 50% -5%, rgba(192,57,43,.18), transparent 55%),linear-gradient(180deg,#0d0d12,#141419 50%,#08080c);
+  }
+  body.skull h1,body.skull h2,body.skull h3,body.skull h4{color:var(--ink);}
+  body.skull .card{background:linear-gradient(180deg,#16161d,#101015); border:1px solid #33333f; outline:none;}
+  body.skull .aname{color:#fff; text-shadow:0 0 20px rgba(192,57,43,.5); font-family:'Cinzel',serif;}
+  body.skull .atag{background:#0d0d12; border:2px solid var(--acc-d); color:var(--acc);}
+  body.skull .astat{background:#0d0d12; border:2px solid #33333f;}
+  body.skull .tab{background:#16161d; border:2px solid #33333f; color:var(--ink-soft);}
+  body.skull .tab.active{background:linear-gradient(180deg,#c0392b,#641e15); color:#fff; border-color:#c0392b;}
+  body.skull .rrow,body.skull .ev,body.skull .ann{background:#0d0d12; border-color:#33333f;}
+  body.skull .botnav{background:linear-gradient(180deg,#0d0d12,#08080c); border-top:2px solid #33333f;}
+  body.skull .botnav a{color:#a8a8b8;}
+
+  /* ── NEUTRAL THEME (soft grey, accent-driven) ─────────────── */
+  body.neutral{
+    --sky:#f5f5f4; --sky2:#e8e8e6; --ice:#d4d4d0; --ice-deep:#8a8a86;
+    --panel:#fafafa; --panel-edge:#e0e0dc; --ink:#3a3a38; --ink-soft:#6a6a66; --muted:#a0a09c;
+    background:linear-gradient(180deg,#f5f5f4,#e8e8e6);
+  }
+  body.neutral .ahero{background:radial-gradient(ellipse at 50% 0%, var(--acc-glow), transparent 60%);}
+  body.neutral .aname{color:#3a3a38;}
   ::selection{background:var(--acc); color:#fff;}
   h1,h2,h3,h4{font-family:'Baloo 2',cursive; color:var(--ink);}
   button{font-family:'Fredoka',sans-serif; cursor:pointer;}
@@ -327,7 +375,7 @@ body{padding-bottom:72px !important;}
       <p id="aboutText"></p>
     </div>
     <div class="section-label" data-i18n="home.culture">What we value</div>
-    <div class="card" style="padding:14px;">
+    <div class="card" style="padding:14px;" id="valuesCard">
       <div class="pill">🤝 <span data-i18n="cult.1">Nobody left behind</span></div>
       <div class="pill">💬 <span data-i18n="cult.2">Real communication</span></div>
       <div class="pill">📊 <span data-i18n="cult.3">Transparent trackers</span></div>
@@ -414,7 +462,10 @@ function setVar(n,v){ document.documentElement.style.setProperty(n,v); }
 function applyConfig(){
   const c=CONFIG;
   // Apply theme (dark fire&ice or light)
-  document.body.classList.toggle('dark', c.theme==='dark');
+  // Apply theme — remove all theme classes, then add the selected one
+  document.body.classList.remove('dark','snow','rainbow','skull','neutral');
+  const themeClass=c.theme&&c.theme!=='light'?c.theme:'';
+  if(themeClass)document.body.classList.add(themeClass);
   setVar('--acc',c.accent); setVar('--acc-d',c.accentDark); setVar('--acc-sh',c.accentShadow);
   // Alliance logo (URL) — override the default crest if provided
   const logoEl=$('#acrest');
@@ -425,6 +476,17 @@ function applyConfig(){
   $('#amotto').textContent='\u201C'+c.motto+'\u201D';
   $('#stRank').textContent=c.stateRank; $('#stMem').textContent=c.members;
   $('#aboutText').textContent=c.about;
+  // Dynamic values (culture pills)
+  if(c.values && c.values.length){
+    const vc=$('#valuesCard');
+    vc.innerHTML='';
+    c.values.forEach(v=>{
+      const pill=document.createElement('div');
+      pill.className='pill';
+      pill.innerHTML=`${v.icon||'✨'} <span>${v.text||''}</span>`;
+      vc.appendChild(pill);
+    });
+  }
   $('#joinText').textContent=c.joinText;
   // quote
   if(c.quote && c.quote.show){ $('#quoteBox').style.display=''; $('#quoteText').textContent='\u201C'+c.quote.text+'\u201D'; $('#quoteBy').textContent='— '+c.quote.by; }

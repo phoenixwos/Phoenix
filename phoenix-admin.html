@@ -212,6 +212,16 @@ body{padding-bottom:72px !important;}
         <div class="field"><label>About (Home tab)</label><textarea id="fAbout" placeholder="A short description of your alliance..."></textarea></div>
       </div>
       <div class="card">
+        <div class="slabel" style="margin-top:0;">✨ What we value</div>
+        <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:12px;">Pick the values shown on your alliance page. Tap to toggle. You can also add custom ones.</p>
+        <div id="valuesPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="customValueIcon" placeholder="✨" maxlength="2" style="width:60px;padding:9px;border:2px solid var(--panel-edge);border-radius:10px;text-align:center;font-size:1rem;">
+          <input id="customValueText" placeholder="Add custom value…" style="flex:1;padding:9px 12px;border:2px solid var(--panel-edge);border-radius:10px;font-size:.86rem;">
+          <button type="button" id="addValueBtn" class="btn btn-ghost" style="width:auto;padding:9px 16px;font-size:.82rem;">+ Add</button>
+        </div>
+      </div>
+      <div class="card">
         <div class="slabel" style="margin-top:0;">TMQ's Quote</div>
         <div class="field"><label>Quote text</label><textarea id="fQuote" placeholder="Like weeds of the earth we are..."></textarea></div>
         <div class="field"><label>Author</label><input id="fQuoteBy" placeholder="TMQ"></div>
@@ -258,10 +268,14 @@ body{padding-bottom:72px !important;}
       </div>
       <div class="card">
         <div class="slabel" style="margin-top:0;">🎨 Theme</div>
-        <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:12px;">Light = clean ice style. Dark = fire &amp; ice epic style.</p>
-        <div style="display:flex;gap:10px;">
-          <button type="button" class="btn btn-ghost theme-opt" data-theme="light" id="themeLight" style="flex:1;">☀️ Light</button>
-          <button type="button" class="btn btn-ghost theme-opt" data-theme="dark" id="themeDark" style="flex:1;">🔥 Dark</button>
+        <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:12px;">Pick a look for this alliance's page. The accent colour above still applies on top.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="light" id="themeLight">☀️ Light</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="dark" id="themeDark">🔥 Dark</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="snow" id="themeSnow">❄️ Snow</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="rainbow" id="themeRainbow">🌈 Rainbow</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="skull" id="themeSkull">💀 Skull</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="neutral" id="themeNeutral">⚪ Neutral</button>
         </div>
       </div>
       <div class="card">
@@ -410,17 +424,70 @@ function updateSwatches(){
 }
 $('#fAccent').addEventListener('input',updateSwatches);
 
+// ── VALUES PICKER ─────────────────────────────────────────────
+const PRESET_VALUES=[
+  {icon:'🤝',text:'Nobody left behind'},
+  {icon:'💪',text:'Teamwork'},
+  {icon:'⚡',text:'Power growth'},
+  {icon:'🛡️',text:'Event attendance'},
+  {icon:'🎯',text:'Participation'},
+  {icon:'💡',text:'Sharing ideas'},
+  {icon:'💬',text:'Communication'},
+  {icon:'📊',text:'Transparent trackers'},
+  {icon:'🎉',text:'We celebrate together'},
+  {icon:'🌍',text:'Multilingual family'},
+  {icon:'🤲',text:'Helping each other'},
+  {icon:'🔥',text:'Active & committed'}
+];
+let selectedValues=[]; // array of {icon,text}
+
+function isValueSelected(v){return selectedValues.some(s=>s.text===v.text);}
+function renderValuesPicker(){
+  const box=$('#valuesPicker');box.innerHTML='';
+  // Show all presets + any custom selected ones
+  const all=[...PRESET_VALUES];
+  selectedValues.forEach(sv=>{if(!all.some(p=>p.text===sv.text))all.push(sv);});
+  all.forEach(v=>{
+    const on=isValueSelected(v);
+    const chip=document.createElement('button');
+    chip.type='button';
+    chip.style.cssText=`padding:8px 13px;border-radius:20px;border:2px solid ${on?'var(--fire-deep)':'var(--panel-edge)'};background:${on?'linear-gradient(180deg,#ff9248,var(--fire-deep))':'#fff'};color:${on?'#fff':'var(--ink-soft)'};font-family:'Fredoka';font-weight:600;font-size:.8rem;cursor:pointer;transition:.12s;`;
+    chip.innerHTML=`${v.icon} ${v.text}`;
+    chip.onclick=()=>{
+      if(isValueSelected(v))selectedValues=selectedValues.filter(s=>s.text!==v.text);
+      else selectedValues.push(v);
+      renderValuesPicker();
+    };
+    box.appendChild(chip);
+  });
+}
+$('#addValueBtn').onclick=()=>{
+  const icon=$('#customValueIcon').value.trim()||'✨';
+  const text=$('#customValueText').value.trim();
+  if(!text)return;
+  if(!selectedValues.some(s=>s.text===text))selectedValues.push({icon,text});
+  $('#customValueText').value='';$('#customValueIcon').value='';
+  renderValuesPicker();
+};
+
 // Theme selector
 let selectedTheme='light';
+const THEME_IDS=['light','dark','snow','rainbow','skull','neutral'];
+const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral'};
 function setThemeUI(t){
+  if(!THEME_IDS.includes(t))t='light';
   selectedTheme=t;
-  $('#themeLight').classList.toggle('btn-fire',t==='light');
-  $('#themeLight').classList.toggle('btn-ghost',t!=='light');
-  $('#themeDark').classList.toggle('btn-fire',t==='dark');
-  $('#themeDark').classList.toggle('btn-ghost',t!=='dark');
+  THEME_IDS.forEach(id=>{
+    const btn=$('#'+THEME_BTN[id]);
+    if(!btn)return;
+    btn.classList.toggle('btn-fire',id===t);
+    btn.classList.toggle('btn-ghost',id!==t);
+  });
 }
-$('#themeLight').onclick=()=>setThemeUI('light');
-$('#themeDark').onclick=()=>setThemeUI('dark');
+THEME_IDS.forEach(id=>{
+  const btn=$('#'+THEME_BTN[id]);
+  if(btn)btn.onclick=()=>setThemeUI(id);
+});
 
 // Logo URL preview
 $('#fLogoUrl').addEventListener('input',()=>{
@@ -589,6 +656,9 @@ function loadEditor(al){
   $('#fRank').value=al.state_rank||'';
   $('#fMembers').value=al.members||'';
   $('#fAbout').value=cfg.about||'';
+  // Values picker
+  selectedValues=Array.isArray(cfg.values)&&cfg.values.length?cfg.values.slice():PRESET_VALUES.slice(0,5);
+  renderValuesPicker();
   $('#fQuote').value=cfg.quote?.text||'';
   $('#fQuoteBy').value=cfg.quote?.by||'TMQ';
   $('#fQuoteShow').checked=cfg.quote?.show!==false;
@@ -641,6 +711,7 @@ $('#saveBtn').onclick=async()=>{
 
   const cfg={
     about:$('#fAbout').value.trim(),
+    values:selectedValues,
     quote:{show:$('#fQuoteShow').checked,text:$('#fQuote').value.trim(),by:$('#fQuoteBy').value.trim()||'TMQ'},
     leaders:readLeaders(),
     events:readEvents(),
