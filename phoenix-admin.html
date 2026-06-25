@@ -745,7 +745,10 @@ $('#saveBtn').onclick=async()=>{
 
 // ── BACK BUTTON ───────────────────────────────────────────────
 $('#backBtn').onclick=()=>{
-  if(adminAlliances.length===1){show('scPick');}else{show('scPick');}};
+  // Non-admins with a picker go back to it; everyone else returns to the state hub
+  if(!isStateAdmin && adminAlliances.length>1){show('scPick');}
+  else{window.location.href='phoenix-state.html';}
+};
 
 // ── LOGIN ─────────────────────────────────────────────────────
 $('#loginBtn').onclick=async()=>{
