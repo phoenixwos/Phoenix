@@ -91,6 +91,18 @@
 
   /* castle countdown */
   .castle{background:linear-gradient(180deg,#fff,var(--panel)); border:2px solid var(--panel-edge); border-radius:16px; padding:18px; margin-bottom:12px; box-shadow:0 4px 0 var(--panel-edge); position:relative; overflow:hidden;}
+  .astat{background:linear-gradient(180deg,#fff,var(--panel));border:2px solid var(--panel-edge);border-radius:14px;padding:14px 10px;box-shadow:0 3px 0 var(--panel-edge);}
+  .astat .n{font-family:'Baloo 2';font-weight:800;font-size:1.6rem;color:var(--acc);}
+  .astat .l{font-size:.68rem;font-family:'Fredoka';font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  /* Castle history rows */
+  .ch-row{background:#fff;border:1.5px solid var(--panel-edge);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;}
+  .ch-badge{font-family:'Baloo 2';font-weight:800;font-size:.78rem;min-width:42px;text-align:center;padding:4px 6px;border-radius:8px;background:var(--panel);color:var(--ice-deep);}
+  .ch-badge.supreme{background:linear-gradient(180deg,#ffb938,#f59e0b);color:#fff;box-shadow:0 2px 0 #c47d00;}
+  .ch-badge.president{background:linear-gradient(180deg,#5fa8da,#3d8bc4);color:#fff;box-shadow:0 2px 0 #2a6a9e;}
+  .ch-info{flex:1;min-width:0;}
+  .ch-info b{display:block;font-size:.9rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ch-info span{font-size:.72rem;color:var(--muted);font-family:'Fredoka';}
+  .ch-date{font-size:.72rem;color:var(--ink-soft);font-family:'Fredoka';font-weight:600;white-space:nowrap;}
   .castle::after{content:""; position:absolute; top:-20px; right:-20px; width:90px; height:90px; background:radial-gradient(circle,rgba(255,122,46,.18),transparent 70%);}
   .castle .ct{font-family:'Baloo 2'; font-weight:800; font-size:1.15rem; color:var(--ink); margin-bottom:3px;}
   .castle .cs{font-size:.8rem; color:var(--muted); margin-bottom:12px;}
@@ -197,11 +209,8 @@ body{padding-bottom:72px !important;}
   <!-- EVENTS -->
   <div class="panel" id="tab-events">
     <div class="section-label" data-i18n="ev.label">State-wide events · all times UTC</div>
-    <div class="ev"><div class="ic">🐻</div><div class="info"><b>Bear Trap</b><span data-i18n="ev.daily">Daily</span></div><div class="time">12:30<br>19:00</div></div>
-    <div class="ev"><div class="ic">⚒️</div><div class="info"><b>Foundry</b><span data-i18n="ev.weekly">Weekly</span></div><div class="time">14:00<br>19:00</div></div>
-    <div class="ev"><div class="ic">🏞️</div><div class="info"><b>Canyon Clash</b><span data-i18n="ev.weekly">Weekly</span></div><div class="time">14:00<br>19:00</div></div>
-    <div class="ev"><div class="ic">😡</div><div class="info"><b>Crazy Joe</b><span data-i18n="ev.rotating">Rotating</span></div><div class="time">14:00<br>19:00</div></div>
-    <div class="ev"><div class="ic">🌍</div><div class="info"><b>SvS</b><span data-i18n="ev.season">Seasonal</span></div><div class="time" data-i18n="ev.prep">Prep + battle</div></div>
+    <div class="ev"><div class="ic">🌍</div><div class="info"><b>SvS</b><span data-i18n="ev.season">Seasonal</span></div><div class="time">12:00–15:00</div></div>
+    <div class="ev"><div class="ic">🏰</div><div class="info"><b>Castle Battle</b><span data-i18n="ev.weekly">Weekly</span></div><div class="time">12:00–15:00</div></div>
     <div class="card" style="margin-top:8px;"><p data-i18n="ev.note">Each alliance runs its own rallies and formations — check your alliance page for exact calls.</p></div>
   </div>
 
@@ -228,7 +237,23 @@ body{padding-bottom:72px !important;}
         <div class="u"><div class="n" data-s>–</div><div class="l" data-i18n="cas.s">Sec</div></div>
       </div>
     </div>
-    <div class="card"><p data-i18n="cas.note">Countdowns are placeholders for the demo. Leaders will set the real dates — they update automatically every 4 weeks.</p></div>
+    <!-- Castle stats loaded from DB -->
+    <div id="castleStats" style="margin-bottom:16px;display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div class="astat" style="flex:1;text-align:center;">
+          <div class="n" id="statSvsWins">—</div>
+          <div class="l">🌍 SvS Wins</div>
+        </div>
+        <div class="astat" style="flex:1;text-align:center;">
+          <div class="n" id="statCastleWins">—</div>
+          <div class="l">🏰 Castle Holds</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">🏆 Hall of Presidents · Sunfire Castle</div>
+    <div id="castleHistory" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:.84rem;">Loading…</div>
+    </div>
   </div>
 
   <!-- WELCOME -->
@@ -548,6 +573,42 @@ applyLang();
     const{data:player}=await sb.from('players').select('role').eq('owner',session.user.id).maybeSingle();
     if(player&&(player.role==='admin'||player.role==='r4'||player.role==='r5')){
       document.getElementById('adminNavBtn').style.display='';
+    }
+  }
+
+  // Load castle history and SvS wins from states table
+  const{data:stateData}=await sb.from('states').select('svs_wins,castle_history').eq('id','3139').maybeSingle();
+  if(stateData){
+    const wins=stateData.svs_wins||0;
+    const history=Array.isArray(stateData.castle_history)?stateData.castle_history:[];
+    // Stats
+    const statsEl=document.getElementById('castleStats');
+    if(statsEl){
+      document.getElementById('statSvsWins').textContent=wins;
+      document.getElementById('statCastleWins').textContent=history.length;
+      statsEl.style.display='';
+    }
+    // History list (newest first)
+    const histEl=document.getElementById('castleHistory');
+    if(histEl&&history.length){
+      histEl.innerHTML='';
+      const reversed=[...history].reverse();
+      reversed.forEach(h=>{
+        const badgeClass=isSupreme?'supreme':'president';
+        const label=isSupreme?'👑 Supreme':`#${h.num||'?'} Pres.`;
+        const div=document.createElement('div');
+        div.className='ch-row';
+        div.innerHTML=`
+          <div class="ch-badge ${badgeClass}">${label}</div>
+          <div class="ch-info">
+            <b>[${h.alliance}] ${h.player}</b>
+            <span>${isSupreme?'President Supreme':'President'}</span>
+          </div>
+          <div class="ch-date">${h.date}</div>`;
+        histEl.appendChild(div);
+      });
+    }else if(histEl){
+      histEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:.84rem;">No history yet.</div>';
     }
   }
 })();

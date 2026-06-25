@@ -68,11 +68,8 @@ const CONFIG = {
 
   /* ---- EVENTS ---- icon, name, frequency, two times, a note. */
   events: [
-    { icon:"🐻", name:"Bear Trap",   freq:"Daily",    t1:"12:30", t2:"19:00", note:"Always join the main rally." },
-    { icon:"⚒️", name:"Foundry",     freq:"Weekly",   t1:"14:00", t2:"19:00", note:"Center lane, set ratio." },
-    { icon:"🏞️", name:"Canyon Clash",freq:"Weekly",   t1:"14:00", t2:"19:00", note:"Same formation as Foundry." },
-    { icon:"😡", name:"Crazy Joe",    freq:"Rotating", t1:"14:00", t2:"19:00", note:"Follow your officer's call." },
-    { icon:"🌍", name:"SvS",          freq:"Seasonal", t1:"Prep + battle", t2:"", note:"Save speedups, gather as a team." }
+    { icon:"🌍", name:"SvS",            freq:"Seasonal", t1:"12:00–15:00 UTC", t2:"Prep week before", note:"Save speedups, gather as a team." },
+    { icon:"🏰", name:"Castle Battle",  freq:"Weekly",   t1:"12:00–15:00 UTC", t2:"",                note:"Teleport 11:00–12:00 UTC." }
   ],
 
   /* ---- RULES ---- title + text, as many blocks as you like. */
@@ -149,9 +146,17 @@ async function maybeLoadFromSupabase(){
   if(data.tag==='PXR')document.body.classList.add('pxr-premium');
   // update page title
   document.title=`[${data.tag}] ${data.name} · Phoenix`;
-  // update botnav alliance link to reflect current tag
-  const navAlliance=document.querySelector('.botnav a:nth-child(2) .ic');
-  if(navAlliance) navAlliance.parentElement.querySelector('span:not(.ic)');
+  // Update nav alliance button with current alliance tag and logo
+  const navTag=document.getElementById('navActiveTag');
+  const navIc=document.getElementById('navActiveIc');
+  const navBtn=document.getElementById('navActiveAlliance');
+  if(navTag)navTag.textContent=data.tag||'Alliance';
+  if(navBtn)navBtn.href=`phoenix-alliance.html?tag=${data.tag}`;
+  if(navIc){
+    const logoUrl=cfg.logoUrl||'';
+    if(logoUrl)navIc.innerHTML=`<img src="${logoUrl}" style="width:1.5rem;height:1.5rem;border-radius:6px;object-fit:cover;">`;
+    else navIc.textContent='🏰';
+  }
   // Check if the logged-in user is a confirmed member → show private zone
   checkMemberZone();
 }
@@ -761,7 +766,7 @@ async function loadMembers(){
 
 <nav class="botnav">
   <a href="phoenix-state.html"><span class="ic">🗺️</span>3139</a>
-  <a href="phoenix-alliance.html" class="active">PXR</a>
+  <a href="phoenix-alliance.html" class="active" id="navActiveAlliance"><span class="nav-ic" id="navActiveIc">🏰</span><span id="navActiveTag">Alliance</span></a>
   <a href="phoenix-profile.html"><span class="ic">🚪</span>Entrar</a>
 </nav>
 
