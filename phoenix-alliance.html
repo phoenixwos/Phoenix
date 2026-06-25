@@ -642,16 +642,18 @@ function applyConfig(){
   const acrest=$('#acrest');
   if(acrest){
     if(c.logoUrl){
+      // Replace div with an actual img element
       const img=document.createElement('img');
-      img.className='acrest'; img.id='acrest_img';
+      img.className='acrest'; img.id='acrest';
       img.src=c.logoUrl; img.alt=c.tag;
-      img.style.cssText='width:92px;height:92px;margin:0 auto 12px;border-radius:24px;border:4px solid #fff;box-shadow:0 8px 22px -6px rgba(36,70,96,.5);object-fit:cover;display:block;';
-      img.onerror=()=>{img.style.display='none';acrest.textContent=c.tag||'';};
-      acrest.parentNode.insertBefore(img, acrest);
-      acrest.style.display='none';
+      img.onerror=()=>{
+        img.outerHTML=`<div class="acrest" id="acrest" style="display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-weight:800;font-size:2rem;color:var(--acc);background:rgba(255,255,255,.9);">${c.tag||''}</div>`;
+      };
+      acrest.replaceWith(img);
     }else{
+      // No logo — show tag text, clear any PXR text
       acrest.textContent=c.tag||'';
-      acrest.style.display='flex';
+      acrest.style.cssText='display:flex;align-items:center;justify-content:center;font-family:"Baloo 2",cursive;font-weight:800;font-size:2rem;color:var(--acc);background:rgba(255,255,255,.9);';
     }
   }
   $('#atag').textContent='['+c.tag+'] · State '+c.state;
