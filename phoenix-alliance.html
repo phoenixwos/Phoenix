@@ -117,26 +117,30 @@ async function maybeLoadFromSupabase(){
   const{data,error}=await _sb.from('alliances').select('*').eq('tag',tag.toUpperCase()).maybeSingle();
   if(error||!data) return; // fallback to CONFIG if not found
   const cfg=data.config||{};
-  // Merge into CONFIG so existing render functions work unchanged
+  const isPXR=(data.tag==='PXR');
+  // For PXR, keep the rich hardcoded defaults. For any other alliance,
+  // show ONLY what's been saved — blank until the leader personalizes it.
+  const def=(savedVal,pxrDefault,blank)=> savedVal!=null&&savedVal!=='' ? savedVal : (isPXR?pxrDefault:blank);
+
   CONFIG.tag=data.tag;
   CONFIG.name=data.name;
   CONFIG.state=data.state_id;
-  CONFIG.motto=data.motto||CONFIG.motto;
+  CONFIG.motto=def(data.motto,CONFIG.motto,'');
   CONFIG.power=data.power||CONFIG.power;
   CONFIG.stateRank=data.state_rank||CONFIG.stateRank;
   CONFIG.members=data.members||CONFIG.members;
   CONFIG.accent=data.accent||CONFIG.accent;
   CONFIG.accentDark=cfg.accentDark||CONFIG.accentDark;
   CONFIG.accentShadow=cfg.accentShadow||CONFIG.accentShadow;
-  CONFIG.about=cfg.about||CONFIG.about;
-  CONFIG.values=cfg.values||CONFIG.values;
-  CONFIG.quote=cfg.quote||CONFIG.quote;
-  CONFIG.leaders=cfg.leaders||CONFIG.leaders;
-  CONFIG.events=cfg.events||CONFIG.events;
-  CONFIG.rules=cfg.rules||CONFIG.rules;
-  CONFIG.news=cfg.news||CONFIG.news;
-  CONFIG.theme=cfg.theme||CONFIG.theme||'light';
-  CONFIG.logoUrl=cfg.logoUrl||CONFIG.logoUrl||'';
+  CONFIG.about=def(cfg.about,CONFIG.about,'');
+  CONFIG.values=cfg.values||(isPXR?CONFIG.values:[]);
+  CONFIG.quote=cfg.quote||(isPXR?CONFIG.quote:{show:false,text:'',by:''});
+  CONFIG.leaders=cfg.leaders||(isPXR?CONFIG.leaders:[]);
+  CONFIG.events=cfg.events||(isPXR?CONFIG.events:[]);
+  CONFIG.rules=cfg.rules||(isPXR?CONFIG.rules:[]);
+  CONFIG.news=cfg.news||(isPXR?CONFIG.news:[]);
+  CONFIG.theme=cfg.theme||'light';
+  CONFIG.logoUrl=cfg.logoUrl||'';
   // update page title
   document.title=`[${data.tag}] ${data.name} · Phoenix`;
   // update botnav alliance link to reflect current tag
@@ -146,7 +150,7 @@ async function maybeLoadFromSupabase(){
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800;900&family=Pacifico&family=Nunito:wght@400;600;700;800&family=Creepster&display=swap');
   :root{
     --sky:#cfe8f7; --sky2:#a9d4ee; --ice:#7fb8e0; --ice-deep:#4a8fc4;
     --panel:#e8f4fc; --panel-edge:#bfe0f4; --panel-blue:#5fa8da; --panel-blue-d:#3d8bc4;
@@ -239,6 +243,27 @@ async function maybeLoadFromSupabase(){
   }
   body.neutral .ahero{background:radial-gradient(ellipse at 50% 0%, var(--acc-glow), transparent 60%);}
   body.neutral .aname{color:#3a3a38;}
+
+  /* ── THEME-SPECIFIC FONTS & DECORATIONS ───────────────────── */
+  /* Rainbow: playful rounded display font + sparkle */
+  body.rainbow .aname{font-family:'Pacifico',cursive;}
+  body.rainbow h1,body.rainbow h2,body.rainbow h3{font-family:'Nunito',sans-serif;font-weight:800;}
+  body.rainbow .ahero::after{content:'🌈';position:absolute;top:12px;right:16px;font-size:1.6rem;opacity:.8;}
+  body.rainbow .ahero::before{content:'✨';position:absolute;top:14px;left:16px;font-size:1.3rem;opacity:.7;}
+  /* Snow: clean airy font + snowflakes */
+  body.snow h1,body.snow h2,body.snow h3,body.snow .aname{font-family:'Nunito',sans-serif;font-weight:800;}
+  body.snow .ahero::after{content:'❄️';position:absolute;top:12px;right:16px;font-size:1.4rem;opacity:.7;}
+  body.snow .ahero::before{content:'❄️';position:absolute;bottom:12px;left:16px;font-size:1rem;opacity:.5;}
+  /* Skull: gothic horror display font + skull */
+  body.skull .aname{font-family:'Creepster',cursive;letter-spacing:.04em;font-weight:400;}
+  body.skull h1,body.skull h2,body.skull h3{font-family:'Cinzel',serif;}
+  body.skull .ahero::after{content:'💀';position:absolute;top:12px;right:16px;font-size:1.5rem;opacity:.8;}
+  body.skull .ahero::before{content:'🔥';position:absolute;top:14px;left:16px;font-size:1.3rem;opacity:.7;}
+  /* Dark fire&ice: ember decorations */
+  body.dark .ahero::after{content:'🔥';position:absolute;top:12px;right:16px;font-size:1.4rem;opacity:.7;}
+  body.dark .ahero::before{content:'❄️';position:absolute;top:14px;left:16px;font-size:1.2rem;opacity:.6;}
+  /* make hero positioned for the decorations */
+  .ahero{position:relative;}
   ::selection{background:var(--acc); color:#fff;}
   h1,h2,h3,h4{font-family:'Baloo 2',cursive; color:var(--ink);}
   button{font-family:'Fredoka',sans-serif; cursor:pointer;}
@@ -475,10 +500,13 @@ function applyConfig(){
   $('#aname').textContent=c.name;
   $('#amotto').textContent='\u201C'+c.motto+'\u201D';
   $('#stRank').textContent=c.stateRank; $('#stMem').textContent=c.members;
-  $('#aboutText').textContent=c.about;
-  // Dynamic values (culture pills)
+  $('#aboutText').textContent=c.about || '';
+  // Dynamic values (culture pills) — hide whole block if none
+  const valuesLabel=document.querySelector('[data-i18n="home.culture"]');
+  const vc=$('#valuesCard');
   if(c.values && c.values.length){
-    const vc=$('#valuesCard');
+    if(valuesLabel)valuesLabel.style.display='';
+    vc.style.display='';
     vc.innerHTML='';
     c.values.forEach(v=>{
       const pill=document.createElement('div');
@@ -486,6 +514,9 @@ function applyConfig(){
       pill.innerHTML=`${v.icon||'✨'} <span>${v.text||''}</span>`;
       vc.appendChild(pill);
     });
+  }else{
+    if(valuesLabel)valuesLabel.style.display='none';
+    vc.style.display='none';
   }
   $('#joinText').textContent=c.joinText;
   // quote
@@ -500,25 +531,34 @@ function applyConfig(){
 
 function renderDynamic(){
   const c=CONFIG, pack=I18N[LANG];
+  const emptyMsg='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:.86rem;">Not set up yet.</div>';
   // roster
   const rl=$('#rosterList'); rl.innerHTML='';
-  c.leaders.forEach(l=>{
-    const roleTxt=(pack.t['role.'+l.role])||l.role;
-    const ini=(l.name||'?').slice(0,1).toUpperCase();
-    rl.innerHTML+=`<div class="rrow"><div class="av">${ini}</div><div class="nm"><b>${l.name}</b><span>${roleTxt}</span></div><div class="rank ${l.rank==='R5'?'r5':''}">${l.rank}</div></div>`;
-  });
+  if(c.leaders.length){
+    c.leaders.forEach(l=>{
+      const roleTxt=(pack.t['role.'+l.role])||l.role;
+      const ini=(l.name||'?').slice(0,1).toUpperCase();
+      rl.innerHTML+=`<div class="rrow"><div class="av">${ini}</div><div class="nm"><b>${l.name}</b><span>${roleTxt}</span></div><div class="rank ${l.rank==='R5'?'r5':''}">${l.rank}</div></div>`;
+    });
+  }else rl.innerHTML=emptyMsg;
   // events
   const el=$('#eventsList'); el.innerHTML='';
-  c.events.forEach(e=>{
-    const times = e.t2 ? `${e.t1}<br>${e.t2}` : e.t1;
-    el.innerHTML+=`<div class="ev"><div class="ic">${e.icon}</div><div class="info"><b>${e.name}</b><span>${e.freq}</span></div><div class="time">${times}</div></div>`;
-  });
+  if(c.events.length){
+    c.events.forEach(e=>{
+      const times = e.t2 ? `${e.t1}<br>${e.t2}` : e.t1;
+      el.innerHTML+=`<div class="ev"><div class="ic">${e.icon}</div><div class="info"><b>${e.name}</b><span>${e.freq}</span></div><div class="time">${times}</div></div>`;
+    });
+  }else el.innerHTML=emptyMsg;
   // rules
   const ru=$('#rulesList'); ru.innerHTML='';
-  c.rules.forEach(r=>{ ru.innerHTML+=`<div class="card"><h3><span class="dot"></span>${r.title}</h3><p>${r.text}</p></div>`; });
+  if(c.rules.length){
+    c.rules.forEach(r=>{ ru.innerHTML+=`<div class="card"><h3><span class="dot"></span>${r.title}</h3><p>${r.text}</p></div>`; });
+  }else ru.innerHTML=emptyMsg;
   // news
   const nw=$('#newsList'); nw.innerHTML='';
-  c.news.forEach(n=>{ nw.innerHTML+=`<div class="ann"><div class="d">${n.date}</div><div class="x">${n.msg||n.text||""}</div></div>`; });
+  if(c.news.length){
+    c.news.forEach(n=>{ nw.innerHTML+=`<div class="ann"><div class="d">${n.date}</div><div class="x">${n.msg||n.text||""}</div></div>`; });
+  }else nw.innerHTML=emptyMsg;
 }
 
 // i18n (fixed labels only)

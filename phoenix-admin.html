@@ -657,7 +657,7 @@ function loadEditor(al){
   $('#fMembers').value=al.members||'';
   $('#fAbout').value=cfg.about||'';
   // Values picker
-  selectedValues=Array.isArray(cfg.values)&&cfg.values.length?cfg.values.slice():PRESET_VALUES.slice(0,5);
+  selectedValues=Array.isArray(cfg.values)?cfg.values.slice():[];
   renderValuesPicker();
   $('#fQuote').value=cfg.quote?.text||'';
   $('#fQuoteBy').value=cfg.quote?.by||'TMQ';
