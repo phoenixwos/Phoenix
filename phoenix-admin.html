@@ -317,7 +317,7 @@ body{padding-bottom:72px !important;}
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:14px;">Event schedule shown on your alliance page.</p>
         <div class="dlist" id="eventList"></div>
         <button class="add-btn" id="addEventBtn">+ Add event</button>
-        <button type="button" class="btn btn-ghost" id="tplEventBtn" style="margin-top:8px;font-size:.8rem;">📋 Use PXR template</button>
+        <button type="button" class="btn btn-ghost" id="tplEventBtn" style="margin-top:8px;font-size:.8rem;">📋 Load starter template</button>
       </div>
     </div>
 
@@ -327,7 +327,7 @@ body{padding-bottom:72px !important;}
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:14px;">Alliance rules. Each block = one rule card on the page.</p>
         <div class="dlist" id="ruleList"></div>
         <button class="add-btn" id="addRuleBtn">+ Add rule</button>
-        <button type="button" class="btn btn-ghost" id="tplRuleBtn" style="margin-top:8px;font-size:.8rem;">📋 Use PXR template</button>
+        <button type="button" class="btn btn-ghost" id="tplRuleBtn" style="margin-top:8px;font-size:.8rem;">📋 Load starter template</button>
       </div>
     </div>
 
@@ -337,7 +337,7 @@ body{padding-bottom:72px !important;}
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:14px;">Announcements and news. Newest first.</p>
         <div class="dlist" id="newsList"></div>
         <button class="add-btn" id="addNewsBtn">+ Add announcement</button>
-        <button type="button" class="btn btn-ghost" id="tplNewsBtn" style="margin-top:8px;font-size:.8rem;">📋 Use PXR template</button>
+        <button type="button" class="btn btn-ghost" id="tplNewsBtn" style="margin-top:8px;font-size:.8rem;">📋 Load starter template</button>
       </div>
     </div>
 
@@ -649,7 +649,7 @@ $('#addRuleBtn').onclick=()=>addItem('ruleList',ruleHTML);
 $('#addNewsBtn').onclick=()=>addItem('newsList',newsHTML);
 
 // ── PXR TEMPLATES ─────────────────────────────────────────────
-const PXR_TPL={
+const STARTER_TPL={
   events:[
     {icon:"🌍",name:"SvS",freq:"Seasonal",t1:"12:00–15:00 UTC",t2:"Prep week before"},
     {icon:"🏰",name:"Castle Battle",freq:"Weekly",t1:"12:00–15:00 UTC",t2:""}
@@ -667,14 +667,14 @@ const PXR_TPL={
 };
 function applyTemplate(listId,htmlFn,data){
   const wrap=$('#'+listId);
-  if(wrap.children.length && !confirm('This will replace the current entries with the PXR template. Continue?'))return;
+  if(wrap.children.length && !confirm('This will replace the current entries with the starter template. Continue?'))return;
   wrap.innerHTML='';
   data.forEach((item,i)=>{const d=document.createElement('div');d.innerHTML=htmlFn(i,item);wrap.appendChild(d.firstElementChild);});
-  toast('PXR template loaded ✓');
+  toast('Starter template loaded ✓');
 }
-$('#tplEventBtn').onclick=()=>applyTemplate('eventList',eventHTML,PXR_TPL.events);
-$('#tplRuleBtn').onclick=()=>applyTemplate('ruleList',ruleHTML,PXR_TPL.rules);
-$('#tplNewsBtn').onclick=()=>applyTemplate('newsList',newsHTML,PXR_TPL.news);
+$('#tplEventBtn').onclick=()=>applyTemplate('eventList',eventHTML,STARTER_TPL.events);
+$('#tplRuleBtn').onclick=()=>applyTemplate('ruleList',ruleHTML,STARTER_TPL.rules);
+$('#tplNewsBtn').onclick=()=>applyTemplate('newsList',newsHTML,STARTER_TPL.news);
 $('#addLinkBtn').onclick=()=>addItem('memberLinkList',linkHTML);
 
 // ── GALLERY FIELDS (6 slots) ───────────────────────────────────
