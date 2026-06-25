@@ -285,6 +285,8 @@ body{padding-bottom:72px !important;}
           <button type="button" class="btn btn-ghost theme-opt" data-theme="rainbow" id="themeRainbow">🌈 Rainbow</button>
           <button type="button" class="btn btn-ghost theme-opt" data-theme="skull" id="themeSkull">💀 Skull</button>
           <button type="button" class="btn btn-ghost theme-opt" data-theme="neutral" id="themeNeutral">⚪ Neutral</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="wosblue" id="themeWosblue">🔵 WOS Blue</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="battle" id="themeBattle">⚔️ Battle</button>
         </div>
       </div>
       <div class="card">
@@ -517,8 +519,8 @@ $('#addValueBtn').onclick=()=>{
 
 // Theme selector
 let selectedTheme='light';
-const THEME_IDS=['light','dark','snow','rainbow','skull','neutral'];
-const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral'};
+const THEME_IDS=['light','dark','snow','rainbow','skull','neutral','wosblue','battle'];
+const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral',wosblue:'themeWosblue',battle:'themeBattle'};
 function setThemeUI(t){
   if(!THEME_IDS.includes(t))t='light';
   selectedTheme=t;

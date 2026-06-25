@@ -355,6 +355,79 @@ function renderMemberZone(mz){
     border:2px solid rgba(255,122,46,.4);
     box-shadow:0 0 18px rgba(255,122,46,.15);
   }
+
+  /* ── WOS BLUE THEME (game UI style) ───────────────────────── */
+  body.wosblue{
+    --sky:#0d2952; --sky2:#0a1f3d; --ice:#1a3a6b; --ice-deep:#4a9fd4;
+    --panel:#132240; --panel-edge:#1e3a6a; --panel-blue:#2455a4; --panel-blue-d:#1a3a7a;
+    --ink:#cce4ff; --ink-soft:#8ab4d8; --muted:#4a7aaa;
+    --white:#132240;
+    background:
+      linear-gradient(180deg,#0d2952 0%,#071628 100%);
+    color:var(--ink);
+  }
+  body.wosblue::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(74,159,212,.12), transparent 30%),
+      radial-gradient(circle at 85% 90%, rgba(36,85,164,.15), transparent 35%),
+      repeating-linear-gradient(0deg, transparent, transparent 48px, rgba(255,255,255,.015) 48px, rgba(255,255,255,.015) 49px),
+      repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(255,255,255,.015) 48px, rgba(255,255,255,.015) 49px);}
+  body.wosblue .shell{position:relative;z-index:1;}
+  body.wosblue h1,body.wosblue h2,body.wosblue h3,body.wosblue h4{color:var(--ink);font-family:'Nunito','Baloo 2',sans-serif;font-weight:900;}
+  body.wosblue .top{background:linear-gradient(180deg,#0a1f3d,#071628);border-bottom:2px solid #1e3a6a;box-shadow:0 2px 16px rgba(0,0,0,.5);}
+  body.wosblue .card{background:linear-gradient(180deg,#132240cc,#0a1928bb);border:1px solid #1e3a6a;backdrop-filter:blur(4px);box-shadow:0 4px 16px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);}
+  body.wosblue .atag{background:linear-gradient(180deg,#1e4a8a,#132860);border:2px solid #4a9fd4;color:#4af0ff;box-shadow:0 0 12px rgba(74,159,212,.3);}
+  body.wosblue .aname{color:#fff;font-family:'Nunito',sans-serif;font-weight:900;text-shadow:0 2px 12px rgba(74,159,212,.4);}
+  body.wosblue .astat{background:linear-gradient(180deg,#132240,#0a1928);border:2px solid #1e3a6a;box-shadow:0 3px 0 #071018;}
+  body.wosblue .astat .n{color:#4a9fd4;text-shadow:0 0 10px rgba(74,159,212,.5);}
+  body.wosblue .tab{background:linear-gradient(180deg,#1a3a6b,#112244);border:2px solid #2455a4;color:#8ab4d8;box-shadow:0 3px 0 #071018;}
+  body.wosblue .tab.active{background:linear-gradient(180deg,#4a9fd4,#2a6eb8);color:#fff;border-color:#5ab0e4;box-shadow:0 3px 0 #0d2952,0 0 14px rgba(74,159,212,.4);}
+  body.wosblue .botnav{background:linear-gradient(180deg,#0a1f3d,#071628);border-top:2px solid #1e3a6a;}
+  body.wosblue .botnav a{color:rgba(255,255,255,.5);}
+  body.wosblue .botnav a.active{background:linear-gradient(180deg,#4a9fd4,#2a6eb8);border-color:#5ab0e4;color:#fff;}
+  body.wosblue .btn-acc,body.wosblue .btn-fire{background:linear-gradient(180deg,#4a9fd4,#2a6eb8)!important;border-color:#5ab0e4!important;box-shadow:0 3px 0 #0d2952,0 0 10px rgba(74,159,212,.3)!important;}
+  body.wosblue .ahero{background:radial-gradient(ellipse at 50% 0%,rgba(74,159,212,.2),transparent 60%),linear-gradient(180deg,#1a3a6b,#0a1928);}
+  body.wosblue .rrow{background:#0a1928;border-color:#1e3a6a;}
+  body.wosblue .rrow .av{background:linear-gradient(135deg,#1a3a6b,#2455a4);color:#cce4ff;}
+  body.wosblue .ev,body.wosblue .ann{background:#0a1928;border-color:#1e3a6a;}
+
+  /* ── WOS BATTLE THEME (war/dark dramatic) ──────────────────── */
+  body.battle{
+    --sky:#1a0d0a; --sky2:#120808; --ice:#2d1510; --ice-deep:#d45a20;
+    --panel:#1e1008; --panel-edge:#3d1e10; --panel-blue:#8b2500; --panel-blue-d:#6a1a00;
+    --ink:#f0d0b0; --ink-soft:#b08060; --muted:#7a5040;
+    --white:#1e1008;
+    --acc:#f5a020; --acc-d:#d47810; --acc-sh:#a05000;
+    background:
+      radial-gradient(ellipse at 50% -10%,rgba(255,80,0,.15),transparent 45%),
+      linear-gradient(180deg,#1a0d0a,#120808 50%,#0a0504);
+    color:var(--ink);
+  }
+  body.battle::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 20% 30%,rgba(255,100,0,.06),transparent 40%),
+      radial-gradient(circle at 80% 70%,rgba(200,40,0,.08),transparent 35%),
+      repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,120,0,.02) 60px,rgba(255,120,0,.02) 61px);}
+  body.battle .shell{position:relative;z-index:1;}
+  body.battle h1,body.battle h2,body.battle h3,body.battle h4{color:var(--ink);font-family:'Cinzel','Baloo 2',serif;letter-spacing:.02em;}
+  body.battle .top{background:linear-gradient(180deg,#1a0d0a,#0a0504);border-bottom:2px solid #3d1e10;box-shadow:0 2px 20px rgba(0,0,0,.6);}
+  body.battle .card{background:linear-gradient(180deg,rgba(30,16,8,.9),rgba(18,8,8,.85));border:1px solid #3d1e10;box-shadow:0 4px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,120,0,.06);}
+  body.battle .atag{background:linear-gradient(180deg,#3d1e10,#2a1008);border:2px solid #d45a20;color:#f5a020;box-shadow:0 0 14px rgba(212,90,32,.3);}
+  body.battle .aname{color:#f0d0b0;font-family:'Cinzel',serif;text-shadow:0 0 20px rgba(245,160,32,.3);}
+  body.battle .astat{background:linear-gradient(180deg,#1e1008,#120808);border:2px solid #3d1e10;box-shadow:0 3px 0 #050202;}
+  body.battle .astat .n{color:#f5a020;text-shadow:0 0 10px rgba(245,160,32,.4);}
+  body.battle .tab{background:linear-gradient(180deg,#2d1510,#1a0d0a);border:2px solid #3d1e10;color:#b08060;box-shadow:0 3px 0 #050202;}
+  body.battle .tab.active{background:linear-gradient(180deg,#d45a20,#8b2500);color:#fff;border-color:#f5a020;box-shadow:0 3px 0 #3d0f00,0 0 14px rgba(212,90,32,.4);}
+  body.battle .botnav{background:linear-gradient(180deg,#1a0d0a,#0a0504);border-top:2px solid #3d1e10;}
+  body.battle .botnav a{color:rgba(240,160,80,.5);}
+  body.battle .botnav a.active{background:linear-gradient(180deg,#d45a20,#8b2500);border-color:#f5a020;color:#fff;}
+  body.battle .btn-acc,body.battle .btn-fire{background:linear-gradient(180deg,#f5a020,#d47810)!important;color:#fff!important;box-shadow:0 3px 0 #6a3000,0 0 10px rgba(245,160,32,.3)!important;}
+  body.battle .ahero{background:radial-gradient(ellipse at 50% 0%,rgba(255,80,0,.2),transparent 55%),linear-gradient(180deg,#2d1510,#0a0504);}
+  body.battle .rrow{background:#120808;border-color:#3d1e10;}
+  body.battle .rrow .av{background:linear-gradient(135deg,#2d1510,#8b2500);color:#f0d0b0;}
+  body.battle .ev,body.battle .ann{background:#120808;border-color:#3d1e10;}
+  body.battle .ahero::after{content:'⚔️';position:absolute;top:10px;right:14px;font-size:1.5rem;opacity:.6;}
+  body.battle .ahero::before{content:'🔥';position:absolute;top:12px;left:14px;font-size:1.3rem;opacity:.5;}
   ::selection{background:var(--acc); color:#fff;}
   h1,h2,h3,h4{font-family:'Baloo 2',cursive; color:var(--ink);}
   button{font-family:'Fredoka',sans-serif; cursor:pointer;}
@@ -455,10 +528,16 @@ function renderMemberZone(mz){
   footer{text-align:center; font-family:'Fredoka'; font-weight:500; font-size:.7rem; color:var(--ink-soft); padding:20px;}
 
 /* ---- bottom navigation (connects the 3 layers) ---- */
-.botnav{position:fixed; bottom:0; left:0; right:0; z-index:45; background:linear-gradient(180deg,#ffffff,#e8f4fc); border-top:2px solid #bfe0f4; box-shadow:0 -4px 16px rgba(74,143,196,.18); display:flex; justify-content:center; gap:6px; padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px));}
-.botnav a{flex:1; max-width:130px; text-decoration:none; text-align:center; padding:6px 4px; border-radius:14px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:.68rem; color:#4a6e88; border:2px solid transparent; line-height:1.2;}
-.botnav a .ic{display:block; font-size:1.35rem; margin-bottom:1px;}
-.botnav a.active{background:linear-gradient(180deg,#fff3ec,#ffe2d2); border-color:#ffc4a3; color:#e85a18;}
+.botnav{position:fixed;bottom:0;left:0;right:0;z-index:45;
+  background:linear-gradient(180deg,#1a3a6b,#0f2448);
+  border-top:2px solid #2a5298;box-shadow:0 -4px 20px rgba(0,0,0,.4);
+  display:flex;justify-content:center;gap:8px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));}
+.botnav a{flex:1;max-width:110px;text-decoration:none;text-align:center;
+  padding:7px 4px;border-radius:14px;font-family:"Fredoka",sans-serif;font-weight:700;font-size:.68rem;
+  color:rgba(255,255,255,.55);border:2px solid transparent;line-height:1.2;}
+.botnav a .ic{display:block;font-size:1.35rem;margin-bottom:2px;}
+.botnav a.active{background:linear-gradient(180deg,#4a9fd4,#2a6eb8);border-color:#5ab0e4;color:#fff;box-shadow:0 3px 10px rgba(74,159,212,.4);}
 .botnav a:active{transform:translateY(1px);}
 body{padding-bottom:72px !important;}
 
@@ -619,7 +698,7 @@ function applyConfig(){
   const c=CONFIG;
   // Apply theme (dark fire&ice or light)
   // Apply theme — remove all theme classes, then add the selected one
-  document.body.classList.remove('dark','snow','rainbow','skull','neutral');
+  document.body.classList.remove('dark','snow','rainbow','skull','neutral','wosblue','battle');
   const themeClass=c.theme&&c.theme!=='light'?c.theme:'';
   if(themeClass)document.body.classList.add(themeClass);
   setVar('--acc',c.accent); setVar('--acc-d',c.accentDark); setVar('--acc-sh',c.accentShadow);

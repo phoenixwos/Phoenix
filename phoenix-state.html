@@ -138,10 +138,21 @@
   [dir="rtl"] .arow .rk{text-align:center;}
 
 /* ---- bottom navigation (connects the 3 layers) ---- */
-.botnav{position:fixed; bottom:0; left:0; right:0; z-index:45; background:linear-gradient(180deg,#ffffff,#e8f4fc); border-top:2px solid #bfe0f4; box-shadow:0 -4px 16px rgba(74,143,196,.18); display:flex; justify-content:center; gap:6px; padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px));}
-.botnav a{flex:1; max-width:130px; text-decoration:none; text-align:center; padding:6px 4px; border-radius:14px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:.68rem; color:#4a6e88; border:2px solid transparent; line-height:1.2;}
-.botnav a .ic{display:block; font-size:1.35rem; margin-bottom:1px;}
-.botnav a.active{background:linear-gradient(180deg,#fff3ec,#ffe2d2); border-color:#ffc4a3; color:#e85a18;}
+.botnav{position:fixed;bottom:0;left:0;right:0;z-index:45;
+  background:linear-gradient(180deg,#1a3a6b,#0f2448);
+  border-top:2px solid #2a5298;
+  box-shadow:0 -4px 20px rgba(0,0,0,.4);
+  display:flex;justify-content:center;gap:8px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));}
+.botnav a{flex:1;max-width:110px;text-decoration:none;text-align:center;
+  padding:7px 4px;border-radius:14px;
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:.68rem;
+  color:rgba(255,255,255,.6);border:2px solid transparent;line-height:1.2;}
+.botnav a .ic{display:block;font-size:1.35rem;margin-bottom:2px;}
+.botnav a.active{
+  background:linear-gradient(180deg,#4a9fd4,#2a6eb8);
+  border-color:#5ab0e4;color:#fff;
+  box-shadow:0 3px 10px rgba(74,159,212,.4);}
 .botnav a:active{transform:translateY(1px);}
 body{padding-bottom:72px !important;}
 
@@ -549,13 +560,15 @@ applyLang();
       const num=parseInt(rank.replace('#',''))||i+1;
       const isPXR=al.tag==='PXR';
       const div=document.createElement('div');
-      div.className='arow'+(num===1?' us':'');
+      const rankClass=num===1?'rank1':num===2?'rank2':num===3?'rank3':'';
+      const medal=num===1?'🥇':num===2?'🥈':num===3?'🥉':'';
+      div.className='arow'+(isPXR?' us':'')+' '+(rankClass);
       let nameHtml=`[${al.tag}] ${al.name}`;
       if(isPXR) nameHtml+=` <span class="tag-home">Featured</span>`;
       let sub='';
       if(al.members) sub=`${al.members} players`;
       const href=`phoenix-alliance.html?tag=${al.tag}`;
-      div.innerHTML=`<div class="rk">${rank}</div><div class="nm">${nameHtml}${sub?'<small>'+sub+'</small>':''}</div>`;
+      div.innerHTML=`<div class="rk">${medal||rank}</div><div class="nm">${nameHtml}${sub?'<small>'+sub+'</small>':''}</div>`;
       div.style.cursor='pointer';
       div.onclick=()=>location.href=href;
       container.appendChild(div);
