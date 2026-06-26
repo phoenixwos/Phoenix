@@ -245,6 +245,9 @@
   .meteor-row .m-name{font-family:'Fredoka';font-weight:600;font-size:.9rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .meteor-row .m-tag{font-size:.68rem;color:#a888c8;font-family:'Fredoka';}
   .meteor-row .m-power{font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#ffb860;flex:none;}
+  .meteor-row.is-pxr{background:linear-gradient(90deg,rgba(255,122,46,.18),rgba(90,58,122,.2));border-color:rgba(255,122,46,.5);}
+  .meteor-row.is-pxr .m-av{border-color:#ff7a2e;box-shadow:0 0 10px rgba(255,122,46,.4);}
+  .meteor-row.is-pxr .m-tag{color:#ff9a5a;font-weight:700;}
 
   /* ─── STATE VICTORIES ─── */
   .victories-section{margin:16px 18px 0; padding:18px; background:radial-gradient(ellipse at 50% 0%,rgba(255,180,40,.12),transparent 60%),linear-gradient(180deg,#10203e,#0a1530); border:2px solid #2a5a9a; border-radius:16px;}
@@ -803,6 +806,7 @@ renderGlobePlayers();
 // ── METEOR PUZZLE CHAMPIONS ───────────────────────────────────
 const METEOR_PLAYERS=[
   {name:'Hello Ida', tag:'AAA', power:'541.7M', img:'av_meteor_ida.png'},
+  {name:'Harambe', tag:'PXR', power:'457.2M', img:'av_meteor_harambe.png'},
   {name:'Hsuan', tag:'AAA', power:'456.4M', img:null},
   {name:'我佛慈悲', tag:'TWN', power:'420.2M', img:null},
   {name:'Hello zzz', tag:'AAA', power:'376.6M', img:null}
@@ -811,10 +815,11 @@ function renderMeteorPlayers(){
   const list=document.getElementById('meteorList');
   if(!list)return;
   list.innerHTML=METEOR_PLAYERS.map(p=>{
+    const isPXR = p.tag==='PXR';
     const av = p.img
       ? `<div class="m-av"><img src="${GLOBE_BASE}${p.img}" alt="${p.name}" onerror="this.parentElement.innerHTML='<span class=\\'m-initial\\'>'+${JSON.stringify(p.name.slice(0,1))}+'</span>'"></div>`
       : `<div class="m-av"><span class="m-initial">${p.name.slice(0,1)}</span></div>`;
-    return `<div class="meteor-row">
+    return `<div class="meteor-row${isPXR?' is-pxr':''}">
       ${av}
       <div class="m-info"><div class="m-name">${p.name}</div><div class="m-tag">[${p.tag}]</div></div>
       <div class="m-power">${p.power}</div>
