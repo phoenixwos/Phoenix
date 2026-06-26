@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>State 3139 · Phoenix</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@700;900&display=swap');
   :root{
     --sky:#cfe8f7; --sky2:#a9d4ee; --ice:#7fb8e0; --ice-deep:#4a8fc4;
     --panel:#e8f4fc; --panel-edge:#bfe0f4; --panel-blue:#5fa8da; --panel-blue-d:#3d8bc4;
@@ -133,6 +133,136 @@
   .welcome-quote .qt.show{display:block;}
   .welcome-quote .by{font-family:'Fredoka'; font-weight:600; font-size:.72rem; color:var(--fire-deep); margin-top:9px;}
 
+  /* ═══ LEGENDS · GLOBE PLAYERS HALL ═══ */
+  #tab-legends{padding:0 0 20px;}
+  .legends-hero{
+    position:relative; overflow:hidden;
+    padding:32px 18px 28px; text-align:center;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,200,60,.25), transparent 55%),
+      radial-gradient(ellipse at 50% 100%, rgba(80,140,220,.3), transparent 60%),
+      linear-gradient(180deg,#0a1530,#0d1f44 60%,#0a1838);
+  }
+  .legends-hero::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      radial-gradient(circle 1.5px at 15% 20%, rgba(255,220,120,.8) 1.5px, transparent 0),
+      radial-gradient(circle 1px at 70% 15%, rgba(180,210,255,.7) 1px, transparent 0),
+      radial-gradient(circle 2px at 85% 40%, rgba(255,220,120,.6) 2px, transparent 0),
+      radial-gradient(circle 1px at 30% 60%, rgba(180,210,255,.6) 1px, transparent 0),
+      radial-gradient(circle 1.5px at 60% 80%, rgba(255,220,120,.5) 1.5px, transparent 0);
+    animation:legendTwinkle 4s ease-in-out infinite alternate;
+  }
+  @keyframes legendTwinkle{0%{opacity:.5;}100%{opacity:1;}}
+  .legends-globe-glow{
+    position:absolute; top:5%; left:50%; transform:translateX(-50%);
+    width:200px; height:200px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,200,60,.4), transparent 70%);
+    animation:globePulse 3s ease-in-out infinite; pointer-events:none;
+  }
+  @keyframes globePulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.6;}50%{transform:translateX(-50%) scale(1.15);opacity:.9;}}
+  .legends-globe-img{
+    position:relative; z-index:1; width:160px; height:auto;
+    border-radius:14px; margin-bottom:14px;
+    filter:drop-shadow(0 0 20px rgba(255,180,40,.5));
+  }
+  .legends-crown{position:relative;z-index:1;font-size:2rem;margin-bottom:4px;filter:drop-shadow(0 2px 6px rgba(255,180,40,.6));}
+  .legends-title-zh{
+    position:relative; z-index:1;
+    font-family:'Noto Serif SC','Baloo 2',serif; font-weight:900;
+    font-size:1.5rem; color:#ffd86a; letter-spacing:.08em;
+    text-shadow:0 0 20px rgba(255,200,60,.6), 0 2px 8px rgba(0,0,0,.5); margin-bottom:6px;
+  }
+  .legends-title{
+    position:relative; z-index:1;
+    font-family:'Baloo 2',cursive; font-weight:800; font-size:1.15rem;
+    color:#fff; text-shadow:0 0 16px rgba(180,210,255,.5); margin-bottom:4px;
+  }
+  .legends-sub{position:relative;z-index:1;font-size:.78rem;color:#9ab8e0;font-family:'Fredoka';font-weight:600;}
+
+  .legends-intro{padding:20px 18px 4px; text-align:center;}
+  .legends-intro-zh{font-family:'Noto Serif SC',serif;font-weight:700;font-size:.95rem;color:var(--ink);line-height:1.7;margin-bottom:8px;}
+  .legends-intro-tr{font-size:.82rem;color:var(--ink-soft);font-style:italic;line-height:1.5;}
+
+  .globe-players{display:flex;flex-direction:column;gap:16px;padding:18px;}
+  .globe-card{
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg,#0d1f44,#0a1530);
+    border:2px solid #2a5a9a; border-radius:18px;
+    box-shadow:0 8px 28px -6px rgba(10,30,70,.6), inset 0 1px 0 rgba(255,220,120,.15);
+  }
+  .globe-card.rank-1{border-color:#ffce4a; box-shadow:0 8px 32px -4px rgba(255,180,40,.4), inset 0 1px 0 rgba(255,220,120,.3);}
+  .globe-card-rankbadge{
+    position:absolute; top:12px; left:12px; z-index:3;
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2'; font-weight:800; font-size:1.1rem; color:#fff;
+    background:linear-gradient(180deg,#4a8fd4,#2a6eb8); border:2px solid #fff;
+    box-shadow:0 3px 8px rgba(0,0,0,.4);
+  }
+  .globe-card.rank-1 .globe-card-rankbadge{background:linear-gradient(180deg,#ffd86a,#f5a020);box-shadow:0 0 14px rgba(255,180,40,.6),0 3px 8px rgba(0,0,0,.4);}
+  .globe-card-body{display:flex; gap:0; align-items:center; padding:14px;}
+  .globe-card-img{
+    width:88px; height:88px; flex:none; position:relative;
+    border-radius:16px; overflow:hidden;
+    border:3px solid #2a5a9a; box-shadow:0 4px 12px rgba(0,0,0,.4);
+  }
+  .globe-card.rank-1 .globe-card-img{border-color:#ffce4a;box-shadow:0 0 16px rgba(255,180,40,.5),0 4px 12px rgba(0,0,0,.4);}
+  .globe-card-img img{width:100%; height:100%; object-fit:cover; display:block;}
+  .globe-card-info{flex:1; padding:0 0 0 14px; display:flex; flex-direction:column; justify-content:center;}
+  .globe-card-name{font-family:'Baloo 2',cursive;font-weight:800;font-size:1.05rem;color:#fff;line-height:1.2;margin-bottom:3px;word-break:break-word;}
+  .globe-card-tag{display:inline-block;font-family:'Fredoka';font-weight:700;font-size:.7rem;color:#ffd86a;background:rgba(255,200,60,.12);border:1px solid rgba(255,200,60,.4);padding:2px 8px;border-radius:8px;margin-bottom:8px;align-self:flex-start;}
+  .globe-card-id{font-size:.7rem;color:#7a9ac8;font-family:'Fredoka';margin-bottom:10px;}
+  .globe-card-power{display:flex;align-items:baseline;gap:6px;}
+  .globe-card-power .pv{font-family:'Baloo 2';font-weight:800;font-size:1.5rem;color:#ffce4a;text-shadow:0 0 12px rgba(255,180,40,.4);}
+  .globe-card-power .pl{font-size:.66rem;color:#7a9ac8;text-transform:uppercase;letter-spacing:.08em;font-family:'Fredoka';font-weight:600;}
+  .globe-card-honor{margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,160,220,.25);}
+  .globe-card-honor-zh{font-family:'Noto Serif SC',serif;font-weight:700;font-size:.82rem;color:#ffd86a;margin-bottom:3px;}
+  .globe-card-honor-tr{font-size:.72rem;color:#9ab8e0;font-style:italic;line-height:1.4;}
+
+  .legends-cta{
+    margin:8px 18px 0; padding:22px 20px; text-align:center;
+    background:radial-gradient(ellipse at 50% 0%, rgba(255,90,24,.15), transparent 60%),linear-gradient(180deg,#1a0d2e,#0d1530);
+    border:2px solid #6a3a9a; border-radius:18px;
+    box-shadow:0 6px 24px -6px rgba(60,20,90,.5);
+  }
+  .legends-cta-zh{font-family:'Noto Serif SC',serif;font-weight:900;font-size:1.1rem;color:#ff8a4a;letter-spacing:.1em;margin-bottom:10px;text-shadow:0 0 16px rgba(255,90,24,.4);}
+  .legends-cta-main{font-family:'Baloo 2',cursive;font-weight:800;font-size:.98rem;color:#fff;margin-bottom:8px;}
+  .legends-cta-sub{font-size:.82rem;color:#b8a8d0;line-height:1.5;}
+
+  /* ─── METEOR PUZZLE (smaller section) ─── */
+  .meteor-section{margin:4px 18px 0; padding:18px; background:linear-gradient(180deg,#1a1228,#120d1e); border:2px solid #5a3a7a; border-radius:16px;}
+  .meteor-header{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .meteor-icon{font-size:1.8rem; filter:drop-shadow(0 0 8px rgba(255,180,80,.6));}
+  .meteor-title-zh{font-family:'Noto Serif SC',serif;font-weight:900;font-size:1.05rem;color:#ffb860;letter-spacing:.06em;}
+  .meteor-title{font-family:'Baloo 2',cursive;font-weight:700;font-size:.82rem;color:#c8b0e0;}
+  .meteor-list{display:flex; flex-direction:column; gap:8px;}
+  .meteor-row{display:flex; align-items:center; gap:12px; padding:10px 12px; background:rgba(90,58,122,.2); border:1px solid rgba(120,80,160,.4); border-radius:11px;}
+  .meteor-row .m-av{width:42px;height:42px;flex:none;border-radius:10px;overflow:hidden;border:2px solid #7a5a9a;background:linear-gradient(135deg,#5a3a7a,#3a2454);display:flex;align-items:center;justify-content:center;}
+  .meteor-row .m-av img{width:100%;height:100%;object-fit:cover;}
+  .meteor-row .m-av .m-initial{font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#d8c0f0;}
+  .meteor-row .m-info{flex:1;min-width:0;}
+  .meteor-row .m-name{font-family:'Fredoka';font-weight:600;font-size:.9rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .meteor-row .m-tag{font-size:.68rem;color:#a888c8;font-family:'Fredoka';}
+  .meteor-row .m-power{font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#ffb860;flex:none;}
+
+  /* ─── STATE VICTORIES ─── */
+  .victories-section{margin:16px 18px 0; padding:18px; background:radial-gradient(ellipse at 50% 0%,rgba(255,180,40,.12),transparent 60%),linear-gradient(180deg,#10203e,#0a1530); border:2px solid #2a5a9a; border-radius:16px;}
+  .victories-header{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+  .victories-icon{font-size:1.8rem; filter:drop-shadow(0 0 8px rgba(255,200,60,.6));}
+  .victories-title-zh{font-family:'Noto Serif SC',serif;font-weight:900;font-size:1.05rem;color:#ffce4a;letter-spacing:.06em;}
+  .victories-title{font-family:'Baloo 2',cursive;font-weight:700;font-size:.78rem;color:#9ab8e0;}
+  .victories-count{text-align:center;padding:10px 0 14px;}
+  .victories-count .vc-num{font-family:'Baloo 2';font-weight:800;font-size:2.6rem;color:#ffce4a;text-shadow:0 0 20px rgba(255,180,40,.5);line-height:1;}
+  .victories-count .vc-label{display:block;font-family:'Fredoka';font-weight:600;font-size:.72rem;color:#7a9ac8;text-transform:uppercase;letter-spacing:.1em;margin-top:4px;}
+  .victories-list{display:flex;flex-direction:column;gap:6px;}
+  .victory-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(42,90,154,.15);border-radius:9px;font-family:'Fredoka';}
+  .victory-row .vr-us{font-weight:700;color:#4af0ff;font-size:.82rem;}
+  .victory-row .vr-vs{font-size:.7rem;color:#6a8aa8;}
+  .victory-row .vr-them{color:#b8a8d0;font-size:.82rem;flex:1;}
+  .victory-row .vr-win{font-weight:700;color:#ffce4a;font-size:.78rem;}
+  .victory-row .vr-date{font-size:.68rem;color:#6a8aa8;}
+
   footer{text-align:center; font-family:'Fredoka'; font-weight:500; font-size:.7rem; color:var(--ink-soft); padding:20px;}
 
   [dir="rtl"] .arow .rk{text-align:center;}
@@ -187,6 +317,7 @@ body{padding-bottom:72px !important;}
     <button class="tab" data-tab="alliances" data-i18n="tab.alliances">Alliances</button>
     <button class="tab" data-tab="events" data-i18n="tab.events">Events</button>
     <button class="tab" data-tab="castles" data-i18n="tab.castles">Castles</button>
+    <button class="tab" data-tab="legends" data-i18n="tab.legends">Legends</button>
     <button class="tab" data-tab="welcome" data-i18n="tab.welcome">Welcome</button>
   </div></div>
 
@@ -267,6 +398,66 @@ body{padding-bottom:72px !important;}
     </div>
   </div>
 
+  <!-- LEGENDS · GLOBE PLAYERS HALL OF HONOR -->
+  <div class="panel" id="tab-legends">
+    <div class="legends-hero">
+      <div class="legends-globe-glow"></div>
+      <img class="legends-globe-img" id="frostSphereImg" src="https://vghutrfcrqgelvgdeesl.supabase.co/storage/v1/object/public/Images/legends/frost_sphere.png" alt="Frost Sphere VI" onerror="this.style.display='none'">
+      <div class="legends-crown">👑</div>
+      <div class="legends-title-zh">寰宇霜球 · 至尊殿堂</div>
+      <div class="legends-title" data-i18n="leg.title">Hall of the Globe Sovereigns</div>
+      <div class="legends-sub" data-i18n="leg.sub">Frost Sphere VI · The highest honor in State 3139</div>
+    </div>
+
+    <div class="legends-intro">
+      <div class="legends-intro-zh">仅有真正的王者方能登临寰宇之巅。此三位巨擘，以无双之力与不朽之志，为三千一百三十九州赢得永恒荣光。</div>
+      <div class="legends-intro-tr" data-i18n="leg.intro">Only true sovereigns ascend to the summit of the cosmos. These three titans, through matchless power and undying will, have won eternal glory for State 3139.</div>
+    </div>
+
+    <div class="globe-players" id="globePlayers">
+      <!-- Player cards injected here -->
+    </div>
+
+    <!-- METEOR PUZZLE CHAMPIONS (smaller) -->
+    <div class="meteor-section">
+      <div class="meteor-header">
+        <span class="meteor-icon">☄️</span>
+        <div>
+          <div class="meteor-title-zh">流星拼图 · 群英榜</div>
+          <div class="meteor-title" data-i18n="met.title">Meteor Puzzle Champions</div>
+        </div>
+      </div>
+      <div class="meteor-list" id="meteorList">
+        <!-- Meteor players injected here -->
+      </div>
+    </div>
+
+    <!-- STATE VICTORIES (SvS castle wins) -->
+    <div class="victories-section">
+      <div class="victories-header">
+        <span class="victories-icon">🏆</span>
+        <div>
+          <div class="victories-title-zh">寰宇征战 · 战无不胜</div>
+          <div class="victories-title" data-i18n="vic.title">State 3139 · Castle Battle Victories</div>
+        </div>
+      </div>
+      <div class="victories-count">
+        <span class="vc-num" id="victoryCount">8</span>
+        <span class="vc-label" data-i18n="vic.count">consecutive victories</span>
+      </div>
+      <div class="victories-list" id="victoriesList">
+        <!-- Victory rows injected here -->
+      </div>
+    </div>
+
+    <div class="legends-cta">
+      <div class="legends-cta-zh">⚔️ 群雄逐鹿，唯我独尊 ⚔️</div>
+      <div class="legends-cta-main" data-i18n="leg.challenge">Rival states: look upon our champions and despair.</div>
+      <div class="legends-cta-sub" data-i18n="leg.recruit">Want to stand among legends? State 3139 is recruiting the ambitious, the relentless, the unstoppable.</div>
+      <a href="/Phoenix/phoenix-alliance.html?tag=PXR" class="btn btn-fire" style="margin-top:14px;" data-i18n="leg.join">Join the strongest</a>
+    </div>
+  </div>
+
   <!-- WELCOME -->
   <div class="panel" id="tab-welcome">
     <div class="card">
@@ -293,6 +484,7 @@ const I18N = {
   en:{name:"English",dir:"ltr",t:{
     "realm":"Enter the Realm","hero.sub":"Many alliances. Thousands of players. One winter.","hero.tag":"Every state has a home. Every alliance, a banner. Every player, a page.","hero.winter":"Whiteout Survival · Community hub",
     "tab.home":"Home","tab.alliances":"Alliances","tab.events":"Events","tab.castles":"Castles","tab.welcome":"Welcome",
+    "tab.legends":"Legends","leg.title":"Hall of the Globe Sovereigns","leg.sub":"Frost Sphere VI · The highest honor in State 3139","leg.intro":"Only true sovereigns ascend to the summit of the cosmos. These three titans, through matchless power and undying will, have won eternal glory for State 3139.","leg.challenge":"Rival states: look upon our champions and despair.","leg.recruit":"Want to stand among legends? State 3139 is recruiting the ambitious, the relentless, the unstoppable.","leg.join":"Join the strongest","met.title":"Meteor Puzzle Champions","vic.title":"State 3139 · Castle Battle Victories","vic.count":"consecutive victories","vic.win":"WIN",
     "home.about.t":"About State 3139","home.about.p":"An active, competitive state in Whiteout Survival — home to many alliances working, fighting and growing together. This is the shared hub: find your alliance, track events, and claim your page.",
     "home.quick":"Quick look","home.s1":"Alliances","home.s2":"Featured","home.s3":"Languages",
     "home.how.t":"How it works","home.how.p":"Three layers, one community:","home.layer1":"State page (you're here)","home.layer2":"Alliance pages","home.layer3":"Player pages",
@@ -305,6 +497,7 @@ const I18N = {
   es:{name:"Español",dir:"ltr",t:{
     "realm":"Entra al Reino","hero.sub":"Muchas alianzas. Miles de jugadores. Un solo invierno.","hero.tag":"Cada estado tiene un hogar. Cada alianza, un estandarte. Cada jugador, una página.","hero.winter":"Whiteout Survival · Centro comunitario",
     "tab.home":"Inicio","tab.alliances":"Alianzas","tab.events":"Eventos","tab.castles":"Castillos","tab.welcome":"Bienvenida",
+    "tab.legends":"Leyendas","leg.title":"Salón de los Soberanos del Globo","leg.sub":"Esfera Escarcha VI · El mayor honor del Estado 3139","leg.intro":"Solo los verdaderos soberanos ascienden a la cima del cosmos. Estos tres titanes, con un poder sin igual y una voluntad imperecedera, han ganado la gloria eterna para el Estado 3139.","leg.challenge":"Estados rivales: contemplad a nuestros campeones y desesperad.","leg.recruit":"¿Quieres estar entre leyendas? El Estado 3139 recluta a los ambiciosos, los implacables, los imparables.","leg.join":"Únete a los más fuertes","met.title":"Campeones del Rompecabezas Meteoro","vic.title":"Estado 3139 · Victorias en Batalla de Castillo","vic.count":"victorias consecutivas","vic.win":"VICTORIA",
     "home.about.t":"Sobre el Estado 3139","home.about.p":"Un estado activo y competitivo en Whiteout Survival — hogar de muchas alianzas que trabajan, luchan y crecen juntas. Este es el centro común: encuentra tu alianza, sigue los eventos y crea tu página.",
     "home.quick":"Vistazo rápido","home.s1":"Alianzas","home.s2":"Destacada","home.s3":"Idiomas",
     "home.how.t":"Cómo funciona","home.how.p":"Tres capas, una comunidad:","home.layer1":"Página de estado (estás aquí)","home.layer2":"Páginas de alianza","home.layer3":"Páginas de jugador",
@@ -317,6 +510,7 @@ const I18N = {
   ko:{name:"한국어",dir:"ltr",t:{
     "realm":"왕국에 입장","hero.sub":"수많은 동맹. 수천 명의 플레이어. 하나의 겨울.","hero.tag":"모든 서버에 집이, 모든 동맹에 깃발이, 모든 플레이어에 페이지가.","hero.winter":"Whiteout Survival · 커뮤니티 허브",
     "tab.home":"홈","tab.alliances":"동맹","tab.events":"이벤트","tab.castles":"성","tab.welcome":"환영",
+    "tab.legends":"전설","leg.title":"지구본 군주의 전당","leg.sub":"서리 구체 VI · 3139 주의 최고 영예","leg.intro":"오직 진정한 군주만이 우주의 정상에 오른다. 이 세 거인은 비할 데 없는 힘과 불멸의 의지로 3139 주에 영원한 영광을 가져왔다.","leg.challenge":"라이벌 주들이여: 우리의 챔피언을 보고 절망하라.","leg.recruit":"전설들과 함께 서고 싶은가? 3139 주는 야망 있고, 끈질기고, 멈출 수 없는 자를 모집한다.","leg.join":"최강자와 함께","met.title":"메테오 퍼즐 챔피언","vic.title":"3139 주 · 성 전투 승리","vic.count":"연속 승리","vic.win":"승리",
     "home.about.t":"서버 3139 소개","home.about.p":"Whiteout Survival의 활발하고 경쟁적인 서버 — 함께 일하고 싸우고 성장하는 여러 동맹의 보금자리. 여기는 공동 허브입니다: 동맹을 찾고, 이벤트를 추적하고, 페이지를 만드세요.",
     "home.quick":"한눈에 보기","home.s1":"동맹","home.s2":"추천","home.s3":"언어",
     "home.how.t":"작동 방식","home.how.p":"세 개의 층, 하나의 커뮤니티:","home.layer1":"서버 페이지 (현재 위치)","home.layer2":"동맹 페이지","home.layer3":"플레이어 페이지",
@@ -329,6 +523,7 @@ const I18N = {
   ja:{name:"日本語",dir:"ltr",t:{
     "realm":"領域へ入る","hero.sub":"多くの同盟。数千のプレイヤー。一つの冬。","hero.tag":"すべてのステートに家を、すべての同盟に旗を、すべてのプレイヤーにページを。","hero.winter":"Whiteout Survival · コミュニティハブ",
     "tab.home":"ホーム","tab.alliances":"同盟","tab.events":"イベント","tab.castles":"城","tab.welcome":"ようこそ",
+    "tab.legends":"伝説","leg.title":"グローブ覇者の殿堂","leg.sub":"フロストスフィアVI · 3139ステート最高の栄誉","leg.intro":"真の覇者のみが宇宙の頂点に立つ。この三人の巨人は、比類なき力と不滅の意志で、3139ステートに永遠の栄光をもたらした。","leg.challenge":"ライバルステートよ、我らの英雄を見て絶望せよ。","leg.recruit":"伝説と肩を並べたいか？3139ステートは野心的で、執念深く、止められない者を募集している。","leg.join":"最強に加わる","met.title":"メテオパズル王者","vic.title":"3139ステート · 城バトル勝利","vic.count":"連続勝利","vic.win":"勝利",
     "home.about.t":"ステート3139について","home.about.p":"Whiteout Survivalの活発で競争的なステート — 共に働き、戦い、成長する多くの同盟の本拠地。ここは共有ハブです：同盟を見つけ、イベントを追跡し、ページを作りましょう。",
     "home.quick":"概要","home.s1":"同盟","home.s2":"注目","home.s3":"言語",
     "home.how.t":"仕組み","home.how.p":"3つの層、一つのコミュニティ：","home.layer1":"ステートページ（現在地）","home.layer2":"同盟ページ","home.layer3":"プレイヤーページ",
@@ -341,6 +536,7 @@ const I18N = {
   "zh-Hant":{name:"繁體中文",dir:"ltr",t:{
     "realm":"進入領域","hero.sub":"眾多聯盟。數千玩家。同一個寒冬。","hero.tag":"每個州都有家，每個聯盟都有旗幟，每位玩家都有頁面。","hero.winter":"Whiteout Survival · 社群中心",
     "tab.home":"首頁","tab.alliances":"聯盟","tab.events":"活動","tab.castles":"城堡","tab.welcome":"歡迎",
+    "tab.legends":"傳奇","leg.title":"寰宇霜球·至尊殿堂","leg.sub":"霜球VI · 3139州至高榮耀","leg.intro":"唯有真正的王者方能登臨寰宇之巔。此三位巨擘，以無雙之力與不朽之志，為3139州贏得永恆榮光。","leg.challenge":"群雄逐鹿，唯我獨尊。敵州仰望我等英豪，唯有絕望。","leg.recruit":"欲與傳奇並肩？3139州廣納雄心壯志、堅韌不拔、勢不可擋之士。","leg.join":"加入最強者","met.title":"流星拼圖群英","vic.title":"3139州 · 城堡爭奪戰績","vic.count":"連勝","vic.win":"勝",
     "home.about.t":"關於3139州","home.about.p":"Whiteout Survival中活躍而競爭的州——眾多聯盟一同工作、戰鬥與成長的家。這裡是共享中心：找到你的聯盟、追蹤活動、建立你的頁面。",
     "home.quick":"快速一覽","home.s1":"聯盟","home.s2":"精選","home.s3":"語言",
     "home.how.t":"運作方式","home.how.p":"三層，一個社群：","home.layer1":"州頁面（你在這裡）","home.layer2":"聯盟頁面","home.layer3":"玩家頁面",
@@ -353,6 +549,7 @@ const I18N = {
   "zh-Hans":{name:"简体中文",dir:"ltr",t:{
     "realm":"进入领域","hero.sub":"众多联盟。数千玩家。同一个寒冬。","hero.tag":"每个服都有家，每个联盟都有旗帜，每位玩家都有页面。","hero.winter":"Whiteout Survival · 社区中心",
     "tab.home":"首页","tab.alliances":"联盟","tab.events":"活动","tab.castles":"城堡","tab.welcome":"欢迎",
+    "tab.legends":"传奇","leg.title":"寰宇霜球·至尊殿堂","leg.sub":"霜球VI · 3139州至高荣耀","leg.intro":"唯有真正的王者方能登临寰宇之巅。此三位巨擘，以无双之力与不朽之志，为3139州赢得永恒荣光。","leg.challenge":"群雄逐鹿，唯我独尊。敌州仰望我等英豪，唯有绝望。","leg.recruit":"欲与传奇并肩？3139州广纳雄心壮志、坚韧不拔、势不可挡之士。","leg.join":"加入最强者","met.title":"流星拼图群英","vic.title":"3139州 · 城堡争夺战绩","vic.count":"连胜","vic.win":"胜",
     "home.about.t":"关于3139服","home.about.p":"Whiteout Survival中活跃而竞争的服——众多联盟一同工作、战斗与成长的家。这里是共享中心：找到你的联盟、追踪活动、创建你的页面。",
     "home.quick":"快速一览","home.s1":"联盟","home.s2":"精选","home.s3":"语言",
     "home.how.t":"运作方式","home.how.p":"三层，一个社区：","home.layer1":"服页面（你在这里）","home.layer2":"联盟页面","home.layer3":"玩家页面",
@@ -365,6 +562,7 @@ const I18N = {
   de:{name:"Deutsch",dir:"ltr",t:{
     "realm":"Betritt das Reich","hero.sub":"Viele Allianzen. Tausende Spieler. Ein Winter.","hero.tag":"Jeder Staat hat ein Zuhause. Jede Allianz ein Banner. Jeder Spieler eine Seite.","hero.winter":"Whiteout Survival · Community-Hub",
     "tab.home":"Start","tab.alliances":"Allianzen","tab.events":"Events","tab.castles":"Burgen","tab.welcome":"Willkommen",
+    "tab.legends":"Legenden","leg.title":"Halle der Globus-Herrscher","leg.sub":"Frostsphäre VI · Die höchste Ehre in Staat 3139","leg.intro":"Nur wahre Herrscher erklimmen den Gipfel des Kosmos. Diese drei Titanen haben mit unvergleichlicher Macht ewigen Ruhm für Staat 3139 errungen.","leg.challenge":"Rivalisierende Staaten: seht unsere Champions und verzweifelt.","leg.recruit":"Willst du unter Legenden stehen? Staat 3139 rekrutiert die Ehrgeizigen und Unaufhaltsamen.","leg.join":"Schließ dich den Stärksten an","met.title":"Meteor-Puzzle-Champions","vic.title":"Staat 3139 · Burgenkampf-Siege","vic.count":"Siege in Folge","vic.win":"SIEG",
     "home.about.t":"Über Staat 3139","home.about.p":"Ein aktiver, kompetitiver Staat in Whiteout Survival — Heimat vieler Allianzen, die zusammen arbeiten, kämpfen und wachsen. Dies ist der gemeinsame Hub: Finde deine Allianz, verfolge Events und erstelle deine Seite.",
     "home.quick":"Überblick","home.s1":"Allianzen","home.s2":"Vorgestellt","home.s3":"Sprachen",
     "home.how.t":"So funktioniert's","home.how.p":"Drei Ebenen, eine Community:","home.layer1":"Staatsseite (du bist hier)","home.layer2":"Allianzseiten","home.layer3":"Spielerseiten",
@@ -377,6 +575,7 @@ const I18N = {
   fr:{name:"Français",dir:"ltr",t:{
     "realm":"Entre dans le Royaume","hero.sub":"De nombreuses alliances. Des milliers de joueurs. Un seul hiver.","hero.tag":"Chaque état a un foyer. Chaque alliance, une bannière. Chaque joueur, une page.","hero.winter":"Whiteout Survival · Hub communautaire",
     "tab.home":"Accueil","tab.alliances":"Alliances","tab.events":"Événements","tab.castles":"Châteaux","tab.welcome":"Bienvenue",
+    "tab.legends":"Légendes","leg.title":"Hall des Souverains du Globe","leg.sub":"Sphère de Givre VI · Le plus grand honneur de l'État 3139","leg.intro":"Seuls les vrais souverains atteignent le sommet du cosmos. Ces trois titans ont conquis une gloire éternelle pour l'État 3139.","leg.challenge":"États rivaux : contemplez nos champions et désespérez.","leg.recruit":"Veux-tu côtoyer les légendes ? L'État 3139 recrute les ambitieux et les inarrêtables.","leg.join":"Rejoins les plus forts","met.title":"Champions du Puzzle Météore","vic.title":"État 3139 · Victoires de Bataille de Château","vic.count":"victoires consécutives","vic.win":"VICTOIRE",
     "home.about.t":"À propos de l'État 3139","home.about.p":"Un état actif et compétitif dans Whiteout Survival — foyer de nombreuses alliances qui travaillent, combattent et grandissent ensemble. Voici le hub commun : trouve ton alliance, suis les événements et crée ta page.",
     "home.quick":"Aperçu","home.s1":"Alliances","home.s2":"À la une","home.s3":"Langues",
     "home.how.t":"Comment ça marche","home.how.p":"Trois couches, une communauté :","home.layer1":"Page d'état (tu es ici)","home.layer2":"Pages d'alliance","home.layer3":"Pages de joueur",
@@ -389,6 +588,7 @@ const I18N = {
   ar:{name:"العربية",dir:"rtl",t:{
     "realm":"ادخل المملكة","hero.sub":"تحالفات كثيرة. آلاف اللاعبين. شتاء واحد.","hero.tag":"لكل ولاية بيت. لكل تحالف راية. لكل لاعب صفحة.","hero.winter":"Whiteout Survival · مركز المجتمع",
     "tab.home":"الرئيسية","tab.alliances":"التحالفات","tab.events":"الأحداث","tab.castles":"القلاع","tab.welcome":"ترحيب",
+    "tab.legends":"الأساطير","leg.title":"قاعة سادة الكرة الأرضية","leg.sub":"كرة الصقيع VI · أعلى شرف في الولاية 3139","leg.intro":"وحدهم السادة الحقيقيون يصعدون إلى قمة الكون. هؤلاء العمالقة الثلاثة حققوا مجداً أبدياً للولاية 3139.","leg.challenge":"أيتها الولايات المنافسة: انظري إلى أبطالنا واستسلمي لليأس.","leg.recruit":"هل تريد الوقوف بين الأساطير؟ الولاية 3139 تجند الطموحين الذين لا يُوقفون.","leg.join":"انضم إلى الأقوى","met.title":"أبطال أحجية النيزك","vic.title":"الولاية 3139 · انتصارات معركة القلعة","vic.count":"انتصارات متتالية","vic.win":"فوز",
     "home.about.t":"عن الولاية 3139","home.about.p":"ولاية نشطة وتنافسية في Whiteout Survival — موطن لتحالفات عديدة تعمل وتقاتل وتنمو معًا. هذا هو المركز المشترك: اعثر على تحالفك، وتابع الأحداث، وأنشئ صفحتك.",
     "home.quick":"نظرة سريعة","home.s1":"تحالفات","home.s2":"مميّز","home.s3":"لغات",
     "home.how.t":"كيف يعمل","home.how.p":"ثلاث طبقات، مجتمع واحد:","home.layer1":"صفحة الولاية (أنت هنا)","home.layer2":"صفحات التحالف","home.layer3":"صفحات اللاعبين",
@@ -401,6 +601,7 @@ const I18N = {
   ru:{name:"Русский",dir:"ltr",t:{
     "realm":"Войти в Королевство","hero.sub":"Множество альянсов. Тысячи игроков. Одна зима.","hero.tag":"У каждого штата есть дом. У каждого альянса — знамя. У каждого игрока — страница.","hero.winter":"Whiteout Survival · Центр сообщества",
     "tab.home":"Главная","tab.alliances":"Альянсы","tab.events":"События","tab.castles":"Замки","tab.welcome":"Добро пожаловать",
+    "tab.legends":"Легенды","leg.title":"Зал Властелинов Сферы","leg.sub":"Морозная Сфера VI · Высшая честь Штата 3139","leg.intro":"Лишь истинные властелины восходят на вершину космоса. Эти три титана завоевали вечную славу для Штата 3139.","leg.challenge":"Враждебные штаты: взгляните на наших чемпионов и отчайтесь.","leg.recruit":"Хочешь встать в ряды легенд? Штат 3139 набирает амбициозных и неудержимых.","leg.join":"Присоединяйся к сильнейшим","met.title":"Чемпионы Метеорной Головоломки","vic.title":"Штат 3139 · Победы в Битве за Замок","vic.count":"побед подряд","vic.win":"ПОБЕДА",
     "home.about.t":"О штате 3139","home.about.p":"Активный конкурентный штат в Whiteout Survival — дом для многих альянсов, которые вместе работают, сражаются и растут. Это общий центр: найдите свой альянс, следите за событиями и создайте свою страницу.",
     "home.quick":"Кратко","home.s1":"Альянсов","home.s2":"В центре внимания","home.s3":"Языков",
     "home.how.t":"Как это работает","home.how.p":"Три уровня, одно сообщество:","home.layer1":"Страница штата (вы здесь)","home.layer2":"Страницы альянсов","home.layer3":"Страницы игроков",
@@ -413,6 +614,7 @@ const I18N = {
   tr:{name:"Türkçe",dir:"ltr",t:{
     "realm":"Diyâra Gir","hero.sub":"Birçok ittifak. Binlerce oyuncu. Tek bir kış.","hero.tag":"Her eyaletin bir evi vardır. Her ittifakın bir sancağı. Her oyuncunun bir sayfası.","hero.winter":"Whiteout Survival · Topluluk merkezi",
     "tab.home":"Ana sayfa","tab.alliances":"İttifaklar","tab.events":"Etkinlikler","tab.castles":"Kaleler","tab.welcome":"Hoş geldin",
+    "tab.legends":"Efsaneler","leg.title":"Küre Hükümdarları Salonu","leg.sub":"Buz Küresi VI · Eyalet 3139'un en yüksek onuru","leg.intro":"Yalnızca gerçek hükümdarlar kozmosun zirvesine çıkar. Bu üç dev, Eyalet 3139 için sonsuz şan kazandı.","leg.challenge":"Rakip eyaletler: şampiyonlarımıza bakın ve umutsuzluğa kapılın.","leg.recruit":"Efsanelerin arasında durmak ister misin? Eyalet 3139 hırslı ve durdurulamaz olanları topluyor.","leg.join":"En güçlülere katıl","met.title":"Meteor Bulmaca Şampiyonları","vic.title":"Eyalet 3139 · Kale Savaşı Zaferleri","vic.count":"ardışık zafer","vic.win":"ZAFER",
     "home.about.t":"Eyalet 3139 hakkında","home.about.p":"Whiteout Survival'da aktif ve rekabetçi bir eyalet — birlikte çalışan, savaşan ve büyüyen birçok ittifakın evi. Burası ortak merkez: ittifakını bul, etkinlikleri takip et ve sayfanı oluştur.",
     "home.quick":"Hızlı bakış","home.s1":"İttifak","home.s2":"Öne çıkan","home.s3":"Dil",
     "home.how.t":"Nasıl çalışır","home.how.p":"Üç katman, tek topluluk:","home.layer1":"Eyalet sayfası (buradasın)","home.layer2":"İttifak sayfaları","home.layer3":"Oyuncu sayfaları",
@@ -425,6 +627,7 @@ const I18N = {
   it:{name:"Italiano",dir:"ltr",t:{
     "realm":"Entra nel Regno","hero.sub":"Molte alleanze. Migliaia di giocatori. Un solo inverno.","hero.tag":"Ogni stato ha una casa. Ogni alleanza, uno stendardo. Ogni giocatore, una pagina.","hero.winter":"Whiteout Survival · Hub della community",
     "tab.home":"Home","tab.alliances":"Alleanze","tab.events":"Eventi","tab.castles":"Castelli","tab.welcome":"Benvenuto",
+    "tab.legends":"Leggende","leg.title":"Sala dei Sovrani del Globo","leg.sub":"Sfera di Gelo VI · Il massimo onore dello Stato 3139","leg.intro":"Solo i veri sovrani ascendono alla vetta del cosmo. Questi tre titani hanno conquistato gloria eterna per lo Stato 3139.","leg.challenge":"Stati rivali: guardate i nostri campioni e disperate.","leg.recruit":"Vuoi stare tra le leggende? Lo Stato 3139 recluta gli ambiziosi e gli inarrestabili.","leg.join":"Unisciti ai più forti","met.title":"Campioni del Puzzle Meteora","vic.title":"Stato 3139 · Vittorie Battaglia del Castello","vic.count":"vittorie consecutive","vic.win":"VITTORIA",
     "home.about.t":"Sullo Stato 3139","home.about.p":"Uno stato attivo e competitivo in Whiteout Survival — casa di molte alleanze che lavorano, combattono e crescono insieme. Questo è l'hub condiviso: trova la tua alleanza, segui gli eventi e crea la tua pagina.",
     "home.quick":"Sguardo rapido","home.s1":"Alleanze","home.s2":"In evidenza","home.s3":"Lingue",
     "home.how.t":"Come funziona","home.how.p":"Tre livelli, una community:","home.layer1":"Pagina dello stato (sei qui)","home.layer2":"Pagine delle alleanze","home.layer3":"Pagine dei giocatori",
@@ -437,6 +640,7 @@ const I18N = {
   pl:{name:"Polski",dir:"ltr",t:{
     "realm":"Wejdź do Królestwa","hero.sub":"Wiele sojuszy. Tysiące graczy. Jedna zima.","hero.tag":"Każdy stan ma dom. Każdy sojusz — sztandar. Każdy gracz — stronę.","hero.winter":"Whiteout Survival · Centrum społeczności",
     "tab.home":"Start","tab.alliances":"Sojusze","tab.events":"Wydarzenia","tab.castles":"Zamki","tab.welcome":"Witaj",
+    "tab.legends":"Legendy","leg.title":"Sala Władców Globu","leg.sub":"Lodowa Sfera VI · Najwyższy zaszczyt Stanu 3139","leg.intro":"Tylko prawdziwi władcy wznoszą się na szczyt kosmosu. Ci trzej tytani zdobyli wieczną chwałę dla Stanu 3139.","leg.challenge":"Rywalizujące stany: spójrzcie na naszych mistrzów i rozpaczajcie.","leg.recruit":"Chcesz stanąć wśród legend? Stan 3139 rekrutuje ambitnych i niepowstrzymanych.","leg.join":"Dołącz do najsilniejszych","met.title":"Mistrzowie Meteorowej Układanki","vic.title":"Stan 3139 · Zwycięstwa w Bitwie o Zamek","vic.count":"zwycięstw z rzędu","vic.win":"WYGRANA",
     "home.about.t":"O stanie 3139","home.about.p":"Aktywny, konkurencyjny stan w Whiteout Survival — dom wielu sojuszy, które razem pracują, walczą i rosną. To wspólne centrum: znajdź swój sojusz, śledź wydarzenia i utwórz swoją stronę.",
     "home.quick":"Szybki przegląd","home.s1":"Sojusze","home.s2":"Wyróżniony","home.s3":"Języki",
     "home.how.t":"Jak to działa","home.how.p":"Trzy warstwy, jedna społeczność:","home.layer1":"Strona stanu (jesteś tu)","home.layer2":"Strony sojuszy","home.layer3":"Strony graczy",
@@ -449,6 +653,7 @@ const I18N = {
   pt:{name:"Português",dir:"ltr",t:{
     "realm":"Entre no Reino","hero.sub":"Muitas alianças. Milhares de jogadores. Um só inverno.","hero.tag":"Cada estado tem um lar. Cada aliança, um estandarte. Cada jogador, uma página.","hero.winter":"Whiteout Survival · Centro da comunidade",
     "tab.home":"Início","tab.alliances":"Alianças","tab.events":"Eventos","tab.castles":"Castelos","tab.welcome":"Bem-vindo",
+    "tab.legends":"Lendas","leg.title":"Salão dos Soberanos do Globo","leg.sub":"Esfera de Gelo VI · A maior honra do Estado 3139","leg.intro":"Apenas verdadeiros soberanos alcançam o cume do cosmos. Estes três titãs conquistaram glória eterna para o Estado 3139.","leg.challenge":"Estados rivais: contemplem nossos campeões e desesperem.","leg.recruit":"Quer estar entre lendas? O Estado 3139 recruta os ambiciosos e imparáveis.","leg.join":"Junte-se aos mais fortes","met.title":"Campeões do Quebra-Cabeça Meteoro","vic.title":"Estado 3139 · Vitórias na Batalha do Castelo","vic.count":"vitórias consecutivas","vic.win":"VITÓRIA",
     "home.about.t":"Sobre o Estado 3139","home.about.p":"Um estado ativo e competitivo em Whiteout Survival — lar de muitas alianças que trabalham, lutam e crescem juntas. Este é o centro compartilhado: encontre sua aliança, acompanhe eventos e crie sua página.",
     "home.quick":"Visão rápida","home.s1":"Alianças","home.s2":"Destaque","home.s3":"Idiomas",
     "home.how.t":"Como funciona","home.how.p":"Três camadas, uma comunidade:","home.layer1":"Página do estado (você está aqui)","home.layer2":"Páginas de aliança","home.layer3":"Páginas de jogador",
@@ -461,6 +666,7 @@ const I18N = {
   th:{name:"ไทย",dir:"ltr",t:{
     "realm":"เข้าสู่อาณาจักร","hero.sub":"พันธมิตรมากมาย ผู้เล่นนับพัน ฤดูหนาวเดียว","hero.tag":"ทุกรัฐมีบ้าน ทุกพันธมิตรมีธง ทุกผู้เล่นมีหน้าของตัวเอง","hero.winter":"Whiteout Survival · ศูนย์กลางชุมชน",
     "tab.home":"หน้าแรก","tab.alliances":"พันธมิตร","tab.events":"กิจกรรม","tab.castles":"ปราสาท","tab.welcome":"ยินดีต้อนรับ",
+    "tab.legends":"ตำนาน","leg.title":"หอเกียรติยศเจ้าแห่งโลก","leg.sub":"Frost Sphere VI · เกียรติสูงสุดของรัฐ 3139","leg.intro":"มีเพียงผู้ปกครองที่แท้จริงเท่านั้นที่ขึ้นสู่จุดสูงสุดของจักรวาล สามยักษ์ใหญ่นี้ได้นำเกียรติยศนิรันดร์มาสู่รัฐ 3139","leg.challenge":"รัฐคู่แข่ง: จงมองดูแชมเปี้ยนของเราและสิ้นหวัง","leg.recruit":"อยากยืนเคียงข้างตำนานไหม? รัฐ 3139 กำลังรับสมัครผู้ทะเยอทะยานที่หยุดไม่อยู่","leg.join":"เข้าร่วมกับผู้แข็งแกร่งที่สุด","met.title":"แชมป์ปริศนาอุกกาบาต","vic.title":"รัฐ 3139 · ชัยชนะศึกปราสาท","vic.count":"ชนะติดต่อกัน","vic.win":"ชนะ",
     "home.about.t":"เกี่ยวกับรัฐ 3139","home.about.p":"รัฐที่กระตือรือร้นและแข่งขันใน Whiteout Survival — บ้านของพันธมิตรมากมายที่ทำงาน ต่อสู้ และเติบโตไปด้วยกัน นี่คือศูนย์กลางร่วม: ค้นหาพันธมิตรของคุณ ติดตามกิจกรรม และสร้างหน้าของคุณ",
     "home.quick":"ดูอย่างรวดเร็ว","home.s1":"พันธมิตร","home.s2":"แนะนำ","home.s3":"ภาษา",
     "home.how.t":"ทำงานอย่างไร","home.how.p":"สามชั้น หนึ่งชุมชน:","home.layer1":"หน้ารัฐ (คุณอยู่ที่นี่)","home.layer2":"หน้าพันธมิตร","home.layer3":"หน้าผู้เล่น",
@@ -473,6 +679,7 @@ const I18N = {
   id:{name:"Indonesia",dir:"ltr",t:{
     "realm":"Masuki Dunia","hero.sub":"Banyak aliansi. Ribuan pemain. Satu musim dingin.","hero.tag":"Setiap state punya rumah. Setiap aliansi, panji. Setiap pemain, halaman.","hero.winter":"Whiteout Survival · Pusat komunitas",
     "tab.home":"Beranda","tab.alliances":"Aliansi","tab.events":"Acara","tab.castles":"Kastil","tab.welcome":"Selamat datang",
+    "tab.legends":"Legenda","leg.title":"Aula Penguasa Globe","leg.sub":"Frost Sphere VI · Kehormatan tertinggi Negara 3139","leg.intro":"Hanya penguasa sejati yang mencapai puncak kosmos. Ketiga raksasa ini telah memenangkan kemuliaan abadi untuk Negara 3139.","leg.challenge":"Negara saingan: pandanglah juara kami dan putus asalah.","leg.recruit":"Ingin berdiri di antara legenda? Negara 3139 merekrut yang ambisius dan tak terbendung.","leg.join":"Bergabung dengan yang terkuat","met.title":"Juara Teka-Teki Meteor","vic.title":"Negara 3139 · Kemenangan Pertempuran Kastil","vic.count":"kemenangan beruntun","vic.win":"MENANG",
     "home.about.t":"Tentang State 3139","home.about.p":"State yang aktif dan kompetitif di Whiteout Survival — rumah bagi banyak aliansi yang bekerja, bertarung, dan tumbuh bersama. Ini pusat bersama: temukan aliansimu, pantau acara, dan buat halamanmu.",
     "home.quick":"Sekilas","home.s1":"Aliansi","home.s2":"Unggulan","home.s3":"Bahasa",
     "home.how.t":"Cara kerja","home.how.p":"Tiga lapisan, satu komunitas:","home.layer1":"Halaman state (kamu di sini)","home.layer2":"Halaman aliansi","home.layer3":"Halaman pemain",
@@ -514,6 +721,8 @@ function applyLang(){
   $('#langLabel').textContent=LANG.toUpperCase().replace('ZH-HANT','繁').replace('ZH-HANS','简');
   langMenu.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.code===LANG));
   const wq=$('#welQt'); if(LANG==='en'||!WEEDS_TR[LANG]){ wq.textContent=''; wq.classList.remove('show'); } else { wq.textContent=WEEDS_TR[LANG]; wq.classList.add('show'); }
+  if(typeof renderGlobePlayers==='function') renderGlobePlayers();
+  if(typeof renderVictories==='function') renderVictories();
 }
 
 // tabs
@@ -542,6 +751,103 @@ function tick(){
   }
 }
 setInterval(tick,1000); tick();
+
+// ── GLOBE PLAYERS (Legends tab) ───────────────────────────────
+const GLOBE_BASE='https://vghutrfcrqgelvgdeesl.supabase.co/storage/v1/object/public/Images/legends/';
+const GLOBE_PLAYERS=[
+  {
+    rank:1, name:'Hello 小漫旅途', tag:'AAA', id:'511501571', power:'855.0M',
+    img:'av_globe_hello.png',
+    honorZh:'独占鳌头，威震八方',
+    honorTr:{en:'Crowned first — power that shakes all eight directions.',es:'El primero coronado — un poder que estremece los ocho rumbos.',fr:'Couronné premier — une puissance qui ébranle les huit directions.',ko:'정상에 오른 자 — 사방을 뒤흔드는 힘.',ja:'頂点に立つ者 — 八方を揺るがす力。',pl:'Pierwszy na szczycie — moc, która wstrząsa ośmioma stronami świata.','zh-Hant':'獨占鰲頭，威震八方','zh-Hans':'独占鳌头，威震八方'}
+  },
+  {
+    rank:2, name:'憶切都是最好的安排', tag:'AAA', id:'509011136', power:'725.0M',
+    img:'av_globe_yiqie.png',
+    honorZh:'运筹帷幄，势不可挡',
+    honorTr:{en:'Master strategist — an unstoppable force.',es:'Estratega maestro — una fuerza imparable.',fr:'Stratège hors pair — une force imparable.',ko:'전략의 대가 — 막을 수 없는 힘.',ja:'戦略の達人 — 止められない力。',pl:'Mistrz strategii — siła nie do powstrzymania.','zh-Hant':'運籌帷幄，勢不可擋','zh-Hans':'运筹帷幄，势不可挡'}
+  },
+  {
+    rank:3, name:'LIBRASTAR', tag:'AAA', id:'504665382', power:'634.0M',
+    img:'av_globe_librastar.png',
+    honorZh:'坚如磐石，傲视群雄',
+    honorTr:{en:'Steadfast as stone — towering above all rivals.',es:'Firme como la roca — se alza por encima de todos.',fr:'Inébranlable comme le roc — au-dessus de tous les rivaux.',ko:'바위처럼 굳건히 — 모든 적을 내려다보다.',ja:'岩のごとく揺るがず — 全ての敵を見下ろす。',pl:'Twardy jak skała — góruje nad wszystkimi rywalami.','zh-Hant':'堅如磐石，傲視群雄','zh-Hans':'坚如磐石，傲视群雄'}
+  }
+];
+function renderGlobePlayers(){
+  const wrap=document.getElementById('globePlayers');
+  if(!wrap)return;
+  const lang=(typeof LANG!=='undefined')?LANG:'en';
+  wrap.innerHTML=GLOBE_PLAYERS.map(p=>{
+    const honorTr=p.honorTr[lang]||p.honorTr.en;
+    return `<div class="globe-card rank-${p.rank}">
+      <div class="globe-card-rankbadge">${p.rank}</div>
+      <div class="globe-card-body">
+        <div class="globe-card-img"><img src="${GLOBE_BASE}${p.img}" alt="${p.name}" onerror="this.parentElement.style.display='none'"></div>
+        <div class="globe-card-info">
+          <div class="globe-card-name">${p.name}</div>
+          <div class="globe-card-tag">[${p.tag}]</div>
+          <div class="globe-card-id">ID ${p.id}</div>
+          <div class="globe-card-power"><span class="pv">${p.power}</span><span class="pl">Power</span></div>
+          <div class="globe-card-honor">
+            <div class="globe-card-honor-zh">${p.honorZh}</div>
+            <div class="globe-card-honor-tr">${honorTr}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderGlobePlayers();
+
+// ── METEOR PUZZLE CHAMPIONS ───────────────────────────────────
+const METEOR_PLAYERS=[
+  {name:'Hello Ida', tag:'AAA', power:'541.7M', img:'av_meteor_ida.png'},
+  {name:'Hsuan', tag:'AAA', power:'456.4M', img:null},
+  {name:'我佛慈悲', tag:'TWN', power:'420.2M', img:null},
+  {name:'Hello zzz', tag:'AAA', power:'376.6M', img:null}
+];
+function renderMeteorPlayers(){
+  const list=document.getElementById('meteorList');
+  if(!list)return;
+  list.innerHTML=METEOR_PLAYERS.map(p=>{
+    const av = p.img
+      ? `<div class="m-av"><img src="${GLOBE_BASE}${p.img}" alt="${p.name}" onerror="this.parentElement.innerHTML='<span class=\\'m-initial\\'>'+${JSON.stringify(p.name.slice(0,1))}+'</span>'"></div>`
+      : `<div class="m-av"><span class="m-initial">${p.name.slice(0,1)}</span></div>`;
+    return `<div class="meteor-row">
+      ${av}
+      <div class="m-info"><div class="m-name">${p.name}</div><div class="m-tag">[${p.tag}]</div></div>
+      <div class="m-power">${p.power}</div>
+    </div>`;
+  }).join('');
+}
+renderMeteorPlayers();
+
+// ── STATE VICTORIES (SvS castle battles) ──────────────────────
+const STATE_VICTORIES=[
+  {them:'#3106', date:'2026/06/20'},
+  {them:'#3145', date:'2026/05/23'},
+  {them:'#3157', date:'2026/04/25'},
+  {them:'#3174', date:'2026/01/31'},
+  {them:'#3158', date:'2026/01/03'},
+  {them:'#3121', date:'2025/12/06'},
+  {them:'#3104', date:'2025/10/11'}
+];
+function renderVictories(){
+  const list=document.getElementById('victoriesList');
+  if(!list)return;
+  const cnt=document.getElementById('victoryCount');
+  if(cnt)cnt.textContent=STATE_VICTORIES.length;
+  const winWord=(I18N[LANG]&&I18N[LANG].t['vic.win'])||'WIN';
+  list.innerHTML=STATE_VICTORIES.map(v=>`<div class="victory-row">
+    <span class="vr-us">#3139</span>
+    <span class="vr-vs">vs</span>
+    <span class="vr-them">${v.them}</span>
+    <span class="vr-win">${winWord}</span>
+    <span class="vr-date">${v.date}</span>
+  </div>`).join('');
+}
+renderVictories();
 applyLang();
 
 // ── SUPABASE: load alliances + show admin btn ─────────────────
@@ -576,7 +882,7 @@ applyLang();
     // Add PXR visit button
     const btn=document.createElement('div');
     btn.style='text-align:center;margin-top:14px;';
-    btn.innerHTML=`<a href="phoenix-alliance.html?tag=PXR" class="btn btn-blue">Visit PXR page</a>`;
+    btn.innerHTML=`<a href="./phoenix-alliance.html?tag=PXR" class="btn btn-blue">Visit PXR page</a>`;
     container.appendChild(btn);
   }
 
@@ -628,10 +934,10 @@ applyLang();
 </script>
 
 <nav class="botnav">
-  <a href="phoenix-state.html" class="active"><span class="ic">🗺️</span>3139</a>
+  <a href="./phoenix-state.html" class="active"><span class="ic">🗺️</span>3139</a>
   <a href="phoenix-alliance.html"><img class="ic" src="data:image/jpeg;base64,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" style="width:1.5rem;height:1.5rem;border-radius:6px;object-fit:cover;display:block;margin:0 auto 1px;">PXR</a>
-  <a href="phoenix-profile.html"><span class="ic">🚪</span>Entrar</a>
-  <a href="phoenix-admin.html" id="adminNavBtn" style="display:none"><span class="ic">🔐</span>Admin</a>
+  <a href="./phoenix-profile.html"><span class="ic">🚪</span>Entrar</a>
+  <a href="./phoenix-admin.html" id="adminNavBtn" style="display:none"><span class="ic">🔐</span>Admin</a>
 </nav>
 
 </body>
