@@ -689,7 +689,8 @@ async function loadProfile(){
         const{data:pb}=await sb.from('player_badges').select('badge_id').eq('player_id',data.id);
         playerBadges=pb?pb.map(p=>p.badge_id):[];
       }catch(badgeErr){console.warn('Badges load failed (non-critical):',badgeErr);playerBadges=[];}
-      renderView(data);show('view');
+      try{ renderView(data); }catch(rvErr){ console.error('renderView failed:',rvErr); }
+      show('view');
     }else{populateAlliances();show('edit');}
   }catch(e){
     console.error('Profile load error:',e);
@@ -899,12 +900,14 @@ function renderGovBadges(leftEl, rightEl, extraWrap, extraGrid, earnedIds){
   if(extraWrap) extraWrap.style.display='none';
 
   // Get all badges that should be shown (earned manual + all non-manual)
-  const visible=badges.filter(b=>!(b.is_manual&&!earnedIds.includes(b.id)));
+  const allBadges=Array.isArray(badges)?badges:[];
+  const ids=Array.isArray(earnedIds)?earnedIds:[];
+  const visible=allBadges.filter(b=>!(b.is_manual&&!ids.includes(b.id)));
   const slotBadges=visible.slice(0,6);
   const extraBadges=visible.slice(6);
 
   function makeSlot(b){
-    const earned=earnedIds.includes(b.id);
+    const earned=ids.includes(b.id);
     const isGold=b.is_manual&&earned;
     const div=document.createElement('div');
     div.className=`gov-slot${isGold?' gold':''}${!earned?' locked':''}`;
@@ -931,7 +934,7 @@ function renderGovBadges(leftEl, rightEl, extraWrap, extraGrid, earnedIds){
   // Extra badges in grid below
   if(extraBadges.length&&extraGrid){
     extraBadges.forEach(b=>{
-      const earned=earnedIds.includes(b.id);
+      const earned=ids.includes(b.id);
       extraGrid.innerHTML+=`<div class="badge ${earned?'':'locked'} ${b.is_manual?'manual':''}"><div class="ic">${b.icon}</div><div class="bn">${b.name}</div><div class="bt">${earned?'✓':'—'}</div></div>`;
     });
     if(extraWrap) extraWrap.style.display='';
