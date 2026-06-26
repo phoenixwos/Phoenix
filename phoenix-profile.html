@@ -908,8 +908,7 @@ function renderGovBadges(leftEl, rightEl, extraWrap, extraGrid, earnedIds){
     const isGold=b.is_manual&&earned;
     const div=document.createElement('div');
     div.className=`gov-slot${isGold?' gold':''}${!earned?' locked':''}`;
-    div.title=b.name+(b.description?'
-'+b.description:'');
+    div.title=b.name+(b.description?' — '+b.description:'');
     div.innerHTML=`<div class="sic">${b.icon}</div><div class="snm">${b.name}</div>`;
     return div;
   }
