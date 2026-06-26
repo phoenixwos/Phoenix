@@ -121,25 +121,26 @@ async function maybeLoadFromSupabase(){
   CONFIG._allianceId=data.id;
 
   if(isPXR){
-    // PXR: saved values take priority, rich hardcoded defaults as fallback
-    CONFIG.motto        = data.motto        ?? CONFIG.motto;
-    CONFIG.power        = data.power        ?? CONFIG.power;
-    CONFIG.stateRank    = data.state_rank   ? '#'+data.state_rank : CONFIG.stateRank;
-    CONFIG.members      = data.members      ?? CONFIG.members;
-    CONFIG.accent       = data.accent       || CONFIG.accent;
+    // PXR: saved values take priority, rich hardcoded defaults as fallback.
+    // Read from top-level column first, then from config object, then hardcoded.
+    CONFIG.motto        = data.motto    || cfg.motto    || CONFIG.motto;
+    CONFIG.power        = data.power    || cfg.power    || CONFIG.power;
+    CONFIG.stateRank    = data.state_rank ? '#'+data.state_rank : (cfg.stateRank || CONFIG.stateRank);
+    CONFIG.members      = data.members  || cfg.members  || CONFIG.members;
+    CONFIG.accent       = data.accent       || cfg.accent       || CONFIG.accent;
     CONFIG.accentDark   = cfg.accentDark    || CONFIG.accentDark;
     CONFIG.accentShadow = cfg.accentShadow  || CONFIG.accentShadow;
-    CONFIG.about        = cfg.about         ?? CONFIG.about;
-    CONFIG.values       = cfg.values        ?? CONFIG.values;
-    CONFIG.quote        = cfg.quote         ?? CONFIG.quote;
-    CONFIG.leaders      = cfg.leaders       ?? CONFIG.leaders;
-    CONFIG.events       = cfg.events        ?? CONFIG.events;
-    CONFIG.rules        = cfg.rules         ?? CONFIG.rules;
-    CONFIG.news         = cfg.news          ?? CONFIG.news;
+    CONFIG.about        = cfg.about         || CONFIG.about;
+    CONFIG.values       = (cfg.values && cfg.values.length)   ? cfg.values  : CONFIG.values;
+    CONFIG.quote        = cfg.quote         || CONFIG.quote;
+    CONFIG.leaders      = (cfg.leaders && cfg.leaders.length) ? cfg.leaders : CONFIG.leaders;
+    CONFIG.events       = (cfg.events && cfg.events.length)   ? cfg.events  : CONFIG.events;
+    CONFIG.rules        = (cfg.rules && cfg.rules.length)     ? cfg.rules   : CONFIG.rules;
+    CONFIG.news         = (cfg.news && cfg.news.length)       ? cfg.news    : CONFIG.news;
     CONFIG.theme        = cfg.theme         || CONFIG.theme;
     CONFIG.logoUrl      = cfg.logoUrl       || CONFIG.logoUrl;
     CONFIG.joinText     = cfg.joinText      || CONFIG.joinText;
-    CONFIG.resell       = cfg.resell        ?? CONFIG.resell;
+    CONFIG.resell       = cfg.resell        || CONFIG.resell;
   } else {
     // Non-PXR: strictly blank — show only what was explicitly saved by the leader
     CONFIG.motto        = data.motto        || '';
