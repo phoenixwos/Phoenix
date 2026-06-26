@@ -1209,86 +1209,125 @@ $('#importCfgFile').addEventListener('change', async(e)=>{
       const nm=wb.SheetNames.find(s=>s.toLowerCase().includes(namePart));
       return nm?XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1,defval:''}):null;
     };
-    // helper: read key/value sheets (Field|Value)
-    const kv=(rows)=>{
+    // Find the real header row index by looking for expected column titles.
+    // Skips title/instruction rows at the top of each sheet.
+    const findHeader=(rows,keywords)=>{
+      if(!rows)return -1;
+      for(let i=0;i<Math.min(rows.length,15);i++){
+        const cells=rows[i].map(c=>String(c||'').trim().toLowerCase());
+        if(keywords.every(k=>cells.some(c=>c===k||c.includes(k)))) return i;
+      }
+      return -1;
+    };
+    // For key/value sheets: read rows after header, treat col0=key col1=value.
+    // Header row has "field" and "value".
+    const kvFromSheet=(rows)=>{
       const map={};
       if(!rows)return map;
-      rows.slice(1).forEach(r=>{ const k=String(r[0]||'').trim().toLowerCase(); if(k) map[k]=String(r[1]||'').trim(); });
+      const h=findHeader(rows,['field','value']);
+      const start=h>=0?h+1:0;
+      for(let i=start;i<rows.length;i++){
+        const k=String(rows[i][0]||'').trim().toLowerCase();
+        // skip instruction/title lines (no value, or key is very long sentence)
+        if(!k || k.length>40) continue;
+        map[k]=String(rows[i][1]||'').trim();
+      }
       return map;
     };
 
     let applied=[];
 
     // 1. Identity
-    const id=kv(getSheet('identity'));
+    const id=kvFromSheet(getSheet('identity'));
     if(Object.keys(id).length){
-      if('tag' in id && id.tag) $('#fTag').value=id.tag;
-      if('alliance name' in id && id['alliance name']) $('#fName').value=id['alliance name'];
+      if(id.tag) $('#fTag').value=id.tag;
+      if(id['alliance name']) $('#fName').value=id['alliance name'];
       if('motto' in id) $('#fMotto').value=id.motto;
       if('power' in id) $('#fPower').value=id.power;
       if('state rank' in id) $('#fRank').value=id['state rank'];
       if('members' in id) $('#fMembers').value=id.members;
       if('about' in id) $('#fAbout').value=id.about;
       if('quote text' in id) $('#fQuote').value=id['quote text'];
-      if('quote author' in id && id['quote author']) $('#fQuoteBy').value=id['quote author'];
+      if(id['quote author']) $('#fQuoteBy').value=id['quote author'];
       applied.push('Identity');
     }
 
     // 2. Style
-    const st=kv(getSheet('style'));
+    const st=kvFromSheet(getSheet('style'));
     if(Object.keys(st).length){
-      if('theme' in st && st.theme){ setThemeUI(st.theme.toLowerCase()); }
-      if('accent color' in st && st['accent color']){ $('#fAccent').value=st['accent color']; updateSwatches(); }
+      if(st.theme){ setThemeUI(st.theme.toLowerCase()); }
+      if(st['accent color']){ $('#fAccent').value=st['accent color']; updateSwatches(); }
       if('logo url' in st){ $('#fLogoUrl').value=st['logo url']; $('#fLogoUrl').dispatchEvent(new Event('input')); }
       applied.push('Style');
     }
 
-    // 3. Leaders
+    // 3. Leaders — header has name/rank/role
     const ldr=getSheet('leaders');
-    if(ldr && ldr.length>1){
-      const list=$('#leaderList'); list.innerHTML='';
-      ldr.slice(1).filter(r=>String(r[0]||'').trim()).forEach((r,i)=>{
-        const d=document.createElement('div');
-        d.innerHTML=leaderHTML(i,{name:String(r[0]||'').trim(),rank:String(r[1]||'R4').trim(),role:String(r[2]||'').trim()});
-        list.appendChild(d.firstElementChild);
-      });
-      applied.push('Leaders');
+    if(ldr){
+      const h=findHeader(ldr,['name','rank','role']);
+      if(h>=0){
+        const list=$('#leaderList'); list.innerHTML=''; let n=0;
+        for(let i=h+1;i<ldr.length;i++){
+          const name=String(ldr[i][0]||'').trim();
+          if(!name) continue;
+          const d=document.createElement('div');
+          d.innerHTML=leaderHTML(n,{name,rank:String(ldr[i][1]||'R4').trim(),role:String(ldr[i][2]||'').trim()});
+          list.appendChild(d.firstElementChild); n++;
+        }
+        if(n) applied.push('Leaders');
+      }
     }
 
-    // 4. Events
+    // 4. Events — header has event name + time
     const ev=getSheet('events');
-    if(ev && ev.length>1){
-      const list=$('#eventList'); list.innerHTML='';
-      ev.slice(1).filter(r=>String(r[1]||'').trim()).forEach((r,i)=>{
-        const d=document.createElement('div');
-        d.innerHTML=eventHTML(i,{icon:String(r[0]||'').trim(),name:String(r[1]||'').trim(),freq:String(r[2]||'').trim(),t1:String(r[3]||'').trim(),t2:String(r[4]||'').trim(),note:String(r[5]||'').trim()});
-        list.appendChild(d.firstElementChild);
-      });
-      applied.push('Events');
+    if(ev){
+      const h=findHeader(ev,['event name','frequency']);
+      if(h>=0){
+        const list=$('#eventList'); list.innerHTML=''; let n=0;
+        for(let i=h+1;i<ev.length;i++){
+          const nm=String(ev[i][1]||'').trim();
+          if(!nm) continue;
+          const d=document.createElement('div');
+          d.innerHTML=eventHTML(n,{icon:String(ev[i][0]||'').trim(),name:nm,freq:String(ev[i][2]||'').trim(),t1:String(ev[i][3]||'').trim(),t2:String(ev[i][4]||'').trim(),note:String(ev[i][5]||'').trim()});
+          list.appendChild(d.firstElementChild); n++;
+        }
+        if(n) applied.push('Events');
+      }
     }
 
-    // 5. Rules
+    // 5. Rules — header has title/text
     const ru=getSheet('rules');
-    if(ru && ru.length>1){
-      const list=$('#ruleList'); list.innerHTML='';
-      ru.slice(1).filter(r=>String(r[0]||'').trim()).forEach((r,i)=>{
-        const d=document.createElement('div');
-        d.innerHTML=ruleHTML(i,{title:String(r[0]||'').trim(),text:String(r[1]||'').trim()});
-        list.appendChild(d.firstElementChild);
-      });
-      applied.push('Rules');
+    if(ru){
+      const h=findHeader(ru,['title','text']);
+      if(h>=0){
+        const list=$('#ruleList'); list.innerHTML=''; let n=0;
+        for(let i=h+1;i<ru.length;i++){
+          const t=String(ru[i][0]||'').trim();
+          if(!t) continue;
+          const d=document.createElement('div');
+          d.innerHTML=ruleHTML(n,{title:t,text:String(ru[i][1]||'').trim()});
+          list.appendChild(d.firstElementChild); n++;
+        }
+        if(n) applied.push('Rules');
+      }
     }
 
-    // 6. News
+    // 6. News — header has date label/text
     const nw=getSheet('news');
-    if(nw && nw.length>1){
-      const list=$('#newsList'); list.innerHTML='';
-      nw.slice(1).filter(r=>String(r[1]||'').trim()||String(r[0]||'').trim()).forEach((r,i)=>{
-        const d=document.createElement('div');
-        d.innerHTML=newsHTML(i,{date:String(r[0]||'').trim(),msg:String(r[1]||'').trim()});
-        list.appendChild(d.firstElementChild);
-      });
-      applied.push('News');
+    if(nw){
+      const h=findHeader(nw,['date','text']);
+      if(h>=0){
+        const list=$('#newsList'); list.innerHTML=''; let n=0;
+        for(let i=h+1;i<nw.length;i++){
+          const date=String(nw[i][0]||'').trim();
+          const msg=String(nw[i][1]||'').trim();
+          if(!date && !msg) continue;
+          const d=document.createElement('div');
+          d.innerHTML=newsHTML(n,{date,msg});
+          list.appendChild(d.firstElementChild); n++;
+        }
+        if(n) applied.push('News');
+      }
     }
 
     if(applied.length){
