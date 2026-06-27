@@ -1019,6 +1019,14 @@ function memberRowHTML(i,m={}){
       <input placeholder="Governor ID" class="m-gid" value="${m.governor_id||''}">
       <select class="m-conf"><option value="false" ${!conf?'selected':''}>⏳ Pending</option><option value="true" ${conf?'selected':''}>✓ Confirmed</option></select>
     </div>
+    <div class="row2" style="margin-top:6px;">
+      <select class="m-rank" style="flex:1;padding:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
+        <option value="" ${!m.game_rank?'selected':''}>— No rank —</option>
+        <option value="R3" ${m.game_rank==='R3'?'selected':''}>R3</option>
+        <option value="R4" ${m.game_rank==='R4'?'selected':''}>R4 🥇</option>
+        <option value="R5" ${m.game_rank==='R5'?'selected':''}>R5 🔥</option>
+      </select>
+    </div>
     <div style="position:relative;">
       <input placeholder="✨ Nickname (e.g. La Jefa)" class="m-nick" value="${(m.nickname||'').replace(/"/g,'&quot;')}" style="padding-right:${m.nickname_suggested&&!m.nickname?'90px':'12px'};">
       ${m.nickname_suggested&&!m.nickname?`<button type="button" onclick="acceptNick(this,'${(m.nickname_suggested||'').replace(/'/g,"\\'")}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:.7rem;background:#eafaf0;border:1.5px solid #3da76e;border-radius:8px;color:#2d7a4e;font-family:'Fredoka';cursor:pointer;">Use: ${m.nickname_suggested}</button>`:''}
@@ -1029,7 +1037,7 @@ async function loadMembersEditor(){
   if(!editingAlliance)return;
   const wrap=$('#memberRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested').eq('alliance_id',editingAlliance.id).order('created_at',{ascending:true});
+  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested,game_rank').eq('alliance_id',editingAlliance.id).order('created_at',{ascending:true});
   memberCache=data||[];
   wrap.innerHTML='';
   memberCache.forEach((m,i)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(i,m);wrap.appendChild(d.firstElementChild);});
@@ -1067,10 +1075,11 @@ $('#saveMembersBtn').onclick=async()=>{
     const gid=row.querySelector('.m-gid')?.value.trim();
     const conf=row.querySelector('.m-conf')?.value==='true';
     const nick=row.querySelector('.m-nick')?.value.trim()||null;
+    const grank=row.querySelector('.m-rank')?.value||null;
     if(del&&id){const{error}=await sb.from('players').delete().eq('id',id);if(error)errors.push(error.message);continue;}
     if(!name)continue;
     if(id){
-      const{error}=await sb.from('players').update({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,nickname_suggested:null}).eq('id',id);
+      const{error}=await sb.from('players').update({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,nickname_suggested:null,game_rank:grank||null}).eq('id',id);
       if(error)errors.push(error.message);
     }else{
       const{error}=await sb.from('players').insert({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,alliance_id:editingAlliance.id,state_id:editingAlliance.state_id||'3139',avatar:name.slice(0,2).toUpperCase()});
