@@ -111,7 +111,7 @@ async function maybeLoadFromSupabase(){
   const tag=new URLSearchParams(location.search).get('tag');
   if(!tag) return; // no ?tag= → use hardcoded CONFIG
   // fetch from Supabase
-  const{data,error}=await _sb.from('alliances').select('*').eq('tag',tag.toUpperCase()).maybeSingle();
+  const{data,error}=await _sb.from('alliances').select('*').ilike('tag',tag).maybeSingle();
   if(error||!data) return; // fallback to CONFIG if not found
   const cfg=data.config||{};
   const isPXR=(data.tag==='PXR');
@@ -125,7 +125,7 @@ async function maybeLoadFromSupabase(){
     // Read from top-level column first, then from config object, then hardcoded.
     CONFIG.motto        = data.motto    || cfg.motto    || CONFIG.motto;
     CONFIG.power        = data.power    || cfg.power    || CONFIG.power;
-    CONFIG.stateRank    = data.state_rank ? '#'+data.state_rank : (cfg.stateRank || CONFIG.stateRank);
+    CONFIG.stateRank    = data.state_rank ? (String(data.state_rank).startsWith('#') ? data.state_rank : '#'+data.state_rank) : (cfg.stateRank || CONFIG.stateRank);
     CONFIG.members      = data.members  || cfg.members  || CONFIG.members;
     CONFIG.accent       = data.accent       || cfg.accent       || CONFIG.accent;
     CONFIG.accentDark   = cfg.accentDark    || CONFIG.accentDark;
@@ -145,7 +145,7 @@ async function maybeLoadFromSupabase(){
     // Non-PXR: strictly blank — show only what was explicitly saved by the leader
     CONFIG.motto        = data.motto        || '';
     CONFIG.power        = data.power        || '—';
-    CONFIG.stateRank    = data.state_rank   ? '#'+data.state_rank : '—';
+    CONFIG.stateRank    = data.state_rank ? (String(data.state_rank).startsWith('#') ? data.state_rank : '#'+data.state_rank) : '—';
     CONFIG.members      = data.members      || '—';
     CONFIG.accent       = data.accent       || '#4a90d9';
     CONFIG.accentDark   = cfg.accentDark    || '#2d6fa3';
