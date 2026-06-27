@@ -278,22 +278,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .nav-ic{font-size:1.35rem;display:block;line-height:1;}
 
 .hidden{display:none !important;}
-
-/* ── PROFILE FRAMES ── */
-.gov-avatar{position:relative;}
-.pf-ring{position:absolute;inset:-6px;border-radius:50%;pointer-events:none;z-index:3;}
-.pf-ice .pf-ring{border:3px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#c5e8ff,#7fb8e0,#4a8fc4,#c5e8ff) border-box;box-shadow:0 0 12px rgba(127,184,224,.5);}
-.pf-gold .pf-ring{border:3px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#ffe08a,#c8a84b,#7a5c14,#ffe08a) border-box;box-shadow:0 0 14px rgba(200,168,75,.6);animation:pfGoldPulse 2.5s ease-in-out infinite;}
-@keyframes pfGoldPulse{0%,100%{box-shadow:0 0 8px rgba(200,168,75,.3);}50%{box-shadow:0 0 20px rgba(200,168,75,.7);}}
-.pf-fire .pf-ring{border:4px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,conic-gradient(from 0deg,#ff7a2e,#ffb938,#e53935,#ff7a2e) border-box;box-shadow:0 0 18px rgba(255,122,46,.6);animation:pfFireSpin 2s linear infinite;}
-@keyframes pfFireSpin{to{filter:hue-rotate(15deg) brightness(1.1);}}
-.pf-bear .pf-ring{border:4px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#D2691E,#8B4513,#3d1a06,#D2691E) border-box;box-shadow:0 0 12px rgba(139,69,19,.5);}
-.pf-svs .pf-ring{border:4px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#e040fb,#9c27b0,#4a148c,#e040fb) border-box;box-shadow:0 0 16px rgba(156,39,176,.6);animation:pfSvsPulse 2s ease-in-out infinite;}
-@keyframes pfSvsPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.4) drop-shadow(0 0 6px #e040fb);}}
-.pf-perf .pf-ring{border:4px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,linear-gradient(135deg,#e0f7fa,#00bcd4,#006064,#e0f7fa) border-box;box-shadow:0 0 14px rgba(0,188,212,.5);animation:pfPerfSpin 6s linear infinite;}
-@keyframes pfPerfSpin{to{transform:rotate(360deg);}}
-.pf-legend .pf-ring{border:5px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,conic-gradient(from 0deg,#ff7a2e,#ffb938,#56c98a,#7fb8e0,#9c27b0,#e040fb,#ff7a2e) border-box;box-shadow:0 0 20px rgba(200,168,75,.7);animation:pfLegendSpin 3s linear infinite;}
-@keyframes pfLegendSpin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
@@ -346,6 +330,10 @@ input,textarea,select{font-family:'Inter',sans-serif;}
       <button class="btn btn-ghost btn-sm" id="authBack">← Back</button>
     </div>
     <div class="auth-switch"><span id="authSwitchTxt">Already have a page?</span> <button id="authSwitch">Sign in instead</button></div>
+    <div id="forgotWrap" style="text-align:center;margin-top:10px;display:none;">
+      <button id="forgotBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.78rem;font-family:'Fredoka';cursor:pointer;text-decoration:underline;">Forgot your password?</button>
+    </div>
+    <div class="ok-msg" id="resetOk" style="margin-top:8px;"></div>
   </div>
 </div>
 
@@ -416,17 +404,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
       <button type="button" id="uploadGal3Btn" style="width:100%;padding:7px;border:2px dashed var(--panel-edge);background:none;border-radius:8px;color:var(--ink-soft);font-family:'Fredoka';font-weight:600;font-size:.78rem;cursor:pointer;margin:4px 0 0;">📤 Upload photo 3</button>
       <input type="file" id="galFile3" accept="image/*" style="display:none;">
     </div>
-    <!-- FRAME SELECTOR -->
-    <div id="frameSelectorWrap" style="display:none;margin-bottom:16px;">
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:6px;">🖼️ Tu marco de perfil
-          <span style="font-size:.7rem;font-weight:400;color:var(--ink-soft);">(elige cuál mostrar)</span>
-        </label>
-        <div id="framePickerGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;"></div>
-        <input type="hidden" id="fActiveFrame" value="none">
-      </div>
-    </div>
-
     <div class="form-actions">
       <button class="btn btn-fire" id="saveBtn" style="flex:1" data-i18n="save">Save my page</button>
       <button class="btn btn-ghost" id="cancelBtn" data-i18n="cancel">Cancel</button>
@@ -672,12 +649,40 @@ function setAuthMode(signup){
   $('#authSubmit').textContent=signup?'Create account':'Sign in';
   $('#authSwitchTxt').textContent=signup?'Already have a page?':"Don't have a page yet?";
   $('#authSwitch').textContent=signup?'Sign in instead':'Create one';
+  updateForgotVisibility();
   $('#authErr').classList.remove('show');$('#authOk').classList.remove('show');
 }
 $('#createBtn').onclick=()=>{setAuthMode(true);show('auth');};
 $('#loginBtn').onclick=()=>{setAuthMode(false);show('auth');};
 $('#authBack').onclick=()=>show('empty');
 $('#authSwitch').onclick=()=>setAuthMode(!signupMode);
+
+// Show/hide forgot password link — only in sign-in mode
+function updateForgotVisibility(){
+  const wrap=$('#forgotWrap');
+  if(wrap) wrap.style.display=signupMode?'none':'block';
+}
+
+$('#forgotBtn').onclick=async()=>{
+  const email=$('#authEmail').value.trim();
+  const okEl=$('#resetOk');
+  okEl.textContent='';
+  okEl.classList.remove('show');
+  if(!email){
+    okEl.textContent='✉️ Enter your email above first, then click "Forgot your password?"';
+    okEl.classList.add('show');
+    return;
+  }
+  const{error}=await sb.auth.resetPasswordForEmail(email,{
+    redirectTo: window.location.href
+  });
+  if(error){
+    okEl.textContent='❌ '+error.message;
+  } else {
+    okEl.textContent='✉️ Password reset email sent! Check your inbox.';
+  }
+  okEl.classList.add('show');
+};
 
 $('#authSubmit').addEventListener('click',async()=>{
   const email=$('#authEmail').value.trim(),pwd=$('#authPwd').value;
@@ -768,8 +773,9 @@ function openEditor(){
   $('#fGal2').value=gal[1]||'';
   $('#fGal3').value=gal[2]||'';
   powerOn=false;
-  // Load frame selector
-  buildFramePicker(p.unlocked_frames||[], p.active_frame||'none');
+  
+  
+  
   updatePreview();
   populateAlliances();
   show('edit');
@@ -784,7 +790,7 @@ $('#saveBtn').addEventListener('click',async()=>{
   const photoUrl=$('#fPhotoUrl').value.trim();
   const ini=($('#fAvatar').value.trim()||name.slice(0,2)).toUpperCase();
   const avatarVal=photoUrl||ini;
-  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:'3139',bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null,active_frame:$('#fActiveFrame').value||'none'};
+  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:'3139',bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
   const btn=$('#saveBtn');btn.textContent='...';btn.disabled=true;
   const{error}=currentProfile?await sb.from('players').update(pd).eq('owner',currentUser.id):await sb.from('players').insert(pd);
   btn.textContent=T('save');btn.disabled=false;
@@ -804,11 +810,6 @@ $('#saveBtn').addEventListener('click',async()=>{
 // ── RENDER OWN PROFILE ────────────────────────────────────────
 function renderView(p){
   setAvatarEl($('#vAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
-  // Apply frame
-  const vAv=$('#vAvatar');
-  vAv.querySelectorAll('.pf-ring').forEach(r=>r.remove());
-  if(p.active_frame&&p.active_frame!=='none'){const r=document.createElement('div');r.className='pf-ring';vAv.classList.add('pf-'+p.active_frame);vAv.style.overflow='visible';vAv.appendChild(r);}
-  else{vAv.className=vAv.className.replace(/pf-\S+/g,'').trim();}
   $('#vName').textContent=p.name||'—';
   $('#vGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#vMeta');meta.innerHTML='';
@@ -904,11 +905,6 @@ async function loadPublicProfile(playerId){
   if(!p){toast('Profile not found.',true);show('directory');return;}
   const earnedIds=pb?pb.map(x=>x.badge_id):[];
   setAvatarEl($('#pAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
-  // Apply frame to public profile
-  const pAv=$('#pAvatar');
-  pAv.querySelectorAll('.pf-ring').forEach(r=>r.remove());
-  pAv.className=pAv.className.replace(/pf-\S+/g,'').trim();
-  if(p.active_frame&&p.active_frame!=='none'){const r=document.createElement('div');r.className='pf-ring';pAv.classList.add('pf-'+p.active_frame);pAv.style.overflow='visible';pAv.appendChild(r);}
   $('#pName').textContent=p.name||'—';
   $('#pGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#pMeta');meta.innerHTML='';
@@ -1037,80 +1033,6 @@ sb.auth.onAuthStateChange(async(event,session)=>{
   if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();}
   else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');}
 });
-
-sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();}
-  else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');}
-});
-
-// ── FRAMES SYSTEM ─────────────────────────────────────────────
-const FRAME_DEFS = [
-  {id:'none',   label:'Sin marco', emoji:''},
-  {id:'ice',    label:'❄️ Hielo',   emoji:'❄️'},
-  {id:'gold',   label:'🥇 Dorado',  emoji:'🥇'},
-  {id:'fire',   label:'🔥 Llama',   emoji:'🔥'},
-  {id:'bear',   label:'🐻 Cazador', emoji:'🐻'},
-  {id:'svs',    label:'⚔️ SvS MVP', emoji:'⚔️'},
-  {id:'perf',   label:'⭐ Perfecto',emoji:'⭐'},
-  {id:'legend', label:'👑 Leyenda', emoji:'👑'},
-];
-
-// Frames auto-unlocked by rank
-function autoFramesForPlayer(p){
-  const frames = ['none'];
-  if(p.alliance_confirmed) frames.push('ice');
-  if(p.game_rank==='R4') frames.push('gold');
-  if(p.game_rank==='R5') { frames.push('gold'); frames.push('fire'); }
-  return frames;
-}
-
-function buildFramePicker(unlockedFrames, activeFrame){
-  const p = currentProfile || {};
-  const autoFrames = autoFramesForPlayer(p);
-  const allUnlocked = [...new Set([...autoFrames, ...(unlockedFrames||[])])];
-  const wrap = document.getElementById('frameSelectorWrap');
-  const grid = document.getElementById('framePickerGrid');
-  if(!wrap||!grid) return;
-  // Show selector only if player has more than just 'none'
-  wrap.style.display = allUnlocked.length > 1 ? '' : 'none';
-  grid.innerHTML = '';
-  document.getElementById('fActiveFrame').value = activeFrame || 'none';
-
-  FRAME_DEFS.forEach(f => {
-    const has = allUnlocked.includes(f.id);
-    const isActive = (activeFrame||'none') === f.id;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.style.cssText = `display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;border:2px solid ${isActive?'var(--fire)':'var(--panel-edge)'};background:${isActive?'rgba(255,122,46,.08)':'none'};cursor:${has?'pointer':'not-allowed'};opacity:${has?1:.3};font-size:.65rem;color:var(--ink-soft);transition:all .15s;`;
-    btn.innerHTML = `<span style="font-size:1.2rem;">${f.emoji||'🚫'}</span><span style="line-height:1.2;text-align:center;">${f.label}</span>`;
-    if(has) {
-      btn.onclick = () => {
-        document.getElementById('fActiveFrame').value = f.id;
-        grid.querySelectorAll('button').forEach(b => {
-          b.style.borderColor = 'var(--panel-edge)';
-          b.style.background = 'none';
-        });
-        btn.style.borderColor = 'var(--fire)';
-        btn.style.background = 'rgba(255,122,46,.08)';
-      };
-    }
-    grid.appendChild(btn);
-  });
-}
-
-// Apply frame class to avatar element
-function applyFrameToAvatar(el, frameId, playerName){
-  if(!el) return;
-  const wrap = el.closest('.gov-avatar-wrap') || el.parentElement;
-  if(!wrap) return;
-  // Remove existing frame classes
-  wrap.querySelectorAll('.pf-ring').forEach(r=>r.remove());
-  wrap.querySelectorAll('.pf-gem').forEach(r=>r.remove());
-  if(!frameId || frameId==='none') return;
-  const ring = document.createElement('div');
-  ring.className = 'pf-ring pf-'+frameId;
-  wrap.appendChild(ring);
-}
 
 // ── GLOBAL FAILSAFE: never stay stuck on the loading spinner ──
 setTimeout(()=>{
