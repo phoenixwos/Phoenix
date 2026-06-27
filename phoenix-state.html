@@ -909,9 +909,10 @@ applyLang();
   const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
   // Load alliances sorted by state_rank
-  const{data:als}=await sb.from('alliances').select('tag,name,state_rank,members,accent,is_showcase,state_id').eq('state_id','3139').order('state_rank');
+  const{data:als, error:alsErr}=await sb.from('alliances').select('tag,name,state_rank,members,accent,is_showcase,state_id').eq('state_id','3139').order('state_rank',{ascending:true,nullsFirst:false});
   const container=document.getElementById('allianceList');
-  if(als&&als.length){
+  if(alsErr){container.innerHTML='<p style="text-align:center;color:var(--muted);padding:20px;font-family:Fredoka">Could not load ranking. Try refreshing.</p>';console.error(alsErr);}
+  else if(als&&als.length){
     container.innerHTML='';
     als.forEach((al,i)=>{
       const rank=al.state_rank||'#'+(i+1);
@@ -957,6 +958,8 @@ applyLang();
     btn.style='text-align:center;margin-top:14px;';
     btn.innerHTML=`<a href="./phoenix-alliance.html?tag=PXR" class="btn btn-blue">Visit PXR page</a>`;
     container.appendChild(btn);
+  } else if(!alsErr) {
+    container.innerHTML='<p style="text-align:center;color:var(--muted);padding:20px;font-family:Fredoka">No alliances found for this state.</p>';
   }
 
   // Check if current user is admin → show Admin nav btn
