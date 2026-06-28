@@ -113,8 +113,11 @@ const PAGE_STATE=(function(){const m=location.pathname.match(/\/(\d{3,5})\/[^\/]
 async function maybeLoadFromSupabase(){
   const tag=new URLSearchParams(location.search).get('tag');
   if(!tag) return; // no ?tag= → use hardcoded CONFIG
-  // fetch from Supabase
-  const{data,error}=await _sb.from('alliances').select('*').ilike('tag',tag).maybeSingle();
+  // fetch from Supabase — filter by the page's state so /4501/ loads the 4501 row,
+  // not whichever same-tag alliance happens to come first.
+  let q=_sb.from('alliances').select('*').ilike('tag',tag);
+  if(PAGE_STATE) q=q.eq('state_id',PAGE_STATE);
+  const{data,error}=await q.maybeSingle();
   if(error||!data) return; // fallback to CONFIG if not found
   const cfg=data.config||{};
   const isPXR=(data.tag && data.tag.toUpperCase()==='PXR');
@@ -954,6 +957,14 @@ function openLightbox(url){
 // apply CONFIG to the page
 function applyConfig(){
   const c=CONFIG;
+  // PXR in a NON-3139 state starts with a clean slate: keep the brand identity
+  // (name, motto, TMQ quote, colours, logo) but clear all 3139-specific data
+  // (leaders, stats, events, rules, news). These get filled from the admin per state.
+  if((c.tag||'').toUpperCase()==='PXR' && PAGE_STATE!=='3139'){
+    c.leaders=[]; c.events=[]; c.rules=[]; c.news=[];
+    c.power=''; c.stateRank=''; c.members='';
+    // motto, quote, about, accent, theme, logoUrl stay — that's the PXR brand
+  }
   // Apply theme (dark fire&ice or light)
   // Apply theme — remove all theme classes, then add the selected one
   document.body.classList.remove('dark','snow','rainbow','skull','neutral','wosblue','battle','fire','ice','night','blood','emerald','storm');
@@ -1009,10 +1020,10 @@ function applyConfig(){
       heroEl.insertBefore(div,heroEl.firstChild);
     }
   }
-  $('#atag').textContent='['+c.tag+'] · State '+c.state;
+  $('#atag').textContent='['+c.tag+'] · State '+(PAGE_STATE||c.state);
   $('#aname').textContent=c.name;
   $('#amotto').textContent=c.motto?'\u201C'+c.motto+'\u201D':'';
-  $('#stRank').textContent=c.stateRank; $('#stMem').textContent=c.members;
+  $('#stRank').textContent=c.stateRank||'—'; $('#stMem').textContent=c.members||'—';
   $('#aboutText').textContent=c.about || '';
   // Dynamic values (culture pills) — hide whole block if none
   const valuesLabel=document.querySelector('[data-i18n="home.culture"]');
@@ -1035,9 +1046,10 @@ function applyConfig(){
   // quote
   if(c.quote && c.quote.show){ $('#quoteBox').style.display=''; $('#quoteText').textContent='\u201C'+c.quote.text+'\u201D'; $('#quoteBy').textContent='— '+c.quote.by; }
   else $('#quoteBox').style.display='none';
-  // PXR legend (Harambe) — only on PXR page
+  // PXR legend (Harambe) — only on the PXR page AND only in state 3139
+  // (it's a 3139 achievement; new states start with a clean slate)
   const legEl=document.getElementById('pxrLegend');
-  if(legEl) legEl.style.display = (c.tag==='PXR') ? '' : 'none';
+  if(legEl) legEl.style.display = (c.tag==='PXR' && PAGE_STATE==='3139') ? '' : 'none';
   // join button → player profile (or Discord if a link is set)
   $('#joinBtn').href = `phoenix-profile.html?invite=${c.tag||'PXR'}`;
   // resell
@@ -1047,7 +1059,8 @@ function applyConfig(){
 
 function renderDynamic(){
   const c=CONFIG, pack=I18N[LANG];
-  const emptyMsg='<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:.86rem;">Not set up yet.</div>';
+  const emptyTxts={en:'Coming soon — being set up.',es:'Próximamente — en preparación.',fr:'Bientôt — en cours de configuration.',ko:'곧 공개 — 준비 중입니다.',ja:'近日公開 — 準備中です。','zh-Hant':'即將推出——設定中。','zh-Hans':'即将推出——设置中。',de:'Demnächst — wird eingerichtet.'};
+  const emptyMsg=`<div style="text-align:center;padding:24px 16px;color:var(--muted);font-size:.86rem;">${emptyTxts[LANG]||emptyTxts.en}</div>`;
   // roster
   const rl=$('#rosterList'); rl.innerHTML='';
   if(c.leaders.length){
