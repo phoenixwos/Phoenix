@@ -698,6 +698,17 @@ function leaderHTML(i,l={}){
 function eventHTML(i,e={}){
   return `<div class="ditem" data-i="${i}">
     <div class="ditem-header"><span class="dtag">Event ${i+1}</span><button class="del-btn" onclick="delItem('eventList',${i})">✕</button></div>
+    <select class="e-preset" onchange="applyEventPreset(this)" style="width:100%;padding:9px;margin-bottom:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
+      <option value="">⭐ Quick pick an event (auto-fills name + banner)…</option>
+      <option value="🐻|Cacería del Oso">🐻 Cacería del Oso</option>
+      <option value="⚒️|Batalla de la Fundición">⚒️ Batalla de la Fundición</option>
+      <option value="🚚|Ruta Comercial Tundra">🚚 Ruta Comercial Tundra</option>
+      <option value="🏰|Batallas de Fuerte">🏰 Batallas de Fuerte</option>
+      <option value="⚔️|Prestigio de Mercenario">⚔️ Prestigio de Mercenario</option>
+      <option value="🏆|Campeonato de Alianza">🏆 Campeonato de Alianza</option>
+      <option value="🌍|SvS">🌍 SvS</option>
+      <option value="🏯|Castle Battle">🏯 Castle Battle</option>
+    </select>
     <div class="row2">
       <input placeholder="Icon (emoji)" class="e-icon" value="${e.icon||''}">
       <input placeholder="Name" class="e-name" value="${e.name||''}">
@@ -709,6 +720,19 @@ function eventHTML(i,e={}){
     <input placeholder="Time 2 UTC (optional)" class="e-t2" value="${e.t2||''}">
     <input placeholder="Note for players" class="e-note" value="${e.note||''}">
   </div>`;}
+
+// Auto-fill icon + name from the preset dropdown
+function applyEventPreset(sel){
+  if(!sel.value) return;
+  const [icon,name]=sel.value.split('|');
+  const row=sel.closest('.ditem');
+  if(row){
+    const ic=row.querySelector('.e-icon'); const nm=row.querySelector('.e-name');
+    if(ic)ic.value=icon;
+    if(nm)nm.value=name;
+  }
+  sel.value=''; // reset so they can pick again
+}
 
 function ruleHTML(i,r={}){
   return `<div class="ditem" data-i="${i}">
