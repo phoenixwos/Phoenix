@@ -1138,10 +1138,12 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
 });
 
 // Set state-aware nav labels & links (works in any state folder)
-(function(){
+function setStateNav(){
   const bn=document.getElementById('backStateNum');if(bn)bn.textContent=PAGE_STATE;
   const nn=document.getElementById('navStateNum');if(nn)nn.textContent=PAGE_STATE;
-})();
+}
+if(document.readyState!=='loading')setStateNav();
+else document.addEventListener('DOMContentLoaded',setStateNav);
 maybeLoadFromSupabase().then(()=>{ applyConfig(); applyLang(); loadMembers(); });
 
 // ── LOAD MEMBERS WITH A PAGE (clickable → their profile) ──────

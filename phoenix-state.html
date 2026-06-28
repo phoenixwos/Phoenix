@@ -935,13 +935,15 @@ function renderVictories(){
   </div>`).join('');
 }
 renderVictories();
-// Show the detected state number in the hero
-(function(){
+// Show the detected state number everywhere
+function setStateLabels(){
   const sn=document.getElementById('statenum');if(sn)sn.textContent=STATE_ID;
   const rl=document.getElementById('reglabel');if(rl)rl.textContent='#'+STATE_ID;
   const ns=document.getElementById('navstate');if(ns)ns.textContent=STATE_ID;
   document.title='State '+STATE_ID+' · Phoenix';
-})();
+}
+if(document.readyState!=='loading')setStateLabels();
+else document.addEventListener('DOMContentLoaded',setStateLabels);
 applyLang();
 
 // ── SUPABASE: load alliances + show admin btn ─────────────────
