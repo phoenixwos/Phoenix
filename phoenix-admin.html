@@ -147,7 +147,7 @@ body{padding-bottom:72px !important;}
     <div class="denied-icon">🔒</div>
     <h2 style="margin-bottom:8px;">Access restricted</h2>
     <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:24px;">This panel is for verified R4/R5 officers only. If you should have access, contact Hestelae or TMQ.</p>
-    <a href="./phoenix-state.html" class="btn btn-ghost" style="text-decoration:none;display:inline-flex;width:auto;">← Back to State 3139</a>
+    <a href="./phoenix-state.html" class="btn btn-ghost" style="text-decoration:none;display:inline-flex;width:auto;">← Back to State <span id="backStateNum">3139</span></a>
   </div>
 
   <!-- NOT LOGGED IN -->
@@ -513,7 +513,7 @@ body{padding-bottom:72px !important;}
 <div class="toast" id="toast"></div>
 
 <nav class="botnav">
-  <a href="./phoenix-state.html"><span class="ic">🗺️</span>3139</a>
+  <a href="./phoenix-state.html"><span class="ic">🗺️</span><span id="navStateNum">3139</span></a>
   <a href="./phoenix-alliance.html">PXR</a>
   <a href="./phoenix-profile.html"><span class="ic">👤</span>Profile</a>
   <a href="./phoenix-admin.html" class="active"><span class="ic">🔐</span>Admin</a>
@@ -524,6 +524,9 @@ body{padding-bottom:72px !important;}
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+// Detect state folder for nav labels
+const PAGE_STATE=(function(){const m=location.pathname.match(/\/(\d{3,5})\/[^\/]*$/);return m?m[1]:'3139';})();
+(function(){function setLabels(){const b=document.getElementById('backStateNum');if(b)b.textContent=PAGE_STATE;const n=document.getElementById('navStateNum');if(n)n.textContent=PAGE_STATE;}if(document.readyState!=='loading')setLabels();else document.addEventListener('DOMContentLoaded',setLabels);})();
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser=null, currentPlayer=null, adminAlliances=[], editingAlliance=null;

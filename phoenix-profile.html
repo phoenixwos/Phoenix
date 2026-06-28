@@ -566,13 +566,23 @@ let allStates=['3139']; // populated from Supabase states table
 const $=s=>document.querySelector(s);
 function T(k){return I18N[LANG]?.t[k]||I18N.en.t[k]||k;}
 
-// ── STATE DETECTION (multi-state support) ─────────────────────
-// Detects which state this page belongs to from its folder path.
-// /Phoenix/4501/... → "4501", otherwise default "3139".
+// ── GLOBAL PROFILE HUB ────────────────────────────────────────
+// This page is the global login/profile center. It is NOT tied to any state.
+// Each character carries its own state_id. PAGE_STATE is only a default
+// pre-selection when creating a new character (from folder path if present).
 const PAGE_STATE=(function(){
-  const m=location.pathname.match(/\/(\d{3,4})\//);
+  const m=location.pathname.match(/\/(\d{3,5})\/[^\/]*$/);
   return m?m[1]:'3139';
 })();
+// Where each state's public pages live. Root state (3139) lives at /Phoenix/,
+// other states live in their own subfolder /Phoenix/<state>/.
+function stateBasePath(stateId){
+  // Derive the repo base (everything up to and including /Phoenix/)
+  const path=location.pathname;
+  const idx=path.indexOf('/Phoenix/');
+  const base = idx>=0 ? path.slice(0, idx+9) : '/';
+  return String(stateId)==='3139' ? base : base+stateId+'/';
+}
 
 // ── SHOW ──────────────────────────────────────────────────────
 const ALL_STATES=['loading','empty','auth','picker','edit','view','directory','pubview'];
@@ -744,9 +754,9 @@ $('#authSubmit').addEventListener('click',async()=>{
   btn.disabled=false;
 });
 
-// ── LOAD PROFILE (FIX: maybeSingle + timeout) ─────────────────
+// ── LOAD PROFILE (multi-profile, resilient) ───────────────────
 async function loadProfile(){
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),12000));
   try{
     // Load ALL profiles owned by this user, across every state
     const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false});
@@ -764,7 +774,15 @@ async function loadProfile(){
     }
   }catch(e){
     console.error('Profile load error:',e);
-    if(!currentProfile){toast('Connection error. Check Supabase settings.',true);show('empty');}
+    // Only surface an error if we genuinely have nothing on screen.
+    // A late timeout after the picker/view already rendered must stay silent.
+    const onResultScreen = !$('#picker').classList.contains('hidden')
+                        || !$('#view').classList.contains('hidden')
+                        || !$('#edit').classList.contains('hidden');
+    if(!onResultScreen && myProfiles.length===0 && !currentProfile){
+      toast('Connection error. Check Supabase settings.',true);
+      show('empty');
+    }
   }
   applyLang();
 }
@@ -785,13 +803,20 @@ function renderPicker(){
     byState[st].forEach(p=>{
       const a=alliances.find(x=>x.id===p.alliance_id);
       const lbl=a?`[${a.tag}] ${p.name}`:p.name;
-      const card=document.createElement('button');
-      card.className='picker-card';
-      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:2px solid var(--panel-edge);border-radius:14px;padding:12px 14px;margin-bottom:9px;cursor:pointer;box-shadow:0 2px 0 var(--panel-edge);';
       const av=isUrl(p.avatar)?`<img src="${p.avatar}" style="width:46px;height:46px;border-radius:11px;object-fit:cover;flex:none;">`:`<div style="width:46px;height:46px;border-radius:11px;background:var(--acc,#ff7a2e);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:1.05rem;flex:none;">${(p.avatar||p.name||'?').slice(0,2).toUpperCase()}</div>`;
       const conf=p.alliance_confirmed?'🔥':'⏳';
-      card.innerHTML=`${av}<div style="flex:1;min-width:0;"><div style="font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</div><div style="font-size:.74rem;color:var(--muted);">${conf} ${p.governor_id?'ID: '+p.governor_id:''}</div></div><div style="color:var(--acc,#ff7a2e);font-size:1.2rem;">›</div>`;
-      card.onclick=()=>selectProfile(p.id);
+      const card=document.createElement('div');
+      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--panel-edge);border-radius:14px;padding:12px 14px;margin-bottom:9px;box-shadow:0 2px 0 var(--panel-edge);';
+      card.innerHTML=`${av}
+        <div style="flex:1;min-width:0;cursor:pointer;" class="pk-open">
+          <div style="font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</div>
+          <div style="font-size:.74rem;color:var(--muted);">${conf} ${p.governor_id?'ID: '+p.governor_id:''}</div>
+        </div>
+        <button class="pk-goto" title="Go to state ${st}" style="flex:none;background:var(--acc,#ff7a2e);color:#fff;border:none;border-radius:10px;padding:8px 11px;font-family:Fredoka;font-weight:600;font-size:.78rem;cursor:pointer;">🗺️ #${st}</button>
+        <div class="pk-open" style="color:var(--acc,#ff7a2e);font-size:1.2rem;cursor:pointer;">›</div>`;
+      card.querySelectorAll('.pk-open').forEach(el=>el.onclick=()=>selectProfile(p.id));
+      const goto=card.querySelector('.pk-goto');
+      if(goto)goto.onclick=(e)=>{e.stopPropagation();const a2=alliances.find(x=>x.id===p.alliance_id);const base=stateBasePath(p.state_id);location.href = a2 ? `${base}phoenix-alliance.html?tag=${a2.tag}` : `${base}phoenix-state.html`;};
       list.appendChild(card);
     });
   });
