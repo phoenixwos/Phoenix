@@ -602,8 +602,23 @@ $('#addValueBtn').onclick=()=>{
 
 // Theme selector
 let selectedTheme='light';
-const THEME_IDS=['light','dark','snow','rainbow','skull','neutral','wosblue','battle'];
+const THEME_IDS=['light','dark','snow','rainbow','skull','neutral','wosblue','battle','ice','night','blood','emerald','storm'];
 const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral',wosblue:'themeWosblue',battle:'themeBattle',ice:'themeIce',night:'themeNight',blood:'themeBlood',emerald:'themeEmerald',storm:'themeStorm'};
+const THEME_PV={
+  light:'linear-gradient(180deg,#eaf4ff,#cfe6fb)',
+  dark:'linear-gradient(180deg,#1a2740,#0d1526)',
+  snow:'linear-gradient(180deg,#dcefff,#a9d8f0)',
+  rainbow:'linear-gradient(120deg,#ff6b6b,#feca57,#48dbfb,#a55eea)',
+  skull:'linear-gradient(180deg,#2a2a2a,#0d0d0d)',
+  neutral:'linear-gradient(180deg,#e8e8e8,#c8c8c8)',
+  wosblue:'linear-gradient(180deg,#2e6db5,#1a4a82)',
+  battle:'linear-gradient(180deg,#3a1010,#1a0606)',
+  ice:'linear-gradient(180deg,#dcefff,#7fbce0)',
+  night:'radial-gradient(ellipse at 50% 0%,#16263f,#0a1422)',
+  blood:'radial-gradient(ellipse at 50% 0%,#3a0d0d,#1a0606)',
+  emerald:'linear-gradient(180deg,#1a3a2a,#081810)',
+  storm:'linear-gradient(180deg,#2a3038,#10141a)'
+};
 function setThemeUI(t){
   if(!THEME_IDS.includes(t))t='light';
   selectedTheme=t;
@@ -613,6 +628,9 @@ function setThemeUI(t){
     btn.classList.toggle('btn-fire',id===t);
     btn.classList.toggle('btn-ghost',id!==t);
   });
+  // Live preview: apply the theme's background so the leader sees the look
+  const pv=$('#stylePreview');
+  if(pv && THEME_PV[t]) pv.style.background=THEME_PV[t];
 }
 THEME_IDS.forEach(id=>{
   const btn=$('#'+THEME_BTN[id]);
