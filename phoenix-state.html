@@ -964,11 +964,41 @@ if(document.readyState!=='loading')setStateLabels();
 else document.addEventListener('DOMContentLoaded',setStateLabels);
 applyLang();
 
+// The Chinese flavor text under "Legends" is part of State 3139's specific
+// branding (PXR) — hide it in every other state so legends stay generic.
+function hideZhBrandingOutside3139(){
+  if(STATE_ID==='3139') return;
+  document.querySelectorAll('.legends-title-zh,.legends-intro-zh,.meteor-title-zh,.victories-title-zh,.legends-cta-zh')
+    .forEach(el=>{ el.style.display='none'; });
+}
+if(document.readyState!=='loading')hideZhBrandingOutside3139();
+else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
+
 // ── SUPABASE: load alliances + show admin btn ─────────────────
 (async()=>{
   const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
   const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+  // Guard: if the requested state isn't registered yet, show a clear
+  // message instead of silently rendering an empty shell.
+  if(STATE_ID!=='3139'){
+    const{data:stateExists}=await sb.from('states').select('id').eq('id',STATE_ID).maybeSingle();
+    if(!stateExists){
+      const msgs={
+        en:{t:'State '+STATE_ID+' doesn\'t exist yet',p:'This state hasn\'t been created on Phoenix yet. If you think this is a mistake, contact an admin.',cta:'Go to State 3139'},
+        es:{t:'El estado '+STATE_ID+' aún no existe',p:'Este estado todavía no se ha creado en Phoenix. Si crees que es un error, contacta con un admin.',cta:'Ir al Estado 3139'}
+      };
+      const m=msgs[LANG]||msgs.en;
+      document.body.innerHTML=`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:'Fredoka',sans-serif;background:#0b1220;color:#fff;">
+        <div style="font-size:2.4rem;margin-bottom:10px;">🧊</div>
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">${m.t}</div>
+        <div style="font-size:.9rem;color:#9ab8e0;max-width:340px;margin-bottom:20px;">${m.p}</div>
+        <a href="phoenix-state.html" style="background:#3a6df0;color:#fff;padding:10px 22px;border-radius:10px;text-decoration:none;font-weight:600;">${m.cta}</a>
+      </div>`;
+      return;
+    }
+  }
 
   // Load alliances sorted by state_rank
   const{data:als}=await sb.from('alliances').select('tag,name,state_rank,members,accent,is_showcase,state_id').eq('state_id',STATE_ID).order('state_rank');
