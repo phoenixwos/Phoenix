@@ -1247,8 +1247,13 @@ $('#importFile').addEventListener('change',async(e)=>{
     if(ci.name<0||ci.gid<0){showErr('#importErr','Could not find Name and Governor ID columns.');return;}
 
     // fetch existing members of this alliance for matching by gov id
-    const{data:existing}=await sb.from('players').select('id,governor_id').eq('alliance_id',editingAlliance.id);
-    const byGid={};(existing||[]).forEach(m=>{if(m.governor_id)byGid[String(m.governor_id).trim()]=m.id;});
+    const{data:existing}=await sb.from('players').select('id,governor_id,name').eq('alliance_id',editingAlliance.id);
+    const byGid={};
+    const byName={};
+    (existing||[]).forEach(m=>{
+      if(m.governor_id)byGid[String(m.governor_id).trim()]=m.id;
+      if(m.name)byName[String(m.name).trim().toLowerCase()]=m.id;
+    });
 
     let added=0,updated=0,errs=0;
     for(let i=1;i<rows.length;i++){
@@ -1260,7 +1265,7 @@ $('#importFile').addEventListener('change',async(e)=>{
       const conf=['yes','y','true','1','sí','si','✓'].includes(confRaw);
       let grank=ci.rank>=0?String(r[ci.rank]||'').trim().toUpperCase():'';
       if(grank&&!/^R[12345]$/.test(grank))grank=''; // accept R1–R5
-      const existingId=gid&&byGid[gid];
+      const existingId=gid&&byGid[gid] || (!gid&&byName[name.toLowerCase()]);
       if(existingId){
         const{error}=await sb.from('players').update({name,alliance_confirmed:conf,game_rank:grank||null}).eq('id',existingId);
         if(error)errs++;else updated++;
