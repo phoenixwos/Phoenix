@@ -923,7 +923,7 @@ $('#saveBtn').addEventListener('click',async()=>{
     const allianceId=$('#fAlliance').value;
     if(allianceId){
       const a=alliances.find(x=>x.id===allianceId);
-      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=`phoenix-alliance.html?tag=${a.tag}`;},400);}
+      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=statePublicUrl(newState,`phoenix-alliance.html?tag=${a.tag}`);},400);}
     }
   }
 });
