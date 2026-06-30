@@ -1259,7 +1259,7 @@ $('#importFile').addEventListener('change',async(e)=>{
       const confRaw=ci.conf>=0?String(r[ci.conf]||'').trim().toLowerCase():'';
       const conf=['yes','y','true','1','sí','si','✓'].includes(confRaw);
       let grank=ci.rank>=0?String(r[ci.rank]||'').trim().toUpperCase():'';
-      if(grank&&!/^R[345]$/.test(grank))grank=''; // only accept R3/R4/R5
+      if(grank&&!/^R[12345]$/.test(grank))grank=''; // accept R1–R5
       const existingId=gid&&byGid[gid];
       if(existingId){
         const{error}=await sb.from('players').update({name,alliance_confirmed:conf,game_rank:grank||null}).eq('id',existingId);
