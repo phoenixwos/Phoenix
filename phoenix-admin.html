@@ -451,6 +451,18 @@ body{padding-bottom:72px !important;}
         <div id="rankRows" class="dlist"></div>
         <div class="errmsg" id="rankErr" style="margin-top:10px;"></div>
         <button class="btn btn-fire" id="saveRankBtn" style="margin-top:12px;">💾 Save state ranking</button>
+
+        <!-- Excel bulk tools for the ranking -->
+        <div style="margin-top:18px;padding-top:16px;border-top:1.5px dashed var(--panel-edge);">
+          <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px;font-family:'Fredoka';font-weight:600;">📊 Bulk edit by Excel</p>
+          <p style="font-size:.74rem;color:var(--muted);margin-bottom:10px;">Download the current list, edit tag / name / rank in Excel, then upload it back. Alliances not in your file just leave the ranking — their pages and data are never deleted.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-ghost" id="rankDownloadBtn" style="width:auto;">⬇️ Download current ranking</button>
+            <button class="btn btn-fire" id="rankUploadBtn" style="width:auto;">⬆️ Upload ranking Excel</button>
+            <input type="file" id="rankXlsxInput" accept=".xlsx,.xls,.csv" style="display:none">
+          </div>
+          <div class="errmsg" id="rankBulkMsg" style="margin-top:8px;"></div>
+        </div>
       </div>
     </div>
 
@@ -540,17 +552,53 @@ TEK"></textarea>
       </div>
     </div>
 
-    <!-- CONFIG TEMPLATE (export / import) -->
+    <!-- CONFIG TEMPLATES (global + per-section) -->
     <div style="margin-top:20px;padding:16px;background:linear-gradient(180deg,#fff7e6,#fff0d8);border:2px solid #ffd9a0;border-radius:14px;">
-      <div style="font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#c2470f;margin-bottom:4px;">📋 Config template</div>
-      <div style="font-size:.78rem;color:#7a5a3a;line-height:1.4;margin-bottom:12px;">Export this alliance's settings to an Excel file that leaders can fill in. Import it back to load everything at once. Then press <b>Save changes</b>.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="exportCfgBtn" style="flex:1;min-width:140px;">⬇️ Export template</button>
-        <button class="btn btn-ghost" id="importCfgBtn" style="flex:1;min-width:140px;">⬆️ Import template</button>
-        <input type="file" id="importCfgFile" accept=".xlsx,.xls" style="display:none;">
+      <div style="font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#c2470f;margin-bottom:4px;">📋 Config templates</div>
+      <div style="font-size:.78rem;color:#7a5a3a;line-height:1.4;margin-bottom:14px;">Fill in Excel and import back, then press <b>Save changes</b>. Files come pre-filled with the current data.</div>
+
+      <!-- GLOBAL -->
+      <div style="background:#fff;border:2px solid #ffc266;border-radius:11px;padding:12px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka';font-weight:700;font-size:.9rem;color:#c2470f;margin-bottom:6px;">🌐 WHOLE ALLIANCE <span style="font-weight:500;font-size:.72rem;color:#a06a3a;">— everything in one file</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="exportCfgBtn" style="flex:1;min-width:130px;">⬇️ Download all</button>
+          <button class="btn btn-ghost" id="importCfgBtn" style="flex:1;min-width:130px;">⬆️ Upload all</button>
+          <input type="file" id="importCfgFile" accept=".xlsx,.xls" style="display:none;">
+        </div>
       </div>
+
+      <!-- PER-SECTION -->
+      <div style="font-family:'Fredoka';font-weight:700;font-size:.82rem;color:#7a5a3a;margin:4px 0 8px;">📑 SINGLE SECTIONS <span style="font-weight:500;font-size:.72rem;">— one file each</span></div>
+      <div id="sectionTemplateGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="sect-tpl" data-sect="leaders">
+          <span>👥 Leaders</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="events">
+          <span>📅 Events</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="rules">
+          <span>📜 Rules</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="news">
+          <span>📢 News</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+      </div>
+      <input type="file" id="sectImportFile" accept=".xlsx,.xls" style="display:none;">
       <div class="errmsg" id="cfgImportMsg" style="margin-top:8px;"></div>
     </div>
+    <style>
+      .sect-tpl{display:flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #ffd9a0;border-radius:10px;padding:7px 9px;}
+      .sect-tpl span{flex:1;font-family:'Fredoka';font-weight:600;font-size:.8rem;color:#8a5a2a;}
+      .sect-tpl .btn{padding:5px 9px;font-size:.82rem;min-width:auto;flex:none;}
+    </style>
 
     <!-- SAVE BAR -->
     <div style="margin-top:20px;" id="mainSaveBar">
@@ -1406,7 +1454,67 @@ $('#exportCfgBtn').onclick=()=>{
   readNews().forEach(n=>nwRows.push([n.date||'',n.msg||'']));
   XLSX.utils.book_append_sheet(wb, aoaSheet(nwRows), '6. News');
 
-  XLSX.writeFile(wb, `${tag}-config-template.xlsx`);
+  XLSX.writeFile(wb, `${tag}-config-ALL.xlsx`);
+};
+
+// ── PER-SECTION TEMPLATES (download / upload one section) ─────
+const SECT_DEF={
+  leaders:{sheet:'Leaders',header:['Name','Rank','Role'],read:()=>readLeaders().map(l=>[l.name||'',l.rank||'',l.role||''])},
+  events: {sheet:'Events', header:['Icon','Event name','Frequency','Time 1','Time 2','Note'],read:()=>readEvents().map(e=>[e.icon||'',e.name||'',e.freq||'',e.t1||'',e.t2||'',e.note||''])},
+  rules:  {sheet:'Rules',  header:['Title','Text'],read:()=>readRules().map(r=>[r.title||'',r.text||''])},
+  news:   {sheet:'News',   header:['Date label','Text'],read:()=>readNews().map(n=>[n.date||'',n.msg||''])}
+};
+let _pendingSect=null;
+
+document.querySelectorAll('.sect-tpl').forEach(box=>{
+  const sect=box.dataset.sect;
+  box.querySelector('.stpl-dl').onclick=()=>{
+    const def=SECT_DEF[sect];
+    const tag=($('#fTag').value.trim()||'alliance');
+    const rows=[def.header,...def.read()];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,def.sheet);
+    XLSX.writeFile(wb,`${tag}-${sect}.xlsx`);
+    toast(def.sheet+' downloaded ✓');
+  };
+  box.querySelector('.stpl-up').onclick=()=>{
+    _pendingSect=sect;
+    $('#sectImportFile').click();
+  };
+});
+
+$('#sectImportFile').onchange=async(e)=>{
+  const file=e.target.files?.[0];
+  if(!file||!_pendingSect){return;}
+  hideErr('#cfgImportMsg');
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()));
+    if(rows.length<2){showErr('#cfgImportMsg','That file has no data rows.');return;}
+    const data=rows.slice(1); // drop header
+    const sect=_pendingSect;
+    const fill=(listId,htmlFn,items)=>{
+      const list=$('#'+listId);list.innerHTML='';
+      items.forEach((it,i)=>{const d=document.createElement('div');d.innerHTML=htmlFn(i,it);list.appendChild(d.firstElementChild);});
+    };
+    if(sect==='leaders'){
+      fill('leaderList',leaderHTML,data.map(r=>({name:String(r[0]||'').trim(),rank:String(r[1]||'').trim(),role:String(r[2]||'').trim()})).filter(l=>l.name));
+    }else if(sect==='events'){
+      fill('eventList',eventHTML,data.map(r=>({icon:String(r[0]||'').trim(),name:String(r[1]||'').trim(),freq:String(r[2]||'').trim(),t1:String(r[3]||'').trim(),t2:String(r[4]||'').trim(),note:String(r[5]||'').trim()})).filter(ev=>ev.name));
+    }else if(sect==='rules'){
+      fill('ruleList',ruleHTML,data.map(r=>({title:String(r[0]||'').trim(),text:String(r[1]||'').trim()})).filter(x=>x.title||x.text));
+    }else if(sect==='news'){
+      fill('newsList',newsHTML,data.map(r=>({date:String(r[0]||'').trim(),msg:String(r[1]||'').trim()})).filter(x=>x.date||x.msg));
+    }
+    $('#cfgImportMsg').style.color='var(--ink-soft)';
+    $('#cfgImportMsg').textContent=`✓ ${sect} loaded from file — press Save changes to keep it.`;
+    $('#cfgImportMsg').style.display='';
+    toast(sect+' loaded ✓');
+  }catch(err){console.error(err);showErr('#cfgImportMsg','Import failed: '+err.message);}
+  finally{_pendingSect=null;e.target.value='';}
 };
 
 $('#importCfgBtn').onclick=()=>{
@@ -1606,6 +1714,102 @@ $('#saveRankBtn').onclick=async()=>{
   btn.textContent='💾 Save state ranking';btn.disabled=false;
   if(errors.length){showErr('#rankErr','Some saves failed: '+errors[0]);}
   else{toast('Ranking saved ✓');loadRankingEditor();}
+};
+
+// ── RANKING: DOWNLOAD current list as Excel (pre-filled) ──────
+$('#rankDownloadBtn').onclick=async()=>{
+  hideErr('#rankBulkMsg');
+  const{data}=await sb.from('alliances').select('tag,name,state_rank').eq('state_id',rankState).order('state_rank');
+  const rows=[['Rank','Tag','Alliance name']];
+  (data||[]).forEach(a=>{
+    const r=(a.state_rank||'').replace('#','');
+    rows.push([r,a.tag||'',a.name||'']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:6},{wch:10},{wch:26}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'State '+rankState);
+  XLSX.writeFile(wb,'state-'+rankState+'-ranking.xlsx');
+  toast('Downloaded ✓');
+};
+
+// ── RANKING: UPLOAD Excel → safe replace ─────────────────────
+$('#rankUploadBtn').onclick=()=>$('#rankXlsxInput').click();
+$('#rankXlsxInput').onchange=(evt)=>{
+  const file=evt.target.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    hideErr('#rankBulkMsg');
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+      if(rows.length<2){showErr('#rankBulkMsg','The file has no data rows.');return;}
+      // Map header columns
+      const header=rows[0].map(h=>String(h||'').trim().toLowerCase());
+      const ci={rank:header.indexOf('rank'),tag:header.indexOf('tag'),name:header.indexOf('alliance name')};
+      if(ci.name<0)ci.name=header.indexOf('name');
+      if(ci.tag<0||ci.name<0){showErr('#rankBulkMsg','Missing Tag or Alliance name column.');return;}
+
+      // Parse uploaded rows
+      const uploaded=[];
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        const tag=String(r[ci.tag]||'').trim();
+        if(!tag)continue;
+        const name=String(r[ci.name]||'').trim();
+        let rank=ci.rank>=0?String(r[ci.rank]||'').trim().replace('#',''):'';
+        const n=parseInt(rank,10);
+        rank=(n>=1)?String(n).padStart(2,'0'):'';
+        uploaded.push({tag,name,rank});
+      }
+      if(!uploaded.length){showErr('#rankBulkMsg','No valid rows found.');return;}
+
+      const btn=$('#rankUploadBtn');btn.textContent='Uploading…';btn.disabled=true;
+
+      // Existing alliances in this state
+      const{data:existing}=await sb.from('alliances').select('id,tag,name,state_rank').eq('state_id',rankState);
+      const byTag={};(existing||[]).forEach(a=>{byTag[(a.tag||'').toLowerCase()]=a;});
+
+      const uploadedTags=new Set(uploaded.map(u=>u.tag.toLowerCase()));
+      let created=0,updated=0,unranked=0,errors=[];
+
+      // Insert / update from the file
+      for(const u of uploaded){
+        const ex=byTag[u.tag.toLowerCase()];
+        const sr=u.rank?'#'+u.rank:null;
+        if(ex){
+          const patch={state_rank:sr};
+          if(u.name)patch.name=u.name; // update name if provided
+          const{error}=await sb.from('alliances').update(patch).eq('id',ex.id);
+          if(error)errors.push(error.message);else updated++;
+        }else{
+          const{error}=await sb.from('alliances').insert({tag:u.tag,name:u.name||u.tag,state_id:rankState,state_rank:sr,is_showcase:false});
+          if(error)errors.push(error.message);else created++;
+        }
+      }
+
+      // Safe replace: alliances NOT in the file just leave the ranking (rank → null).
+      // We NEVER delete rows — pages, configs and members are always preserved.
+      for(const a of (existing||[])){
+        if(!uploadedTags.has((a.tag||'').toLowerCase()) && a.state_rank){
+          const{error}=await sb.from('alliances').update({state_rank:null}).eq('id',a.id);
+          if(!error)unranked++;
+        }
+      }
+
+      btn.textContent='⬆️ Upload ranking Excel';btn.disabled=false;
+      evt.target.value='';
+      if(errors.length){showErr('#rankBulkMsg','Done with some errors: '+errors[0]);}
+      else{toast('Ranking updated ✓');}
+      $('#rankBulkMsg').style.color='var(--ink-soft)';
+      $('#rankBulkMsg').textContent=`✓ ${created} added, ${updated} updated, ${unranked} removed from ranking (kept safe).`;
+      $('#rankBulkMsg').style.display='';
+      loadRankingEditor();
+    }catch(err){console.error(err);showErr('#rankBulkMsg','Upload failed: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
 };
 
 // ── NAP EDITOR (admins only) ──────────────────────────────────
