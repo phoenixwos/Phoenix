@@ -1159,7 +1159,7 @@ async function loadMembers(){
   const list=document.getElementById('membersList');
   if(!list)return;
   try{
-    const{data:al}=await _sb.from('alliances').select('id').eq('tag',tag).maybeSingle();
+    const{data:al}=await _sb.from('alliances').select('id').eq('tag',tag).eq('state_id',PAGE_STATE).maybeSingle();
     if(!al){list.innerHTML='';return;}
     const{data:members}=await _sb.from('players')
       .select('id,name,avatar,governor_id,languages,alliance_confirmed')
