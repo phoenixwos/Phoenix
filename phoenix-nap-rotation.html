@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAP Rotation · Phoenix</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --sky:#0b1220;--panel:#16263a;--panel-edge:#264866;
+  --ink:#e8f4ff;--ink-soft:#9ab8e0;--muted:#6a8aa8;
+  --acc:#ff7a2e;--acc-d:#e85a18;--acc-sh:#c2470f;
+  --green:#56c98a;--gold:#ffb938;--red:#e05050;
+}
+body{background:linear-gradient(180deg,#0b1220,#0d1b2a 60%,#081019);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:80px;}
+button{font-family:'Fredoka',sans-serif;cursor:pointer;}
+h1,h2,h3{font-family:'Baloo 2',cursive;}
+
+/* TOP BAR */
+.top{position:sticky;top:0;z-index:30;background:rgba(11,18,32,.95);backdrop-filter:blur(8px);border-bottom:2px solid var(--panel-edge);padding:0 12px;}
+.top-in{max-width:600px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.brand{font-family:'Baloo 2',cursive;font-weight:800;font-size:1rem;color:var(--ink);}
+.brand em{color:var(--acc);font-style:normal;}
+.back-btn{font-family:'Fredoka';font-weight:600;font-size:.78rem;color:var(--ink-soft);text-decoration:none;display:flex;align-items:center;gap:4px;}
+
+/* SHELL */
+.shell{max-width:600px;margin:0 auto;padding:16px 12px;}
+.section-label{font-family:'Fredoka';font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--acc);margin:4px 2px 10px;}
+.card{background:var(--panel);border:1px solid var(--panel-edge);border-radius:16px;padding:16px;margin-bottom:14px;}
+
+/* SEASON HEADER */
+.season-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;}
+.season-title{font-family:'Baloo 2';font-weight:800;font-size:1.1rem;color:var(--ink);}
+.season-sel{background:var(--panel);border:2px solid var(--panel-edge);border-radius:10px;color:var(--ink);font-family:'Fredoka';font-weight:600;font-size:.82rem;padding:6px 10px;}
+
+/* WEEK TABS */
+.week-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:16px;}
+.week-tabs::-webkit-scrollbar{display:none;}
+.week-tab{flex:none;font-family:'Fredoka';font-weight:600;font-size:.74rem;padding:7px 12px;border-radius:10px;border:2px solid var(--panel-edge);background:var(--panel);color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
+.week-tab.active{background:linear-gradient(180deg,var(--acc),var(--acc-d));color:#fff;border-color:var(--acc-d);}
+.week-tab.has-data{border-color:#56c98a;}
+
+/* BUILDING GRID */
+.building-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.building-card{background:#0d1b2a;border:2px solid var(--panel-edge);border-radius:12px;padding:10px 12px;position:relative;}
+.building-card.stronghold{border-color:#ffb938;}
+.building-card.taken{border-color:#56c98a;}
+.building-label{font-family:'Fredoka';font-weight:700;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.building-label .type-badge{font-size:.6rem;padding:2px 6px;border-radius:6px;background:#ffb93822;color:var(--gold);}
+.building-label .type-badge.fort{background:#4a9fd422;color:#4a9fd4;}
+.building-alliance{font-family:'Baloo 2';font-weight:700;font-size:.92rem;color:var(--ink);min-height:22px;}
+.building-alliance.empty{color:var(--muted);font-style:italic;font-size:.8rem;}
+.building-note{font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.3;}
+
+/* IMPORT AREA */
+.import-area{display:flex;flex-direction:column;gap:8px;}
+.import-ta{width:100%;background:#0d1b2a;border:2px solid var(--panel-edge);border-radius:10px;color:var(--ink);font-family:'Inter';font-size:.82rem;padding:10px;resize:vertical;min-height:100px;line-height:1.4;}
+.import-ta::placeholder{color:var(--muted);}
+.btn{font-family:'Fredoka';font-weight:600;font-size:.86rem;padding:10px 18px;border-radius:12px;border:none;display:inline-flex;align-items:center;gap:7px;cursor:pointer;}
+.btn-acc{background:linear-gradient(180deg,var(--acc),var(--acc-d));color:#fff;box-shadow:0 3px 0 var(--acc-sh);}
+.btn-ghost{background:var(--panel);border:2px solid var(--panel-edge);color:var(--ink-soft);}
+.btn-danger{background:#3a1010;border:2px solid #8a2020;color:#f09090;}
+.btn-green{background:linear-gradient(180deg,#3da76e,#2a7a52);color:#fff;box-shadow:0 3px 0 #1a5035;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* NOTES */
+.note-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--panel-edge);}
+.note-row:last-child{border-bottom:none;}
+.note-tag{font-family:'Fredoka';font-weight:700;font-size:.74rem;color:var(--acc);min-width:40px;}
+.note-txt{flex:1;font-size:.82rem;color:var(--ink-soft);line-height:1.4;}
+.note-input{flex:1;background:#0d1b2a;border:1px solid var(--panel-edge);border-radius:8px;color:var(--ink);font-family:'Inter';font-size:.8rem;padding:6px 8px;}
+
+/* SEASON MANAGER */
+.season-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--panel-edge);}
+.season-item:last-child{border-bottom:none;}
+.season-item-name{flex:1;font-family:'Fredoka';font-weight:600;font-size:.9rem;color:var(--ink);}
+
+/* TOAST */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a3a52;border:2px solid var(--acc);color:var(--ink);font-family:'Fredoka';font-weight:600;font-size:.86rem;padding:10px 20px;border-radius:14px;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ACCESS DENIED */
+#accessDenied{display:none;text-align:center;padding:60px 20px;}
+#accessDenied .icon{font-size:3rem;margin-bottom:12px;}
+#accessDenied p{color:var(--ink-soft);font-size:.9rem;}
+
+/* LOADING */
+#loadingScreen{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--panel-edge);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* BOTTOM NAV */
+.botnav{position:fixed;bottom:0;left:0;right:0;z-index:45;background:linear-gradient(180deg,#0d1b2a,#081019);border-top:2px solid var(--panel-edge);display:flex;justify-content:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));}
+.botnav a{flex:1;max-width:110px;text-decoration:none;text-align:center;padding:7px 4px;border-radius:12px;font-family:'Fredoka';font-weight:700;font-size:.68rem;color:rgba(255,255,255,.5);border:2px solid transparent;line-height:1.2;}
+.botnav a .ic{display:block;font-size:1.35rem;margin-bottom:2px;}
+.botnav a.active{background:linear-gradient(180deg,var(--acc),var(--acc-d));border-color:var(--acc-d);color:#fff;}
+body{padding-bottom:72px!important;}
+
+/* TABS */
+.main-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.main-tab{font-family:'Fredoka';font-weight:600;font-size:.8rem;padding:8px 14px;border-radius:11px;border:2px solid var(--panel-edge);background:var(--panel);color:var(--ink-soft);cursor:pointer;}
+.main-tab.active{background:linear-gradient(180deg,var(--acc),var(--acc-d));color:#fff;border-color:var(--acc-d);}
+.main-panel{display:none;}
+.main-panel.active{display:block;}
+
+/* HISTORY TABLE */
+.hist-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.hist-table th{text-align:left;padding:6px 8px;color:var(--muted);font-family:'Fredoka';font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--panel-edge);}
+.hist-table td{padding:7px 8px;border-bottom:1px solid #1a2e42;color:var(--ink-soft);vertical-align:top;}
+.hist-table tr:last-child td{border-bottom:none;}
+.hist-table .tag{font-family:'Fredoka';font-weight:700;color:var(--acc);}
+.hist-table .week-num{color:var(--gold);font-family:'Fredoka';font-weight:700;}
+.hist-table .note-cell{color:var(--muted);font-style:italic;font-size:.72rem;}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="spinner"></div><br>Loading…
+</div>
+
+<div id="accessDenied">
+  <div class="icon">🔒</div>
+  <h2 style="margin-bottom:8px;">R4/R5 Only</h2>
+  <p>This tool is restricted to R4 and R5 members.<br>Log in with your Phoenix account to access it.</p>
+  <div style="margin-top:20px;">
+    <a href="phoenix-profile.html" class="btn btn-acc" style="text-decoration:none;">Log in</a>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="top"><div class="top-in">
+    <a href="javascript:history.back()" class="back-btn">◂ Back</a>
+    <div class="brand">PHO<em>E</em>NIX · <span style="color:var(--gold);">NAP Rotation</span></div>
+    <div style="width:50px;"></div>
+  </div></div>
+
+  <div class="shell">
+    <!-- SEASON SELECTOR -->
+    <div class="season-header">
+      <div class="season-title" id="seasonTitle">Season —</div>
+      <select class="season-sel" id="seasonSel" onchange="changeSeason(this.value)"></select>
+    </div>
+
+    <!-- MAIN TABS -->
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchTab('rotation')">📅 Rotation</button>
+      <button class="main-tab" onclick="switchTab('history')">📋 History</button>
+      <button class="main-tab" data-admin-only onclick="switchTab('import')">📥 Import</button>
+      <button class="main-tab" data-admin-only onclick="switchTab('seasons')">⚙️ Seasons</button>
+    </div>
+
+    <!-- ROTATION TAB -->
+    <div class="main-panel active" id="panel-rotation">
+      <div class="week-tabs" id="weekTabs"></div>
+
+      <div class="section-label">🏰 Strongholds (S1–S4)</div>
+      <div class="building-grid" id="strongholdGrid"></div>
+
+      <div class="section-label">⚔️ Fortresses (F1–F12)</div>
+      <div class="building-grid" id="fortressGrid"></div>
+
+      <div class="section-label">📝 Week notes</div>
+      <div class="card" id="weekNotesCard">
+        <div id="notesList"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;" data-admin-only>
+          <input class="note-input" id="newNoteTag" placeholder="Tag (e.g. PXR)" style="width:90px;flex:none;">
+          <input class="note-input" id="newNoteText" placeholder="Note (e.g. Fort F3 was attacked by DOM)">
+          <button class="btn btn-acc" onclick="addNote()" style="padding:6px 12px;font-size:.8rem;">+</button>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:4px;">
+        <button class="btn btn-green" data-admin-only onclick="saveWeek()">💾 Save week</button>
+        <button class="btn btn-ghost" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn btn-ghost" data-admin-only onclick="downloadTemplate()">📋 Blank template</button>
+        <button class="btn btn-acc" data-admin-only onclick="document.getElementById('xlsxInput').click()">📥 Import Excel</button>
+        <input type="file" id="xlsxInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="main-panel" id="panel-history">
+      <div class="card" style="padding:12px 0;">
+        <table class="hist-table" id="histTable">
+          <thead><tr>
+            <th>Week</th><th>Building</th><th>Alliance</th><th>Notes</th>
+          </tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- IMPORT TAB -->
+    <div class="main-panel" id="panel-import">
+      <div class="card">
+        <div class="section-label">Paste NAP chat message</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">Paste the allocation message from your NAP chat (e.g. <em>F1:LCW F2:PXR S1:DOM…</em>). The tool will extract the assignments automatically.</p>
+        <div class="import-area">
+          <textarea class="import-ta" id="importText" placeholder="Paste here...
+Example:
+Allocation of strong:
+F1:LCW     F2:PXR
+S1:DOM     S2:RAW
+..."></textarea>
+          <div id="importPreview" style="display:none;margin-top:8px;"></div>
+          <div class="btn-row">
+            <button class="btn btn-acc" onclick="parseImport()">🔍 Preview</button>
+            <button class="btn btn-green" id="applyImportBtn" style="display:none;" onclick="applyImport()">✓ Apply to current week</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('importText').value='';document.getElementById('importPreview').style.display='none';document.getElementById('applyImportBtn').style.display='none';">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEASONS TAB -->
+    <div class="main-panel" id="panel-seasons">
+      <div class="card">
+        <div class="section-label">Manage seasons</div>
+        <div id="seasonList"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+          <input class="note-input" id="newSeasonName" placeholder="Season name (e.g. Season 3)" style="flex:1;">
+          <button class="btn btn-acc" onclick="createSeason()" style="padding:8px 14px;">+ New season</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<nav class="botnav">
+  <a href="phoenix-state.html" id="stateNavLink"><span class="ic">🗺️</span><span id="stateNavNum">—</span></a>
+  <a href="phoenix-nap-rotation.html" class="active"><span class="ic">🏰</span>NAP</a>
+  <a href="phoenix-profile.html"><span class="ic">🚪</span>Login</a>
+</nav>
+
+<script>
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function getState(){const s=new URLSearchParams(location.search).get('s');return(s&&/^\d{3,5}$/.test(s))?s:'3139';}
+function stateUrl(page){const s=getState();return s==='3139'?page:page+(page.includes('?')?'&':'?')+'s='+s;}
+const STATE_ID=getState();
+
+// State
+let currentUser=null;
+let isAdmin=false;   // only full admins can edit; R4/R5 are read-only
+let seasons=[];
+let currentSeasonId=null;
+let currentWeek=1;
+let weekData={};     // {weekNum: {buildings:{S1:'',F1:'',...}, notes:[{tag,text}]}}
+let parsedImport=null;
+
+// Buildings config
+const STRONGHOLDS=['S1','S2','S3','S4'];
+const FORTRESSES=['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'];
+const ALL_BUILDINGS=[...STRONGHOLDS,...FORTRESSES];
+
+function toast(msg,dur=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function $$(id){return document.getElementById(id);}
+
+// ── INIT ────────────────────────────────────────────────────────
+(async()=>{
+  // Fix nav links
+  $$('stateNavLink').href=stateUrl('phoenix-state.html');
+  $$('stateNavNum').textContent=STATE_ID;
+
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session?.user){show('accessDenied');return;}
+
+  // Check R4/R5/admin — admins edit, R4/R5 read-only
+  const{data:players}=await sb.from('players').select('role').eq('owner',session.user.id);
+  const roles=(players||[]).map(p=>p.role);
+  const isStaff=roles.some(r=>['admin','r4','r5'].includes(r));
+  if(!isStaff){show('accessDenied');return;}
+  isAdmin=roles.includes('admin');
+
+  currentUser=session.user;
+  await loadSeasons();
+  show('mainApp');
+  applyPermissions();
+})();
+
+// Hide/disable all editing controls for non-admins (R4/R5 read-only)
+function applyPermissions(){
+  if(isAdmin)return; // admins keep everything
+  // Hide edit-only buttons
+  document.querySelectorAll('[data-admin-only]').forEach(el=>el.style.display='none');
+  // Make building inputs read-only
+  document.querySelectorAll('.building-card input').forEach(i=>{i.readOnly=true;});
+  // Add a read-only banner
+  const banner=document.createElement('div');
+  banner.style.cssText='background:#1a3a52;border:1px solid #4a9fd4;border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:.8rem;color:#9ab8e0;text-align:center;font-family:Fredoka;font-weight:600;';
+  banner.textContent='👁️ Read-only — you can view and export, but only admins can edit.';
+  const shell=document.querySelector('.shell');
+  if(shell)shell.insertBefore(banner,shell.firstChild);
+}
+
+function show(id){
+  $$('loadingScreen').style.display='none';
+  $$('accessDenied').style.display='none';
+  $$('mainApp').style.display='none';
+  $$(id).style.display='';
+}
+
+// ── SEASONS ─────────────────────────────────────────────────────
+async function loadSeasons(){
+  const{data}=await sb.from('nap_seasons').select('*').eq('state_id',STATE_ID).order('created_at',{ascending:false});
+  seasons=data||[];
+
+  const sel=$$('seasonSel');
+  sel.innerHTML='';
+  if(seasons.length===0){
+    sel.innerHTML='<option value="">No seasons yet</option>';
+    renderSeasonList();
+    return;
+  }
+  seasons.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;o.textContent=s.name;
+    sel.appendChild(o);
+  });
+  currentSeasonId=seasons[0].id;
+  $$('seasonTitle').textContent=seasons[0].name;
+  await loadWeeks();
+  renderSeasonList();
+}
+
+async function changeSeason(id){
+  currentSeasonId=id;
+  const s=seasons.find(x=>x.id===id);
+  if(s)$$('seasonTitle').textContent=s.name;
+  currentWeek=1;
+  await loadWeeks();
+}
+
+async function loadWeeks(){
+  if(!currentSeasonId)return;
+  const{data}=await sb.from('nap_weeks').select('*').eq('season_id',currentSeasonId).order('week_number');
+  weekData={};
+  (data||[]).forEach(w=>{
+    weekData[w.week_number]={id:w.id,buildings:w.buildings||{},notes:w.notes||[]};
+  });
+  renderWeekTabs();
+  renderCurrentWeek();
+}
+
+function renderWeekTabs(){
+  const tabs=$$('weekTabs');
+  tabs.innerHTML='';
+  for(let w=1;w<=8;w++){
+    const btn=document.createElement('button');
+    btn.className='week-tab'+(w===currentWeek?' active':'')+(weekData[w]?' has-data':'');
+    btn.textContent='W'+w;
+    btn.onclick=(()=>{const ww=w;return()=>{currentWeek=ww;renderWeekTabs();renderCurrentWeek();}})();
+    tabs.appendChild(btn);
+  }
+}
+
+function renderCurrentWeek(){
+  const data=weekData[currentWeek]||{buildings:{},notes:[]};
+  // Strongholds
+  const sg=$$('strongholdGrid');sg.innerHTML='';
+  STRONGHOLDS.forEach(b=>{
+    const ally=data.buildings[b]||'';
+    sg.appendChild(buildingCard(b,'stronghold',ally));
+  });
+  // Fortresses
+  const fg=$$('fortressGrid');fg.innerHTML='';
+  FORTRESSES.forEach(b=>{
+    const ally=data.buildings[b]||'';
+    fg.appendChild(buildingCard(b,'fort',ally));
+  });
+  // Notes
+  renderNotes(data.notes||[]);
+}
+
+function buildingCard(id,type,alliance){
+  const div=document.createElement('div');
+  div.className='building-card'+(type==='stronghold'?' stronghold':'')+(alliance?' taken':'');
+  div.innerHTML=`
+    <div class="building-label">
+      ${id}
+      <span class="type-badge ${type==='stronghold'?'':'fort'}">${type==='stronghold'?'⭐ SH':'⚔️ Fort'}</span>
+    </div>
+    <input ${isAdmin?'':'readonly'} style="background:transparent;border:none;border-bottom:1px solid ${alliance?'#56c98a':'var(--panel-edge)'};color:${alliance?'#56c98a':'var(--ink)'};font-family:'Baloo 2';font-weight:700;font-size:.9rem;width:100%;padding:2px 0;outline:none;" 
+      value="${alliance}" placeholder="—" 
+      oninput="setBuilding('${id}',this.value)" 
+      onblur="this.style.color=this.value?'#56c98a':'var(--ink)';this.style.borderBottomColor=this.value?'#56c98a':'var(--panel-edge)'">
+  `;
+  return div;
+}
+
+function setBuilding(id,val){
+  if(!weekData[currentWeek])weekData[currentWeek]={buildings:{},notes:[]};
+  weekData[currentWeek].buildings[id]=val.trim().toUpperCase();
+}
+
+function renderNotes(notes){
+  const list=$$('notesList');list.innerHTML='';
+  (notes||[]).forEach((n,i)=>{
+    const row=document.createElement('div');row.className='note-row';
+    row.innerHTML=`<span class="note-tag">${n.tag||''}</span>
+      <span class="note-txt">${n.text||''}</span>
+      ${isAdmin?`<button onclick="removeNote(${i})" style="background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:2px 6px;">✕</button>`:''}`;
+    list.appendChild(row);
+  });
+}
+
+function addNote(){
+  const tag=$$('newNoteTag').value.trim().toUpperCase();
+  const text=$$('newNoteText').value.trim();
+  if(!text)return;
+  if(!weekData[currentWeek])weekData[currentWeek]={buildings:{},notes:[]};
+  weekData[currentWeek].notes.push({tag,text});
+  renderNotes(weekData[currentWeek].notes);
+  $$('newNoteTag').value='';$$('newNoteText').value='';
+}
+
+function removeNote(i){
+  if(!weekData[currentWeek])return;
+  weekData[currentWeek].notes.splice(i,1);
+  renderNotes(weekData[currentWeek].notes);
+}
+
+async function saveWeek(){
+  if(!currentSeasonId){toast('No season selected');return;}
+  const data=weekData[currentWeek]||{buildings:{},notes:[]};
+  const existing=weekData[currentWeek]?.id;
+  let err;
+  if(existing){
+    ({error:err}=await sb.from('nap_weeks').update({buildings:data.buildings,notes:data.notes}).eq('id',existing));
+  }else{
+    const{data:row,error:e}=await sb.from('nap_weeks').insert({season_id:currentSeasonId,state_id:STATE_ID,week_number:currentWeek,buildings:data.buildings,notes:data.notes}).select().single();
+    err=e;
+    if(row){weekData[currentWeek]={...data,id:row.id};}
+  }
+  if(err){toast('Error: '+err.message);return;}
+  renderWeekTabs();
+  toast('✓ Week '+currentWeek+' saved');
+  renderHistory();
+}
+
+// ── HISTORY ─────────────────────────────────────────────────────
+function renderHistory(){
+  const tbody=$$('histBody');tbody.innerHTML='';
+  const weeks=Object.keys(weekData).sort((a,b)=>a-b);
+  weeks.forEach(w=>{
+    const wd=weekData[w];
+    const buildings=Object.entries(wd.buildings||{}).filter(([,v])=>v);
+    const notes=wd.notes||[];
+    if(buildings.length===0&&notes.length===0)return;
+    buildings.forEach(([b,ally],i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        ${i===0?`<td class="week-num" rowspan="${buildings.length||1}">W${w}</td>`:''}
+        <td><span style="color:${STRONGHOLDS.includes(b)?'var(--gold)':'#4a9fd4'};font-family:Fredoka;font-weight:700;">${b}</span></td>
+        <td class="tag">${ally}</td>
+        <td class="note-cell">${i===0&&notes.length?notes.map(n=>`<b>${n.tag||''}</b> ${n.text}`).join(' · '):''}
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    if(buildings.length===0&&notes.length){
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="week-num">W${w}</td><td>—</td><td>—</td><td class="note-cell">${notes.map(n=>`<b>${n.tag||''}</b> ${n.text}`).join(' · ')}</td>`;
+      tbody.appendChild(tr);
+    }
+  });
+  if(!tbody.innerHTML){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted);">No data yet</td></tr>';}
+}
+
+// ── IMPORT / PARSE ───────────────────────────────────────────────
+function parseImport(){
+  const raw=$$('importText').value;
+  if(!raw.trim()){toast('Nothing to parse');return;}
+
+  // Match patterns like F1:PXR, S1:DOM, F1: PXR, F1 : PXR etc.
+  const matches=[...raw.matchAll(/([SF]\d{1,2})\s*[:=\-]\s*([A-Za-zÀ-ÖØ-öø-ÿ0-9_\u00C0-\u024F]{2,6})/g)];
+  if(!matches.length){toast('No assignments found. Expected format: F1:TAG');return;}
+
+  parsedImport={};
+  matches.forEach(m=>{
+    const key=m[1].toUpperCase();
+    const val=m[2].toUpperCase();
+    parsedImport[key]=val;
+  });
+
+  // Preview
+  const prev=$$('importPreview');
+  prev.style.display='';
+  prev.innerHTML=`<div style="background:#0d1b2a;border:1px solid var(--panel-edge);border-radius:10px;padding:10px;margin-bottom:8px;">
+    <div style="font-family:Fredoka;font-weight:600;font-size:.72rem;color:var(--acc);margin-bottom:8px;">PREVIEW — ${Object.keys(parsedImport).length} assignments found</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+      ${Object.entries(parsedImport).sort((a,b)=>{
+        const order=b=>[...STRONGHOLDS,...FORTRESSES].indexOf(b);
+        return order(a[0])-order(b[0]);
+      }).map(([b,t])=>`<div style="font-size:.78rem;"><span style="color:${STRONGHOLDS.includes(b)?'var(--gold)':'#4a9fd4'};font-family:Fredoka;font-weight:700;">${b}</span> → <b style="color:#56c98a;">${t}</b></div>`).join('')}
+    </div>
+  </div>`;
+  $$('applyImportBtn').style.display='';
+}
+
+function applyImport(){
+  if(!parsedImport)return;
+  if(!weekData[currentWeek])weekData[currentWeek]={buildings:{},notes:[]};
+  Object.assign(weekData[currentWeek].buildings,parsedImport);
+  renderCurrentWeek();
+  switchTab('rotation');
+  toast('Applied to Week '+currentWeek+' — save when ready');
+}
+
+// ── SEASONS MANAGER ──────────────────────────────────────────────
+function renderSeasonList(){
+  const list=$$('seasonList');list.innerHTML='';
+  if(!seasons.length){
+    list.innerHTML='<p style="color:var(--muted);font-size:.85rem;">No seasons yet.</p>';
+    return;
+  }
+  seasons.forEach(s=>{
+    const row=document.createElement('div');row.className='season-item';
+    row.innerHTML=`
+      <div class="season-item-name">${s.name}</div>
+      <button class="btn btn-ghost" style="font-size:.72rem;padding:5px 10px;" onclick="changeSeason('${s.id}');switchTab('rotation');">Select</button>
+      <button class="btn btn-danger" style="font-size:.72rem;padding:5px 10px;" onclick="deleteSeason('${s.id}','${s.name}')">Delete</button>`;
+    list.appendChild(row);
+  });
+}
+
+async function createSeason(){
+  const name=$$('newSeasonName').value.trim();
+  if(!name){toast('Enter a season name');return;}
+  const{data,error}=await sb.from('nap_seasons').insert({name,state_id:STATE_ID}).select().single();
+  if(error){toast('Error: '+error.message);return;}
+  $$('newSeasonName').value='';
+  await loadSeasons();
+  toast('✓ '+name+' created');
+}
+
+async function deleteSeason(id,name){
+  if(!confirm('Delete "'+name+'" and all its week data? This cannot be undone.'))return;
+  await sb.from('nap_weeks').delete().eq('season_id',id);
+  await sb.from('nap_seasons').delete().eq('id',id);
+  await loadSeasons();
+  toast('Deleted '+name);
+}
+
+// ── EXCEL: EXPORT / TEMPLATE / IMPORT (SheetJS) ──────────────────
+function exportExcel(){
+  if(!currentSeasonId){toast('No season selected');return;}
+  const season=seasons.find(s=>s.id===currentSeasonId);
+  const rows=[['Week','Building','Type','Alliance','Notes']];
+  Object.keys(weekData).sort((a,b)=>a-b).forEach(w=>{
+    const wd=weekData[w];
+    const notesStr=(wd.notes||[]).map(n=>(n.tag?n.tag+': ':'')+n.text).join(' | ');
+    let firstFilled=ALL_BUILDINGS.find(x=>wd.buildings?.[x]);
+    ALL_BUILDINGS.forEach(b=>{
+      const ally=wd.buildings?.[b]||'';
+      rows.push(['W'+w,b,STRONGHOLDS.includes(b)?'Stronghold':'Fortress',ally,b===firstFilled?notesStr:'']);
+    });
+  });
+  writeXlsx(rows,(season?.name||'nap-rotation')+'.xlsx','Rotation');
+  toast('✓ Exported');
+}
+
+// Blank template for the CURRENT week — fill it, share in chat, re-import
+function downloadTemplate(){
+  const rows=[['Week','Building','Type','Alliance','Notes']];
+  ALL_BUILDINGS.forEach(b=>{
+    rows.push(['W'+currentWeek,b,STRONGHOLDS.includes(b)?'Stronghold':'Fortress','','']);
+  });
+  writeXlsx(rows,'nap-week'+currentWeek+'-template.xlsx','Week '+currentWeek);
+  toast('✓ Template for Week '+currentWeek);
+}
+
+function writeXlsx(rows,filename,sheetName){
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:8},{wch:10},{wch:12},{wch:12},{wch:40}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,(sheetName||'Sheet1').slice(0,31));
+  XLSX.writeFile(wb,filename);
+}
+
+function importExcel(evt){
+  const file=evt.target.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+      if(!rows.length){toast('Empty file');return;}
+      // Find header columns
+      const header=rows[0].map(h=>String(h||'').trim().toLowerCase());
+      const ci={
+        week:header.indexOf('week'),
+        building:header.indexOf('building'),
+        alliance:header.indexOf('alliance'),
+        notes:header.indexOf('notes')
+      };
+      if(ci.building<0||ci.alliance<0){toast('Missing Building/Alliance columns');return;}
+      let touched=0;
+      const notesByWeek={};
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        const bldg=String(r[ci.building]||'').trim().toUpperCase();
+        if(!ALL_BUILDINGS.includes(bldg))continue;
+        // Which week? Use Week column (e.g. "W2" or "2"), else current week
+        let wk=currentWeek;
+        if(ci.week>=0){
+          const wraw=String(r[ci.week]||'').trim().toUpperCase().replace('W','');
+          const wn=parseInt(wraw,10);
+          if(wn>=1&&wn<=8)wk=wn;
+        }
+        if(!weekData[wk])weekData[wk]={buildings:{},notes:[]};
+        const ally=String(r[ci.alliance]||'').trim().toUpperCase();
+        weekData[wk].buildings[bldg]=ally;
+        touched++;
+        // Notes (first non-empty per week)
+        if(ci.notes>=0){
+          const note=String(r[ci.notes]||'').trim();
+          if(note && !notesByWeek[wk])notesByWeek[wk]=note;
+        }
+      }
+      // Apply parsed notes (as a single note entry per week if provided)
+      Object.entries(notesByWeek).forEach(([wk,note])=>{
+        if(!weekData[wk].notes)weekData[wk].notes=[];
+        // avoid duplicating the same imported note
+        if(!weekData[wk].notes.some(n=>n.text===note)){
+          weekData[wk].notes.push({tag:'',text:note});
+        }
+      });
+      renderWeekTabs();renderCurrentWeek();
+      toast('✓ Imported '+touched+' assignments — review & save each week');
+    }catch(err){console.error(err);toast('Import failed: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+  evt.target.value='';
+}
+
+// ── TABS ─────────────────────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.main-tab').forEach((t,i)=>{
+    const ids=['rotation','history','import','seasons'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.main-panel').forEach(p=>{
+    p.classList.toggle('active',p.id==='panel-'+id);
+  });
+  if(id==='history')renderHistory();
+  if(id==='seasons')renderSeasonList();
+}
+</script>
+</body>
+</html>

@@ -184,6 +184,10 @@
 
   /* ═══ LEGENDS · GLOBE PLAYERS HALL ═══ */
   #tab-legends{padding:0 0 20px;}
+  .nap-rule{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--panel-edge);font-size:.88rem;color:var(--ink);}
+  .nap-rule:last-of-type{border-bottom:none;}
+  .nap-rule span{line-height:1.4;}
+  .nap-ally{background:var(--panel);border:2px solid var(--panel-edge);border-radius:10px;padding:8px 12px;font-family:'Fredoka';font-weight:700;font-size:.88rem;color:var(--ink);text-align:center;}
   .legends-hero{
     position:relative; overflow:hidden;
     padding:32px 18px 28px; text-align:center;
@@ -369,6 +373,7 @@ body{padding-bottom:72px !important;}
     <button class="tab" data-tab="alliances" data-i18n="tab.alliances">Alliances</button>
     <button class="tab" data-tab="events" data-i18n="tab.events">Events</button>
     <button class="tab" data-tab="castles" data-i18n="tab.castles">Castles</button>
+    <button class="tab" data-tab="nap">🤝 NAP</button>
     <button class="tab" data-tab="legends" data-i18n="tab.legends">Legends</button>
     <button class="tab" data-tab="welcome" data-i18n="tab.welcome">Welcome</button>
   </div></div>
@@ -447,6 +452,48 @@ body{padding-bottom:72px !important;}
     <div class="section-label">🏆 Hall of Presidents · Sunfire Castle</div>
     <div id="castleHistory" style="display:flex;flex-direction:column;gap:8px;">
       <div style="text-align:center;padding:20px;color:var(--muted);font-size:.84rem;">Loading…</div>
+    </div>
+  </div>
+
+  <!-- NAP · NON-AGGRESSION PACT -->
+  <div class="panel" id="tab-nap">
+    <div style="padding:16px 0 4px;">
+      <!-- Empty state: shown when this state has no NAP set up -->
+      <div id="napEmpty" style="display:none;text-align:center;padding:40px 20px;">
+        <div style="font-size:2.4rem;margin-bottom:10px;">🤝</div>
+        <div style="font-family:'Fredoka';font-weight:600;color:var(--ink-soft);font-size:.95rem;">No NAP set up yet</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-top:6px;">Leadership hasn't published a pact for this state.</div>
+      </div>
+
+      <!-- NAP content (hidden until data loads) -->
+      <div id="napContent" style="display:none;">
+        <!-- RULES -->
+        <div class="section-label" id="napRulesLabel">📢 NAP — RULES</div>
+        <div class="card" style="padding:14px 16px;">
+          <div id="napRulesList"></div>
+          <div id="napRulesFooter" style="margin-top:12px;font-size:.78rem;color:var(--muted);font-family:'Fredoka';font-weight:600;"></div>
+        </div>
+
+        <!-- PROTECTED ALLIANCES -->
+        <div class="section-label" style="margin-top:18px;">🤝 PROTECTED ALLIANCES</div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;" id="napAllianceGrid"></div>
+          <div id="napAllianceFooter" style="font-size:.78rem;color:var(--muted);font-family:'Fredoka';font-weight:600;text-align:center;"></div>
+        </div>
+
+        <!-- ROTATION TOOL LINK (R4/R5 only, non-3139) -->
+        <div id="napRotationBtn" style="display:none;margin-top:10px;">
+          <div class="section-label">🏰 Stronghold &amp; Fortress Rotation</div>
+          <a href="phoenix-nap-rotation.html" id="napRotationLink" class="card" style="display:flex;align-items:center;gap:12px;padding:14px 16px;text-decoration:none;cursor:pointer;">
+            <span style="font-size:1.6rem;">🗓️</span>
+            <div>
+              <div style="font-family:'Fredoka';font-weight:700;color:var(--ink);font-size:.95rem;">View rotation tracker</div>
+              <div style="font-size:.76rem;color:var(--muted);margin-top:2px;">Season schedule · Fort &amp; Stronghold assignments · Notes</div>
+            </div>
+            <span style="margin-left:auto;color:var(--muted);font-size:1.1rem;">›</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1060,7 +1107,11 @@ else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
     if(isStaff){
       document.getElementById('adminNavBtn').style.display='';
     }
+    window._isStaff=isStaff;
   }
+
+  // ── NAP TAB: load rules + protected alliances for this state ────
+  await loadNapTab();
 
   // Load castle history and SvS wins from states table
   const{data:stateData}=await sb.from('states').select('svs_wins,castle_history').eq('id',STATE_ID).maybeSingle();
@@ -1098,6 +1149,57 @@ else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
     }
   }
 })();
+
+// ── NAP TAB LOADER ───────────────────────────────────────────────
+async function loadNapTab(){
+  const empty=document.getElementById('napEmpty');
+  const content=document.getElementById('napContent');
+  const napTabBtn=document.querySelector('.tab[data-tab="nap"]');
+  try{
+    const sbn=supabase.createClient('https://vghutrfcrqgelvgdeesl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE');
+    const{data}=await sbn.from('nap_config').select('rules,alliances,rules_footer,alliances_footer,active').eq('state_id',STATE_ID).maybeSingle();
+
+    // If no config or not active → hide the whole NAP tab for public
+    if(!data || !data.active){
+      // Non-staff: hide the tab entirely. Staff: show empty-state so they know to set it up.
+      if(window._isStaff){
+        if(empty)empty.style.display='';
+        if(content)content.style.display='none';
+      }else{
+        if(napTabBtn)napTabBtn.style.display='none';
+      }
+      return;
+    }
+
+    if(empty)empty.style.display='none';
+    if(content)content.style.display='';
+
+    // Rules
+    const rl=document.getElementById('napRulesList');
+    const rules=Array.isArray(data.rules)?data.rules:[];
+    rl.innerHTML=rules.map(r=>`<div class="nap-rule">${r.icon||'•'} <span>${(r.text||'').replace(/</g,'&lt;')}</span></div>`).join('');
+    const rf=document.getElementById('napRulesFooter');
+    if(rf)rf.textContent=data.rules_footer||'';
+
+    // Alliances
+    const ag=document.getElementById('napAllianceGrid');
+    const allies=Array.isArray(data.alliances)?data.alliances:[];
+    ag.innerHTML=allies.map(a=>`<div class="nap-ally">⚜️ ${String(a).replace(/</g,'&lt;')}</div>`).join('');
+    const af=document.getElementById('napAllianceFooter');
+    if(af)af.textContent=data.alliances_footer||'';
+
+    // Rotation button: R4/R5 + non-3139 only
+    const napBtn=document.getElementById('napRotationBtn');
+    if(napBtn && window._isStaff && STATE_ID!=='3139'){
+      napBtn.style.display='';
+      const link=document.getElementById('napRotationLink');
+      if(link)link.href=stateUrl('phoenix-nap-rotation.html');
+    }
+  }catch(e){
+    console.warn('NAP load failed:',e);
+    if(napTabBtn && !window._isStaff)napTabBtn.style.display='none';
+  }
+}
 </script>
 
 <nav class="botnav">

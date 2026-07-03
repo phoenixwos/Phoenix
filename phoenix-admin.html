@@ -197,6 +197,7 @@ body{padding-bottom:72px !important;}
       <button class="etab" data-sec="gallery">📸 Gallery</button>
       <button class="etab" data-sec="memberzone">🔒 Members Zone</button>
       <button class="etab" data-sec="ranking" id="rankingTab" style="display:none">🏆 State Ranking</button>
+      <button class="etab" data-sec="nap" id="napTab" style="display:none">🤝 NAP</button>
       <button class="etab" data-sec="access" id="accessTab" style="display:none">🔑 Access</button>
       <button class="etab" data-sec="frames" id="framesTab" style="display:none">🖼️ Marcos</button>
     </div>
@@ -450,6 +451,49 @@ body{padding-bottom:72px !important;}
         <div id="rankRows" class="dlist"></div>
         <div class="errmsg" id="rankErr" style="margin-top:10px;"></div>
         <button class="btn btn-fire" id="saveRankBtn" style="margin-top:12px;">💾 Save state ranking</button>
+      </div>
+    </div>
+
+    <!-- NAP EDITOR (admins only) -->
+    <div class="esec" id="sec-nap">
+      <div class="card">
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px;">Set up the Non-Aggression Pact for <b id="napStateLabel">this state</b>. It appears as a public NAP tab on the state page. Leave everything empty and turn it off to hide the tab.</p>
+
+        <div class="field" style="margin-bottom:14px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="napActive" style="width:auto;">
+            <span>NAP active (show the public tab)</span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label>Rules — one per line (start with an emoji if you like)</label>
+          <textarea id="napRules" rows="6" placeholder="⚔️ DO NOT attack NAP alliances or their academy
+🏕️ DO NOT attack occupied tiles or encampments
+🏰 DO NOT alliance jump for Facilities/Fortresses
+💬 DO NOT provoke in World Chat"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Rules footer (optional)</label>
+          <input id="napRulesFooter" placeholder="❓ Not sure? Ask leadership first!">
+        </div>
+
+        <div class="field">
+          <label>Protected alliances — one tag per line</label>
+          <textarea id="napAlliances" rows="6" placeholder="LCW
+PXR
+PBB
+TEK"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Alliances footer (optional)</label>
+          <input id="napAlliancesFooter" placeholder="⚠️ Includes their academies too!">
+        </div>
+
+        <div class="errmsg" id="napErr" style="margin-top:6px;"></div>
+        <button class="btn btn-fire" id="saveNapBtn" style="margin-top:12px;">💾 Save NAP</button>
       </div>
     </div>
 
@@ -707,11 +751,12 @@ document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.esec').forEach(s=>s.classList.toggle('active',s.id==='sec-'+sec));
   // Members, Ranking and Access have their own controls — hide the main save button
   const mainBar=document.getElementById('mainSaveBar');
-  if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access')?'none':'';
+  if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access'||sec==='nap')?'none':'';
   // Lazy-load data for these tabs
   if(sec==='members')loadMembersEditor();
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
+  if(sec==='nap')loadNapEditor();
   if(sec==='frames'){document.getElementById('framesSearch').value='';document.getElementById('framesResults').innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Escribe al menos 2 caracteres…</p>';document.getElementById('framesMsg').textContent='';}
 });
 
@@ -1563,6 +1608,56 @@ $('#saveRankBtn').onclick=async()=>{
   else{toast('Ranking saved ✓');loadRankingEditor();}
 };
 
+// ── NAP EDITOR (admins only) ──────────────────────────────────
+async function loadNapEditor(){
+  const stateId=(editingAlliance&&editingAlliance.state_id)||'3139';
+  const lbl=$('#napStateLabel');if(lbl)lbl.textContent='State '+stateId;
+  hideErr('#napErr');
+  const{data}=await sb.from('nap_config').select('*').eq('state_id',stateId).maybeSingle();
+  const rules=Array.isArray(data?.rules)?data.rules:[];
+  const allies=Array.isArray(data?.alliances)?data.alliances:[];
+  // Rules stored as {icon,text}; show as "icon text" per line
+  $('#napRules').value=rules.map(r=>((r.icon?r.icon+' ':'')+(r.text||'')).trim()).join('\n');
+  $('#napRulesFooter').value=data?.rules_footer||'';
+  $('#napAlliances').value=allies.join('\n');
+  $('#napAlliancesFooter').value=data?.alliances_footer||'';
+  $('#napActive').checked=!!(data&&data.active);
+}
+
+// Split "⚔️ DO NOT..." into {icon,text}. First token is the icon if it's non-alphanumeric.
+function parseRuleLine(line){
+  const t=line.trim();
+  if(!t)return null;
+  const m=t.match(/^(\S+)\s+(.*)$/);
+  if(m && /[\u{1F000}-\u{1FFFF}\u2190-\u27BF\u2B00-\u2BFF]/u.test(m[1])){
+    return {icon:m[1],text:m[2]};
+  }
+  return {icon:'•',text:t};
+}
+
+$('#saveNapBtn').onclick=async()=>{
+  hideErr('#napErr');
+  const stateId=(editingAlliance&&editingAlliance.state_id)||'3139';
+  const btn=$('#saveNapBtn');btn.textContent='Saving…';btn.disabled=true;
+
+  const rules=$('#napRules').value.split('\n').map(parseRuleLine).filter(Boolean);
+  const alliances=$('#napAlliances').value.split('\n').map(a=>a.trim().toUpperCase()).filter(Boolean);
+  const payload={
+    state_id:stateId,
+    rules,
+    alliances,
+    rules_footer:$('#napRulesFooter').value.trim(),
+    alliances_footer:$('#napAlliancesFooter').value.trim(),
+    active:$('#napActive').checked
+  };
+
+  // upsert by state_id
+  const{error}=await sb.from('nap_config').upsert(payload,{onConflict:'state_id'});
+  btn.textContent='💾 Save NAP';btn.disabled=false;
+  if(error){showErr('#napErr','Error: '+error.message);}
+  else{toast('NAP saved ✓');}
+};
+
 // ── CREATE NEW STATE (admins only, no SQL needed) ─────────────
 (function(){
   const btn=document.getElementById('newStateBtn');
@@ -1836,6 +1931,7 @@ async function checkAccess(user){
   if(isStateAdmin){
     const rt=document.getElementById('rankingTab');if(rt)rt.style.display='';
     const at=document.getElementById('accessTab');if(at)at.style.display='';
+    const nt=document.getElementById('napTab');if(nt)nt.style.display='';
   }
   // Frames tab: visible for admins and r5
   if(player.role==='admin'||player.role==='r5'){
