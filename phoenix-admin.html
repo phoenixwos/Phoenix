@@ -109,7 +109,9 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .al-pick .arr{color:var(--muted);font-size:1.1rem;}
 
 /* TABS for editor sections */
-.etabbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin-bottom:4px;}
+.etabbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin-bottom:4px;align-items:center;}
+.etab-group{flex:none;font-family:'Fredoka',sans-serif;font-weight:700;font-size:.64rem;letter-spacing:.08em;color:var(--acc-d,#c2470f);background:var(--panel,#fff2e6);border:1.5px dashed var(--acc,#ff9a5a);border-radius:8px;padding:5px 9px;white-space:nowrap;margin-left:4px;}
+.etab-group:first-child{margin-left:0;}
 .etabbar::-webkit-scrollbar{display:none;}
 .etab{flex:none;font-family:'Fredoka';font-weight:600;font-size:.78rem;padding:8px 14px;border-radius:11px;border:2px solid var(--panel-edge);background:#fff;color:var(--ink-soft);white-space:nowrap;box-shadow:0 2px 0 var(--panel-edge);}
 .etab.active{background:linear-gradient(180deg,#ff9248,var(--fire-deep));color:#fff;border-color:var(--fire-deep);box-shadow:0 2px 0 #c2470f;}
@@ -187,6 +189,7 @@ body{padding-bottom:72px !important;}
 
     <!-- EDITOR TABS -->
     <div class="etabbar">
+      <span class="etab-group" id="grpAlliance">🏰 ALLIANCE</span>
       <button class="etab active" data-sec="identity">🏷️ Identity</button>
       <button class="etab" data-sec="style">🎨 Style</button>
       <button class="etab" data-sec="leaders">👥 Leaders</button>
@@ -196,8 +199,10 @@ body{padding-bottom:72px !important;}
       <button class="etab" data-sec="news">📢 News</button>
       <button class="etab" data-sec="gallery">📸 Gallery</button>
       <button class="etab" data-sec="memberzone">🔒 Members Zone</button>
+      <span class="etab-group" id="grpState" style="display:none">🌍 STATE</span>
       <button class="etab" data-sec="ranking" id="rankingTab" style="display:none">🏆 State Ranking</button>
       <button class="etab" data-sec="nap" id="napTab" style="display:none">🤝 NAP</button>
+      <span class="etab-group" id="grpSystem" style="display:none">⚙️ SYSTEM</span>
       <button class="etab" data-sec="access" id="accessTab" style="display:none">🔑 Access</button>
       <button class="etab" data-sec="frames" id="framesTab" style="display:none">🖼️ Marcos</button>
     </div>
@@ -595,9 +600,10 @@ TEK"></textarea>
       <div class="errmsg" id="cfgImportMsg" style="margin-top:8px;"></div>
     </div>
     <style>
-      .sect-tpl{display:flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #ffd9a0;border-radius:10px;padding:7px 9px;}
-      .sect-tpl span{flex:1;font-family:'Fredoka';font-weight:600;font-size:.8rem;color:#8a5a2a;}
-      .sect-tpl .btn{padding:5px 9px;font-size:.82rem;min-width:auto;flex:none;}
+      #sectionTemplateGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+      .sect-tpl{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ffd9a0;border-radius:10px;padding:8px 10px;min-width:0;}
+      .sect-tpl span{flex:1;min-width:0;font-family:'Fredoka';font-weight:600;font-size:.8rem;color:#8a5a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .sect-tpl .btn{padding:0;font-size:.9rem;min-width:32px;width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:8px;box-shadow:none;}
     </style>
 
     <!-- SAVE BAR -->
@@ -2136,6 +2142,8 @@ async function checkAccess(user){
     const rt=document.getElementById('rankingTab');if(rt)rt.style.display='';
     const at=document.getElementById('accessTab');if(at)at.style.display='';
     const nt=document.getElementById('napTab');if(nt)nt.style.display='';
+    const gs=document.getElementById('grpState');if(gs)gs.style.display='';
+    const gy=document.getElementById('grpSystem');if(gy)gy.style.display='';
   }
   // Frames tab: visible for admins and r5
   if(player.role==='admin'||player.role==='r5'){
