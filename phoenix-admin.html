@@ -203,6 +203,7 @@ body{padding-bottom:72px !important;}
       <button class="etab" data-sec="ranking" id="rankingTab" style="display:none">🏆 State Ranking</button>
       <button class="etab" data-sec="nap" id="napTab" style="display:none">🤝 NAP</button>
       <span class="etab-group" id="grpSystem" style="display:none">⚙️ SYSTEM</span>
+      <button class="etab" data-sec="search" id="searchTab" style="display:none">🔍 Search</button>
       <button class="etab" data-sec="access" id="accessTab" style="display:none">🔑 Access</button>
       <button class="etab" data-sec="frames" id="framesTab" style="display:none">🖼️ Marcos</button>
     </div>
@@ -413,13 +414,14 @@ body{padding-bottom:72px !important;}
     <!-- MEMBERS -->
     <div class="esec" id="sec-members">
       <div class="card">
-        <div class="slabel" style="margin-top:0;">📥 Bulk import / export</div>
-        <p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:12px;">Import a list of members from CSV or Excel. Columns: Name, Governor ID, Confirmed, Rank. Existing members (matched by Governor ID) are updated; new ones are added.</p>
+        <div class="slabel" style="margin-top:0;">📥 Roster (names)</div>
+        <p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:12px;">Upload a simple list of member names (one per line, or a "Name" column). New names are added; names already here are left untouched — no duplicates. A "Rank" column is optional (R1–R5).</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <button type="button" class="btn btn-ghost" id="downloadTemplateBtn" style="font-size:.82rem;">📄 Download template</button>
-          <button type="button" class="btn btn-ghost" id="importBtn" style="font-size:.82rem;">📥 Import CSV / Excel</button>
+          <button type="button" class="btn btn-ghost" id="downloadTemplateBtn" style="font-size:.82rem;">📄 Download names template</button>
+          <button type="button" class="btn btn-ghost" id="importBtn" style="font-size:.82rem;">📥 Upload names list</button>
           <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none;">
-          <button type="button" class="btn btn-ghost" id="exportBtn" style="font-size:.82rem;">📤 Export current list (Excel)</button>
+          <button type="button" class="btn btn-ghost" id="exportBtn" style="font-size:.82rem;">📤 Export current roster</button>
+          <button type="button" class="btn btn-ghost" id="dedupeBtn" style="font-size:.82rem;color:#b06a00;border-color:#ffc266;">🧹 Clean duplicates</button>
         </div>
         <div class="errmsg" id="importErr" style="margin-top:10px;"></div>
         <div id="importStatus" style="display:none;margin-top:10px;padding:10px 14px;background:#eafaf0;border:2px solid #b8e8cc;border-radius:10px;font-size:.82rem;color:#2d8a5a;font-family:'Fredoka';font-weight:600;"></div>
@@ -511,6 +513,19 @@ TEK"></textarea>
 
         <div class="errmsg" id="napErr" style="margin-top:6px;"></div>
         <button class="btn btn-fire" id="saveNapBtn" style="margin-top:12px;">💾 Save NAP</button>
+      </div>
+    </div>
+
+    <!-- SEARCH / MANAGE (admins only) -->
+    <div class="esec" id="sec-search">
+      <div class="card">
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:10px;">Quickly find a player or an alliance by name to edit it — change a rank, fix a name, move a player, etc.</p>
+        <input id="mgmtSearch" placeholder="🔍 Type a player or alliance name…" style="width:100%;padding:11px;border:2px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.9rem;margin-bottom:12px;">
+        <div id="mgmtResults"></div>
+      </div>
+      <!-- Inline editor panel (shown when you pick a result) -->
+      <div class="card" id="mgmtEditCard" style="display:none;">
+        <div id="mgmtEditBody"></div>
       </div>
     </div>
 
@@ -811,6 +826,7 @@ document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
   if(sec==='nap')loadNapEditor();
+  if(sec==='search')initMgmtSearch();
   if(sec==='frames'){document.getElementById('framesSearch').value='';document.getElementById('framesResults').innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Escribe al menos 2 caracteres…</p>';document.getElementById('framesMsg').textContent='';}
 });
 
@@ -1305,22 +1321,59 @@ $('#saveMembersBtn').onclick=async()=>{
 const MEMBER_HEADERS=['Name','Governor ID','Confirmed','Rank'];
 
 $('#downloadTemplateBtn').onclick=()=>{
-  const rows=[MEMBER_HEADERS,['ExamplePlayer','123456789','no','R3'],['AnotherPlayer','987654321','yes','R4']];
+  const rows=[['Name','Rank'],['ExamplePlayer','R3'],['AnotherPlayer','R4'],['ThirdPlayer','']];
   const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:8}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Members');
-  XLSX.writeFile(wb,'phoenix-members-template.xlsx');
+  XLSX.writeFile(wb,'phoenix-names-template.xlsx');
 };
 
 $('#exportBtn').onclick=async()=>{
   if(!editingAlliance)return;
-  const{data}=await sb.from('players').select('name,governor_id,alliance_confirmed').eq('alliance_id',editingAlliance.id).order('created_at');
-  const rows=[MEMBER_HEADERS];
-  (data||[]).forEach(m=>rows.push([m.name||'',m.governor_id||'',m.alliance_confirmed?'yes':'no','']));
+  const{data}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).order('created_at');
+  const rows=[['Name','Rank']];
+  (data||[]).forEach(m=>rows.push([m.name||'',m.game_rank||'']));
   const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:8}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Members');
-  XLSX.writeFile(wb,`${editingAlliance.tag}-members.xlsx`);
+  XLSX.writeFile(wb,`${editingAlliance.tag}-roster.xlsx`);
+};
+
+// ── CLEAN DUPLICATES (same name in this alliance) ─────────────
+// Keeps the "best" row (one with an owner/page, or with a rank), deletes the rest.
+$('#dedupeBtn').onclick=async()=>{
+  if(!editingAlliance)return;
+  hideErr('#importErr');
+  if(!confirm('Scan this alliance for duplicate names and remove the extra copies? The version with a real page (owner) is always kept.'))return;
+  const btn=$('#dedupeBtn');btn.textContent='Scanning…';btn.disabled=true;
+  try{
+    const{data:all}=await sb.from('players').select('id,name,owner,game_rank,governor_id,avatar').eq('alliance_id',editingAlliance.id);
+    const groups={};
+    (all||[]).forEach(m=>{
+      const key=(m.name||'').trim().toLowerCase();
+      if(!key)return;
+      (groups[key]=groups[key]||[]).push(m);
+    });
+    // Score: owner > has avatar url > has gov id > has rank
+    const score=m=>(m.owner?8:0)+((m.avatar&&/^https?:/.test(m.avatar))?4:0)+(m.governor_id?2:0)+(m.game_rank?1:0);
+    let removed=0,errs=0;
+    for(const key in groups){
+      const list=groups[key];
+      if(list.length<2)continue;
+      list.sort((a,b)=>score(b)-score(a)); // best first
+      const keep=list[0];
+      for(let i=1;i<list.length;i++){
+        const{error}=await sb.from('players').delete().eq('id',list[i].id);
+        if(error)errs++;else removed++;
+      }
+    }
+    btn.textContent='🧹 Clean duplicates';btn.disabled=false;
+    const status=$('#importStatus');status.style.display='';
+    status.textContent=removed?`✓ Removed ${removed} duplicate${removed>1?'s':''}${errs?`, ${errs} errors`:''}.`:'✓ No duplicates found.';
+    loadMembersEditor();
+  }catch(err){console.error(err);btn.textContent='🧹 Clean duplicates';btn.disabled=false;showErr('#importErr','Cleanup failed: '+err.message);}
 };
 
 $('#importBtn').onclick=()=>$('#importFile').click();
@@ -1334,47 +1387,60 @@ $('#importFile').addEventListener('change',async(e)=>{
     const wb=XLSX.read(buf,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    if(rows.length<2){showErr('#importErr','File has no data rows.');return;}
-    // detect header row & column positions
+    if(rows.length<1){showErr('#importErr','File is empty.');return;}
+
+    // Flexible header: find a "name" column; if none, use the first column.
     const header=rows[0].map(h=>String(h).trim().toLowerCase());
-    const ci={
-      name:header.findIndex(h=>h.includes('name')),
-      gid:header.findIndex(h=>h.includes('governor')||h.includes('gov')||h.includes('id')),
-      conf:header.findIndex(h=>h.includes('confirm')),
-      rank:header.findIndex(h=>h.includes('rank'))
-    };
-    if(ci.name<0||ci.gid<0){showErr('#importErr','Could not find Name and Governor ID columns.');return;}
+    let nameCol=header.findIndex(h=>h.includes('name')||h.includes('nombre'));
+    let rankCol=header.findIndex(h=>h.includes('rank')||h.includes('rango'));
+    let startRow=1;
+    if(nameCol<0){ nameCol=0; startRow=0; } // no header → treat every row as a name
 
-    // fetch existing members of this alliance for matching by gov id
-    const{data:existing}=await sb.from('players').select('id,governor_id,name').eq('alliance_id',editingAlliance.id);
-    const byGid={};
-    const byName={};
-    (existing||[]).forEach(m=>{
-      if(m.governor_id)byGid[String(m.governor_id).trim()]=m.id;
-      if(m.name)byName[String(m.name).trim().toLowerCase()]=m.id;
-    });
-
-    let added=0,updated=0,errs=0;
-    for(let i=1;i<rows.length;i++){
+    // Collect unique names from the file (dedupe within the file too)
+    const seen=new Set();
+    const wanted=[];
+    for(let i=startRow;i<rows.length;i++){
       const r=rows[i];
-      const name=String(r[ci.name]||'').trim();
-      const gid=String(r[ci.gid]||'').trim();
-      if(!name&&!gid)continue;
-      const confRaw=ci.conf>=0?String(r[ci.conf]||'').trim().toLowerCase():'';
-      const conf=['yes','y','true','1','sí','si','✓'].includes(confRaw);
-      let grank=ci.rank>=0?String(r[ci.rank]||'').trim().toUpperCase():'';
-      if(grank&&!/^R[12345]$/.test(grank))grank=''; // accept R1–R5
-      const existingId=gid&&byGid[gid] || (!gid&&byName[name.toLowerCase()]);
-      if(existingId){
-        const{error}=await sb.from('players').update({name,alliance_confirmed:conf,game_rank:grank||null}).eq('id',existingId);
-        if(error)errs++;else updated++;
+      const name=String(r[nameCol]||'').trim();
+      if(!name)continue;
+      const key=name.toLowerCase();
+      if(seen.has(key))continue;        // duplicate inside the file → skip
+      seen.add(key);
+      let grank=rankCol>=0?String(r[rankCol]||'').trim().toUpperCase():'';
+      if(grank&&!/^R[12345]$/.test(grank))grank='';
+      wanted.push({name,grank});
+    }
+    if(!wanted.length){showErr('#importErr','No names found in the file.');return;}
+
+    // Existing members of THIS alliance (match by name, case-insensitive)
+    const{data:existing}=await sb.from('players').select('id,name,game_rank').eq('alliance_id',editingAlliance.id);
+    const byName={};
+    (existing||[]).forEach(m=>{ if(m.name)byName[String(m.name).trim().toLowerCase()]=m; });
+
+    let added=0, kept=0, rankUpdated=0, errs=0;
+    for(const w of wanted){
+      const ex=byName[w.name.toLowerCase()];
+      if(ex){
+        // Already here → DON'T touch it, unless the file gives a rank and it's different
+        kept++;
+        if(w.grank && w.grank!==ex.game_rank){
+          const{error}=await sb.from('players').update({game_rank:w.grank}).eq('id',ex.id);
+          if(!error)rankUpdated++;
+        }
       }else{
-        const{error}=await sb.from('players').insert({name,governor_id:gid,alliance_confirmed:conf,game_rank:grank||null,alliance_id:editingAlliance.id,state_id:editingAlliance.state_id||'3139',avatar:name.slice(0,2).toUpperCase()});
+        // New name → add it (names-only roster, no gov id / no confirm needed)
+        const{error}=await sb.from('players').insert({
+          name:w.name,
+          game_rank:w.grank||null,
+          alliance_id:editingAlliance.id,
+          state_id:editingAlliance.state_id||'3139',
+          avatar:w.name.slice(0,2).toUpperCase()
+        });
         if(error)errs++;else added++;
       }
     }
 
-    // Auto-build leadership in config from imported R4/R5 members
+    // Rebuild leadership in config from R4/R5 members
     const{data:leaders}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).in('game_rank',['R5','R4']);
     if(leaders&&leaders.length){
       const order={R5:0,R4:1};
@@ -1384,13 +1450,12 @@ $('#importFile').addEventListener('change',async(e)=>{
       cfg.leaders=ldrConfig;
       await sb.from('alliances').update({config:cfg}).eq('id',editingAlliance.id);
       editingAlliance.config=cfg;
-      // refresh leaders tab UI
       $('#leaderList').innerHTML='';
       ldrConfig.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=leaderHTML(i,l);$('#leaderList').appendChild(d.firstElementChild);});
     }
 
     status.style.display='';
-    status.textContent=`✓ Import done — ${added} added, ${updated} updated${errs?`, ${errs} errors`:''}. Leadership updated from ranks.`;
+    status.textContent=`✓ ${added} new · ${kept} already there · ${rankUpdated} ranks updated${errs?` · ${errs} errors`:''}. No duplicates created.`;
     loadMembersEditor();
   }catch(err){console.error('Import failed:',err);showErr('#importErr','Import failed: '+err.message);}
   e.target.value=''; // reset so same file can be re-imported
@@ -2144,6 +2209,7 @@ async function checkAccess(user){
     const nt=document.getElementById('napTab');if(nt)nt.style.display='';
     const gs=document.getElementById('grpState');if(gs)gs.style.display='';
     const gy=document.getElementById('grpSystem');if(gy)gy.style.display='';
+    const st=document.getElementById('searchTab');if(st)st.style.display='';
   }
   // Frames tab: visible for admins and r5
   if(player.role==='admin'||player.role==='r5'){
@@ -2220,6 +2286,105 @@ setTimeout(()=>{
 },9000);
 
 init();
+
+// ── MANAGEMENT SEARCH (admins only) ───────────────────────────
+let _mgmtInit=false, _mgmtTimer=null;
+function initMgmtSearch(){
+  const box=$('#mgmtSearch');
+  if(!box||_mgmtInit)return;
+  _mgmtInit=true;
+  box.addEventListener('input',()=>{
+    clearTimeout(_mgmtTimer);
+    _mgmtTimer=setTimeout(()=>runMgmtSearch(box.value.trim()),300);
+  });
+}
+
+async function runMgmtSearch(q){
+  const res=$('#mgmtResults');
+  $('#mgmtEditCard').style.display='none';
+  if(!q||q.length<2){res.innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Type at least 2 letters…</p>';return;}
+  res.innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Searching…</p>';
+  const[players,alliances]=await Promise.all([
+    sb.from('players').select('id,name,game_rank,alliance_id,state_id,owner').ilike('name','%'+q+'%').limit(20),
+    sb.from('alliances').select('id,tag,name,state_id').or(`name.ilike.%${q}%,tag.ilike.%${q}%`).limit(20)
+  ]);
+  const pl=players.data||[], al=alliances.data||[];
+  // Map alliance id → tag for showing where a player is
+  const{data:allAll}=await sb.from('alliances').select('id,tag');
+  const tagById={};(allAll||[]).forEach(a=>tagById[a.id]=a.tag);
+
+  let html='';
+  if(al.length){
+    html+='<div style="font-family:Fredoka;font-weight:700;font-size:.72rem;color:var(--acc);text-transform:uppercase;margin:6px 2px;">Alliances</div>';
+    al.forEach(a=>{
+      html+=`<div class="mgmt-row" data-type="alliance" data-id="${a.id}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--panel-edge);border-radius:9px;margin-bottom:6px;cursor:pointer;">
+        <span style="font-family:Fredoka;font-weight:700;color:var(--ink);">[${a.tag}]</span>
+        <span style="flex:1;color:var(--ink-soft);font-size:.85rem;">${a.name||''}</span>
+        <span style="font-size:.72rem;color:var(--muted);">State ${a.state_id}</span></div>`;
+    });
+  }
+  if(pl.length){
+    html+='<div style="font-family:Fredoka;font-weight:700;font-size:.72rem;color:var(--acc);text-transform:uppercase;margin:10px 2px 6px;">Players</div>';
+    pl.forEach(p=>{
+      const where=p.alliance_id?('['+(tagById[p.alliance_id]||'?')+']'):'no alliance';
+      html+=`<div class="mgmt-row" data-type="player" data-id="${p.id}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--panel-edge);border-radius:9px;margin-bottom:6px;cursor:pointer;">
+        <span style="flex:1;font-family:Fredoka;font-weight:600;color:var(--ink);">${p.name||'—'}</span>
+        <span style="font-size:.72rem;color:var(--muted);">${where} ${p.game_rank||''}</span>
+        ${p.owner?'<span style="font-size:.66rem;color:#56c98a;">●page</span>':''}</div>`;
+    });
+  }
+  if(!html)html='<p style="color:var(--muted);font-size:.82rem;padding:8px;">No matches.</p>';
+  res.innerHTML=html;
+  res.querySelectorAll('.mgmt-row').forEach(row=>{
+    row.onclick=()=>openMgmtEditor(row.dataset.type,row.dataset.id);
+  });
+}
+
+async function openMgmtEditor(type,id){
+  const card=$('#mgmtEditCard'), body=$('#mgmtEditBody');
+  card.style.display='';card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(type==='player'){
+    const{data:p}=await sb.from('players').select('*').eq('id',id).single();
+    const{data:alls}=await sb.from('alliances').select('id,tag,state_id').order('state_id');
+    const opts=(alls||[]).map(a=>`<option value="${a.id}" ${a.id===p.alliance_id?'selected':''}>[${a.tag}] · ${a.state_id}</option>`).join('');
+    body.innerHTML=`
+      <div style="font-family:Baloo 2;font-weight:800;font-size:1rem;color:var(--ink);margin-bottom:10px;">Edit player</div>
+      <label class="lab">Name</label><input id="meName" value="${(p.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+      <label class="lab">Rank</label>
+      <select id="meRank" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+        ${['','R1','R2','R3','R4','R5'].map(r=>`<option value="${r}" ${r===(p.game_rank||'')?'selected':''}>${r||'— none —'}</option>`).join('')}
+      </select>
+      <label class="lab">Alliance</label>
+      <select id="meAlliance" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:14px;">${opts}</select>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-fire" id="meSave" style="flex:1;">💾 Save</button>
+        <button class="btn btn-danger" id="meDelete" style="width:auto;">🗑️</button>
+      </div>
+      <div class="errmsg" id="meMsg" style="margin-top:8px;"></div>`;
+    $('#meSave').onclick=async()=>{
+      const patch={name:$('#meName').value.trim(),game_rank:$('#meRank').value||null,alliance_id:$('#meAlliance').value};
+      const{error}=await sb.from('players').update(patch).eq('id',id);
+      if(error)showErr('#meMsg','Error: '+error.message);else{toast('Player saved ✓');runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+    $('#meDelete').onclick=async()=>{
+      if(!confirm('Delete this player permanently?'))return;
+      const{error}=await sb.from('players').delete().eq('id',id);
+      if(error)showErr('#meMsg','Error: '+error.message);else{toast('Deleted');card.style.display='none';runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+  }else{
+    const{data:a}=await sb.from('alliances').select('*').eq('id',id).single();
+    body.innerHTML=`
+      <div style="font-family:Baloo 2;font-weight:800;font-size:1rem;color:var(--ink);margin-bottom:10px;">Edit alliance</div>
+      <label class="lab">Tag</label><input id="maTag" value="${(a.tag||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+      <label class="lab">Name</label><input id="maName" value="${(a.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:14px;">
+      <button class="btn btn-fire" id="maSave" style="width:100%;">💾 Save</button>
+      <div class="errmsg" id="maMsg" style="margin-top:8px;"></div>`;
+    $('#maSave').onclick=async()=>{
+      const{error}=await sb.from('alliances').update({tag:$('#maTag').value.trim(),name:$('#maName').value.trim()}).eq('id',id);
+      if(error)showErr('#maMsg','Error: '+error.message);else{toast('Alliance saved ✓');runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+  }
+}
 </script>
 </body>
 </html>
