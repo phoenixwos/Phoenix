@@ -1153,7 +1153,7 @@ if(document.readyState!=='loading')setStateNav();
 else document.addEventListener('DOMContentLoaded',setStateNav);
 maybeLoadFromSupabase().then(()=>{ applyConfig(); applyLang(); loadMembers(); });
 
-// ── LOAD MEMBERS WITH A PAGE (clickable → their profile) ──────
+// ── LOAD MEMBERS WITH A PAGE (names only for alliance members) ──────
 async function loadMembers(){
   const tag=(CONFIG.tag||'PXR').toUpperCase();
   const list=document.getElementById('membersList');
@@ -1165,12 +1165,39 @@ async function loadMembers(){
       .select('id,name,avatar,governor_id,languages,alliance_confirmed')
       .eq('alliance_id',al.id)
       .order('created_at',{ascending:true});
-    if(!members||members.length===0){
+
+    const count=(members||[]).length;
+    // Always show the member count (public)
+    const memEl=document.getElementById('stMem');
+    if(memEl && count>0) memEl.textContent=count;
+
+    if(count===0){
       list.innerHTML='<p style="text-align:center;color:#7fa0b8;padding:16px;font-family:Fredoka;font-size:.85rem;">No member pages yet. Be the first to create yours!</p>';
       return;
     }
+
+    // Are you a member of THIS alliance? Only then do we reveal names.
+    let isMember=false;
+    try{
+      const{data:{session}}=await _sb.auth.getSession();
+      if(session?.user){
+        const{data:mine}=await _sb.from('players').select('alliance_id').eq('owner',session.user.id);
+        isMember=(mine||[]).some(m=>m.alliance_id===al.id);
+      }
+    }catch(_){}
+
+    if(!isMember){
+      // Public visitors: show the count, hide the names.
+      list.innerHTML=`<div class="card" style="text-align:center;padding:18px;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:1.6rem;color:var(--accent,#ff7a2e);">${count}</div>
+        <div style="font-family:Fredoka;font-weight:600;color:#7fa0b8;font-size:.85rem;margin-top:4px;">members with a page</div>
+        <div style="color:#9ab8d0;font-size:.78rem;margin-top:10px;line-height:1.4;">🔒 Member names are visible to alliance members only. Join and create your page to see the roster.</div>
+      </div>`;
+      return;
+    }
+
+    // Alliance members: full clickable roster
     list.innerHTML='';
-    document.getElementById('stMem').textContent=members.length;
     members.forEach(m=>{
       const isUrl=m.avatar&&/^https?:\/\//.test(m.avatar);
       const ini=(m.name||'?').slice(0,2).toUpperCase();
