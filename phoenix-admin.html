@@ -1263,8 +1263,15 @@ async function loadMembersEditor(){
   if(!editingAlliance)return;
   const wrap=$('#memberRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested,game_rank').eq('alliance_id',editingAlliance.id).order('created_at',{ascending:true});
-  memberCache=data||[];
+  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested,game_rank').eq('alliance_id',editingAlliance.id);
+  // Sort by rank (R5 → R4 → R3 → R2 → R1 → none), then alphabetically by name
+  const rankOrder={R5:0,R4:1,R3:2,R2:3,R1:4};
+  const sorted=(data||[]).slice().sort((a,b)=>{
+    const ra=rankOrder[a.game_rank]??9, rb=rankOrder[b.game_rank]??9;
+    if(ra!==rb)return ra-rb;
+    return (a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
+  });
+  memberCache=sorted;
   wrap.innerHTML='';
   memberCache.forEach((m,i)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(i,m);wrap.appendChild(d.firstElementChild);});
   if(memberCache.length===0)wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
@@ -1440,6 +1447,31 @@ $('#importFile').addEventListener('change',async(e)=>{
       }
     }
 
+    // ── SMART REPLACE: handle members who are NO LONGER in the uploaded list ──
+    // Re-fetch with owner so we can protect real pages.
+    const{data:current}=await sb.from('players').select('id,name,owner').eq('alliance_id',editingAlliance.id);
+    const wantedSet=new Set(wanted.map(w=>w.name.toLowerCase()));
+    const toRemove=(current||[]).filter(m=>m.name && !wantedSet.has(m.name.trim().toLowerCase()));
+
+    let removed=0, unlinked=0;
+    if(toRemove.length){
+      const names=toRemove.map(m=>m.name).join(', ');
+      const ok=confirm(`These ${toRemove.length} member(s) are NOT in your uploaded list and will leave the roster:\n\n${names}\n\n• Plain roster names will be removed.\n• Members with their own page will be kept but unlinked from this alliance (their page is never deleted).\n\nContinue?`);
+      if(ok){
+        for(const m of toRemove){
+          if(m.owner){
+            // Has a real page → don't delete, just unlink from this alliance
+            const{error}=await sb.from('players').update({alliance_id:null}).eq('id',m.id);
+            if(!error)unlinked++;
+          }else{
+            // Plain roster entry → remove
+            const{error}=await sb.from('players').delete().eq('id',m.id);
+            if(!error)removed++;
+          }
+        }
+      }
+    }
+
     // Rebuild leadership in config from R4/R5 members
     const{data:leaders}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).in('game_rank',['R5','R4']);
     if(leaders&&leaders.length){
@@ -1455,7 +1487,12 @@ $('#importFile').addEventListener('change',async(e)=>{
     }
 
     status.style.display='';
-    status.textContent=`✓ ${added} new · ${kept} already there · ${rankUpdated} ranks updated${errs?` · ${errs} errors`:''}. No duplicates created.`;
+    let msg=`✓ ${added} new · ${kept} kept · ${rankUpdated} ranks updated`;
+    if(removed)msg+=` · ${removed} removed`;
+    if(unlinked)msg+=` · ${unlinked} unlinked (page kept)`;
+    if(errs)msg+=` · ${errs} errors`;
+    msg+='. No duplicates.';
+    status.textContent=msg;
     loadMembersEditor();
   }catch(err){console.error('Import failed:',err);showErr('#importErr','Import failed: '+err.message);}
   e.target.value=''; // reset so same file can be re-imported

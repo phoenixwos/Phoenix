@@ -1161,10 +1161,15 @@ async function loadMembers(){
   try{
     const{data:al}=await _sb.from('alliances').select('id').eq('tag',tag).eq('state_id',PAGE_STATE).maybeSingle();
     if(!al){list.innerHTML='';return;}
-    const{data:members}=await _sb.from('players')
-      .select('id,name,avatar,governor_id,languages,alliance_confirmed')
-      .eq('alliance_id',al.id)
-      .order('created_at',{ascending:true});
+    const{data:membersRaw}=await _sb.from('players')
+      .select('id,name,avatar,governor_id,languages,alliance_confirmed,game_rank')
+      .eq('alliance_id',al.id);
+    const rankOrder={R5:0,R4:1,R3:2,R2:3,R1:4};
+    const members=(membersRaw||[]).slice().sort((a,b)=>{
+      const ra=rankOrder[a.game_rank]??9, rb=rankOrder[b.game_rank]??9;
+      if(ra!==rb)return ra-rb;
+      return (a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
+    });
 
     const count=(members||[]).length;
     // Always show the member count (public)
