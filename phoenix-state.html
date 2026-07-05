@@ -508,7 +508,7 @@ function updateNav(activePage){
     a.classList.toggle('active', activePage?page===activePage:a.classList.contains('active'));
   });
   const stLbl=document.getElementById('navStateLabel'); if(stLbl) stLbl.textContent=getState();
-  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'—';
+  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'Alianza';
 }
 const I18N = {
   en:{name:"English",dir:"ltr",t:{

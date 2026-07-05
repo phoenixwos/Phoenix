@@ -48,7 +48,7 @@ function updateNav(activePage){
     a.classList.toggle('active', activePage?page===activePage:a.classList.contains('active'));
   });
   const stLbl=document.getElementById('navStateLabel'); if(stLbl) stLbl.textContent=getState();
-  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'—';
+  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'Alianza';
 }
 const CONFIG = {
 
@@ -133,14 +133,24 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const _sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 async function maybeLoadFromSupabase(){
+  const S=getState();
   let tag=new URLSearchParams(location.search).get('tag');
-  if(!tag) tag=getTag(); // fall back to last-known alliance for this session/state
-  if(!tag) return; // no tag anywhere → use hardcoded CONFIG demo
-  // fetch from Supabase
-  const{data,error}=await _sb.from('alliances').select('*').eq('tag',tag.toUpperCase()).maybeSingle();
-  if(error||!data) return; // fallback to CONFIG if not found
+  if(!tag) tag=getTag(); // hint: last-known alliance from this session
+  let data=null;
+  // 1) Try the requested tag, but ONLY within the state currently being browsed —
+  //    a stale "PXR" tag from state 3139 must not load into state 4501.
+  if(tag){
+    const r=await _sb.from('alliances').select('*').eq('tag',tag.toUpperCase()).eq('state_id',S).maybeSingle();
+    if(!r.error) data=r.data;
+  }
+  // 2) No tag (or tag not in this state) → load this state's showcase / top alliance.
+  if(!data){
+    const r=await _sb.from('alliances').select('*').eq('state_id',S).order('state_rank');
+    if(r.data&&r.data.length){ data=r.data.find(a=>a.is_showcase)||r.data[0]; }
+  }
+  if(!data) return; // truly nothing in this state → fall back to the built-in demo CONFIG
   const cfg=data.config||{};
-  const isPXR=(data.tag==='PXR');
+  const isPXR=(data.tag==='PXR' && String(data.state_id)==='3139'); // rich demo defaults belong to the original 3139 branded alliance only
   CONFIG.tag=data.tag;
   CONFIG.name=data.name;
   CONFIG.state=data.state_id;

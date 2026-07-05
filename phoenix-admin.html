@@ -488,7 +488,7 @@ function updateNav(activePage){
     a.classList.toggle('active', activePage?page===activePage:a.classList.contains('active'));
   });
   const stLbl=document.getElementById('navStateLabel'); if(stLbl) stLbl.textContent=getState();
-  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'—';
+  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'Alianza';
   const db=document.getElementById('deniedBackLink'); if(db) db.href=stateUrl('phoenix-state.html');
   const dn=document.getElementById('deniedBackNum'); if(dn) dn.textContent=getState();
 }

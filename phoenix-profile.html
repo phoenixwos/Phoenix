@@ -508,7 +508,7 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 
 <nav class="botnav" id="botnav">
   <a href="#" data-page="state"><span class="nav-ic">🌍</span><span id="navStateLabel">3139</span></a>
-  <a href="#" data-page="alliance" id="navAllianceBtn"><span class="nav-ic" id="navAllianceIc">🏰</span><span id="navAllianceTag">Alianza</span></a>
+  <a href="#" data-page="alliance" id="navAllianceBtn"><span class="nav-ic" id="navAllianceIc">🏰</span><span id="navAllianceLabel">Alianza</span></a>
   <a href="#" data-page="profile" class="active"><span class="nav-ic">👤</span>Perfil</a>
   <a href="#" data-page="admin" id="adminNavBtn" style="display:none"><span class="nav-ic">🔐</span>Admin</a>
 </nav>
@@ -537,7 +537,7 @@ function updateNav(activePage){
     a.classList.toggle('active', activePage?page===activePage:a.classList.contains('active'));
   });
   const stLbl=document.getElementById('navStateLabel'); if(stLbl) stLbl.textContent=getState();
-  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'—';
+  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'Alianza';
 }
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
@@ -848,7 +848,7 @@ function renderView(p){
   // Update nav alliance button with player's actual alliance
   if(myAlliance){
     const navBtn=$('#navAllianceBtn');
-    const navTag=$('#navAllianceTag');
+    const navTag=$('#navAllianceLabel');
     const navIc=$('#navAllianceIc');
     if(navTag)navTag.textContent=myAlliance.tag||'Alliance';
     if(navBtn)navBtn.href=stateUrl('phoenix-alliance.html',{tag:myAlliance.tag});
