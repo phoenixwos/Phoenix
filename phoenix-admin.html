@@ -433,9 +433,17 @@ body{padding-bottom:72px !important;}
           <div id="pendingList"></div>
         </div>
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Manage your roster. Registered players appear automatically; you can also add members manually.</p>
-        <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
-        <div id="memberRows" class="dlist"></div>
-        <button class="add-btn" id="addMemberBtn">+ Add member manually</button>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
+        <!-- Count + collapse toggle -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span id="memberCount" style="font-family:'Fredoka';font-weight:700;font-size:.85rem;color:var(--ink);">0/100</span>
+          <span id="memberOver" style="display:none;font-family:'Fredoka';font-weight:700;font-size:.76rem;color:#e05050;">⚠️ over 100 — check duplicates</span>
+          <button id="memberToggle" class="btn btn-ghost" style="margin-left:auto;width:auto;padding:6px 12px;font-size:.8rem;">▼ Show list</button>
+        </div>
+        <!-- Search within this alliance -->
+        <input id="memberSearch" placeholder="🔍 Filter by name…" style="display:none;width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;margin-bottom:10px;">
+        <div id="memberRows" class="dlist" style="display:none;"></div>
+        <button class="add-btn" id="addMemberBtn" style="display:none;">+ Add member manually</button>
         <div class="errmsg" id="memberErr" style="margin-top:10px;"></div>
         <button class="btn btn-fire" id="saveMembersBtn" style="margin-top:12px;">💾 Save member changes</button>
       </div>
@@ -827,7 +835,7 @@ document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
   const mainBar=document.getElementById('mainSaveBar');
   if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access'||sec==='nap')?'none':'';
   // Lazy-load data for these tabs
-  if(sec==='members')loadMembersEditor();
+  if(sec==='members'){loadMembersEditor();setMemberListOpen(false);}
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
   if(sec==='nap')loadNapEditor();
@@ -1281,6 +1289,15 @@ async function loadMembersEditor(){
   memberCache.forEach((m,i)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(i,m);wrap.appendChild(d.firstElementChild);});
   if(memberCache.length===0)wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
 
+  // Count X/100 + over-limit warning
+  const n=memberCache.length;
+  const cEl=$('#memberCount'); if(cEl)cEl.textContent=n+'/100';
+  const oEl=$('#memberOver'); if(oEl)oEl.style.display=(n>100)?'':'none';
+  if(cEl)cEl.style.color=(n>100)?'#e05050':'var(--ink)';
+  // Re-apply current filter if the search box has text
+  const q=($('#memberSearch')?.value||'').trim().toLowerCase();
+  if(q)filterMemberRows(q);
+
   // ── PENDING BANNER: players who created their own page but aren't confirmed yet ──
   const pending=(data||[]).filter(m=>m.owner && !m.alliance_confirmed);
   const banner=$('#pendingBanner');
@@ -1308,6 +1325,36 @@ async function approveMember(id){
   toast('Approved ✓');
   loadMembersEditor();
 }
+
+// Collapse / expand the member list
+let memberListOpen=false;
+function setMemberListOpen(open){
+  memberListOpen=open;
+  const rows=$('#memberRows'), search=$('#memberSearch'), addBtn=$('#addMemberBtn'), tog=$('#memberToggle');
+  if(rows)rows.style.display=open?'':'none';
+  if(search)search.style.display=open?'':'none';
+  if(addBtn)addBtn.style.display=open?'':'none';
+  if(tog)tog.textContent=open?'▲ Hide list':'▼ Show list';
+}
+document.addEventListener('click',(e)=>{
+  if(e.target&&e.target.id==='memberToggle'){setMemberListOpen(!memberListOpen);}
+});
+
+// Filter rows by name within this alliance
+function filterMemberRows(q){
+  const rows=$('#memberRows'); if(!rows)return;
+  Array.from(rows.children).forEach((row,i)=>{
+    const m=memberCache[i];
+    if(!m){row.style.display='';return;}
+    const hit=(m.name||'').toLowerCase().includes(q);
+    row.style.display=hit?'':'none';
+  });
+}
+document.addEventListener('input',(e)=>{
+  if(e.target&&e.target.id==='memberSearch'){
+    filterMemberRows(e.target.value.trim().toLowerCase());
+  }
+});
 function delMember(i){
   const row=$('#memberRows').children[i];
   if(!row)return;
