@@ -200,6 +200,53 @@ input,textarea,select{font-family:'Inter',sans-serif;}
   overflow:hidden;flex:none;
 }
 .gov-avatar img{width:100%;height:100%;object-fit:cover;}
+
+/* ── PROFILE AVATAR FRAMES (marcos) — driven by players.active_frame ── */
+.gov-avatar.frame-legend{ /* 👑 Leyenda · Globo del estado — gold + frost */
+  border-color:#ffe9b0;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #e9b949,0 0 0 8px #7fd0f0,
+             0 6px 24px -4px rgba(233,185,73,.7),0 0 22px 2px rgba(127,208,240,.55);
+  animation:frLegend 3.2s ease-in-out infinite;
+}
+@keyframes frLegend{
+  0%,100%{box-shadow:0 0 0 3px #fff,0 0 0 6px #e9b949,0 0 0 8px #7fd0f0,0 6px 24px -4px rgba(233,185,73,.7),0 0 22px 2px rgba(127,208,240,.55);}
+  50%{box-shadow:0 0 0 3px #fff,0 0 0 6px #f4cf6a,0 0 0 8px #a6e2f7,0 6px 30px -2px rgba(244,207,106,.95),0 0 32px 6px rgba(166,226,247,.8);}
+}
+.gov-avatar.frame-meteor{ /* ☄️ Campeón de Meteoro — fire */
+  border-color:#ffd0a8;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #ff8a3c,
+             0 6px 22px -4px rgba(255,138,60,.7),0 0 20px 2px rgba(255,120,40,.5);
+  animation:frMeteor 3.2s ease-in-out infinite;
+}
+@keyframes frMeteor{
+  0%,100%{box-shadow:0 0 0 3px #fff,0 0 0 6px #ff8a3c,0 6px 22px -4px rgba(255,138,60,.7),0 0 20px 2px rgba(255,120,40,.5);}
+  50%{box-shadow:0 0 0 3px #fff,0 0 0 6px #ffa45c,0 6px 28px -2px rgba(255,164,92,.95),0 0 30px 6px rgba(255,150,70,.75);}
+}
+.gov-avatar.frame-svs{ /* ⚔️ SvS MVP — steel + crimson */
+  border-color:#ffc9c9;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #c0392b,0 0 0 8px #8895a3,
+             0 6px 22px -4px rgba(192,57,43,.6),0 0 18px 2px rgba(140,149,163,.5);
+}
+.gov-avatar.frame-perf{ /* ⭐ Perfecto — violet star */
+  border-color:#e6d4ff;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #7b5cd6,
+             0 6px 22px -4px rgba(123,92,214,.6),0 0 18px 2px rgba(180,150,255,.5);
+}
+.gov-avatar.frame-bear{ /* 🐻 Cazador — earthy brown/green */
+  border-color:#e2d3b0;
+  box-shadow:0 0 0 3px #fff,0 0 0 6px #7a5230,0 0 0 8px #5a7d4a,
+             0 6px 20px -4px rgba(122,82,48,.6);
+}
+.frame-emblem{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:1.25rem;line-height:1;z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  pointer-events:none;
+}
+/* Frame picker (own profile) */
+.frame-picker{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 20px 4px;}
+.frame-picker .fp-chip{border:1.5px solid var(--panel-edge);background:#fff;border-radius:11px;padding:6px 11px;font-family:'Fredoka';font-weight:600;font-size:.76rem;cursor:pointer;color:var(--ink-soft);}
+.frame-picker .fp-chip.active{border-color:var(--fire);background:#fff2e8;color:var(--fire);}
+.frame-picker .fp-title{width:100%;text-align:center;font-size:.72rem;color:var(--muted);font-family:'Fredoka';margin-bottom:2px;}
 .gov-name-block{text-align:center;margin-top:10px;padding:0 4px;}
 .gov-name-block h1{font-size:1.3rem;line-height:1.15;}
 .gov-name-block .gid{text-align:center;}
@@ -456,6 +503,7 @@ input,textarea,select{font-family:'Inter',sans-serif;}
     </div>
     <!-- Stats row below hero -->
     <div class="meta" id="vMeta" style="padding:0 20px 16px;"></div>
+    <div class="frame-picker" id="framePicker" style="display:none;"></div>
     <div id="vBioWrap" class="hidden"><div class="section-t" data-i18n="sec.about">About me</div><div class="bio-text" id="vBio"></div></div>
     <div id="vHelpWrap" class="hidden">
       <div class="help-box" style="margin:14px 24px 0;">
@@ -617,6 +665,7 @@ function show(s){
   if(!['loading'].includes(s)&&!['loading'].includes(prevState)) prevState=s==='pubview'||s==='directory'?prevState:s;
   ALL_STATES.forEach(x=>{const el=$('#'+x);if(el)el.classList.toggle('hidden',x!==s);});
   window.scrollTo({top:0});
+  if(typeof maybeShowCave==='function') maybeShowCave(); // keep the cave button visible across screens
 }
 
 // ── TOAST ─────────────────────────────────────────────────────
@@ -956,9 +1005,69 @@ $('#saveBtn').addEventListener('click',async()=>{
   }
 });
 
+// ── LEGEND FRAME (marco) — show a decorative frame + emblem when the
+//    player holds a badge that carries a `frame` value (globe > meteor). ──
+// ── PROFILE FRAMES (marcos) ───────────────────────────────────
+// Uses the platform's frame system: players.unlocked_frames (array of ids)
+// + players.active_frame (the one the player chose to show).
+const FRAME_EMBLEM={legend:'👑',meteor:'☄️',svs:'⚔️',perf:'⭐',bear:'🐻'};
+const FRAME_LABEL={legend:'👑 Leyenda',meteor:'☄️ Meteoro',svs:'⚔️ SvS MVP',perf:'⭐ Perfecto',bear:'🐻 Cazador'};
+const FRAME_PRIORITY=['legend','meteor','svs','perf','bear'];
+function pickFrame(p){
+  const unlocked=Array.isArray(p.unlocked_frames)?p.unlocked_frames:[];
+  if(!unlocked.length) return null;
+  if(p.active_frame && unlocked.includes(p.active_frame)) return p.active_frame; // honor player's choice
+  return FRAME_PRIORITY.find(f=>unlocked.includes(f))||null;                     // else highest tier
+}
+function applyFrame(avatarEl, p){
+  if(!avatarEl) return;
+  FRAME_PRIORITY.forEach(f=>avatarEl.classList.remove('frame-'+f));
+  const parent=avatarEl.parentElement;
+  if(parent){ const old=parent.querySelector('.frame-emblem'); if(old) old.remove(); }
+  const fr=pickFrame(p);
+  if(!fr) return;
+  avatarEl.classList.add('frame-'+fr);
+  if(parent){
+    parent.style.position='relative';
+    const em=document.createElement('div');
+    em.className='frame-emblem';
+    em.textContent=FRAME_EMBLEM[fr]||'';
+    parent.appendChild(em);
+  }
+}
+// Frame picker (own profile only): lets the player choose which unlocked frame to display.
+function renderFramePicker(p){
+  const box=$('#framePicker'); if(!box) return;
+  const unlocked=Array.isArray(p.unlocked_frames)?p.unlocked_frames:[];
+  if(unlocked.length<2){ box.style.display='none'; box.innerHTML=''; return; } // nothing to choose
+  const current=pickFrame(p);
+  box.style.display='flex';
+  let html='<div class="fp-title" data-i18n="frame.pick">Choose your frame</div>';
+  html+=`<div class="fp-chip${!p.active_frame?' active':''}" data-frame="">✖ None</div>`;
+  FRAME_PRIORITY.filter(f=>unlocked.includes(f)).forEach(f=>{
+    html+=`<div class="fp-chip${current===f&&p.active_frame===f?' active':''}" data-frame="${f}">${FRAME_LABEL[f]}</div>`;
+  });
+  box.innerHTML=html;
+  box.querySelectorAll('.fp-chip').forEach(chip=>{
+    chip.onclick=async()=>{
+      const val=chip.dataset.frame||null;
+      try{
+        const{error}=await sb.from('players').update({active_frame:val}).eq('id',p.id);
+        if(error){toast('No se pudo guardar el marco',true);return;}
+        p.active_frame=val;
+        applyFrame($('#vAvatar'),p);
+        renderFramePicker(p);
+        toast('Marco actualizado ✓');
+      }catch(e){toast('Error al guardar',true);}
+    };
+  });
+}
+
 // ── RENDER OWN PROFILE ────────────────────────────────────────
 function renderView(p){
   setAvatarEl($('#vAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
+  applyFrame($('#vAvatar'),p);
+  renderFramePicker(p);
   $('#vName').textContent=p.name||'—';
   $('#vGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#vMeta');meta.innerHTML='';
@@ -1054,6 +1163,7 @@ async function loadPublicProfile(playerId){
   if(!p){toast('Profile not found.',true);show('directory');return;}
   const earnedIds=pb?pb.map(x=>x.badge_id):[];
   setAvatarEl($('#pAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
+  applyFrame($('#pAvatar'),p);
   $('#pName').textContent=p.name||'—';
   $('#pGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#pMeta');meta.innerHTML='';
@@ -1187,8 +1297,16 @@ async function init(){
 }
 
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();maybeShowCave();}
-  else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');document.getElementById('caveBtn').style.display='none';}
+  if(session?.user){
+    // Any event that carries a valid session (SIGNED_IN, INITIAL_SESSION,
+    // TOKEN_REFRESHED, USER_UPDATED) should (re)assert the cave button.
+    if(!currentUser){ currentUser=session.user; await loadProfile(); }
+    else { currentUser=session.user; }
+    maybeShowCave();
+  } else if(event==='SIGNED_OUT'){
+    currentUser=null;currentProfile=null;show('empty');
+    const cb=document.getElementById('caveBtn'); if(cb) cb.style.display='none';
+  }
 });
 
 // ── 🍪 THE CAVE — private space for the two of us ──────────────

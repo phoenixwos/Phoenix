@@ -1244,5 +1244,139 @@ async function loadMembers(){
   }catch(e){}
 })();
 </script>
+
+<!-- 🍪 THE CAVE (shared module) — private space for Hestelae & TMQ -->
+<button id="caveBtn" style="display:none;position:fixed;bottom:78px;right:16px;z-index:60;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(180deg,#8a5a3a,#6a3f28);box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:1.5rem;cursor:pointer;">🍪<span id="caveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#ff3b3b;border:2px solid #1a1009;border-radius:50%;"></span></button>
+<style>
+@keyframes caveNudge{0%,100%{transform:translateY(0) rotate(0);}25%{transform:translateY(-6px) rotate(-8deg);}75%{transform:translateY(-3px) rotate(8deg);}}
+#caveBtn.has-new{animation:caveNudge 1.1s ease-in-out infinite;}
+</style>
+<div id="cavePanel" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(20,12,8,.75);backdrop-filter:blur(4px);align-items:flex-end;">
+  <div style="background:linear-gradient(180deg,#2a1c14,#1a1009);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;border:1px solid #4a3020;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="padding:16px 18px;border-bottom:1px solid #3a2818;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.4rem;">🍪</span>
+      <div style="flex:1;">
+        <div style="font-family:'Baloo 2',cursive;font-weight:800;color:#ffd9a0;font-size:1.05rem;">Our cave</div>
+        <div style="font-size:.72rem;color:#b0876a;">Just us. Nobody else can see this. 🤍</div>
+      </div>
+      <button id="caveClose" style="background:none;border:none;color:#b0876a;font-size:1.5rem;cursor:pointer;">×</button>
+    </div>
+    <div id="caveMessages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="padding:12px 16px;border-top:1px solid #3a2818;display:flex;gap:8px;">
+      <input id="caveInput" placeholder="Leave a message…" style="flex:1;background:#1a1009;border:1.5px solid #4a3020;border-radius:12px;color:#ffe8d0;font-family:Inter,sans-serif;font-size:.9rem;padding:11px 13px;outline:none;">
+      <button id="caveSend" style="background:linear-gradient(180deg,#c98a5a,#a06840);border:none;border-radius:12px;color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;padding:0 18px;cursor:pointer;">Send</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var __sb=(typeof sb!=='undefined'&&sb)?sb:((typeof _sb!=='undefined'&&_sb)?_sb:null);
+  if(!__sb)return;
+  var CAVE_EMAILS=['hestelae@gmail.com','ld9791@gmail.com'];
+  var caveOpen=false, caveChannel=null, caveLastSeen=0, myEmail='';
+  try{ caveLastSeen=parseInt(localStorage.getItem('caveLastSeen')||'0',10)||0; }catch(_){}
+
+  function maybeShowCave(){
+    var btn=document.getElementById('caveBtn'); if(!btn)return;
+    if(CAVE_EMAILS.indexOf(myEmail)>-1){ btn.style.display=''; subscribeCave(); refreshCaveDot(); }
+    else { btn.style.display='none'; }
+  }
+  function subscribeCave(){
+    if(caveChannel)return;
+    try{
+      caveChannel=__sb.channel('cave-rt-'+Math.random().toString(36).slice(2,7))
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'cave_messages'},function(payload){
+          if(caveOpen){ appendCaveMessage(payload.new); markCaveSeen(); } else { refreshCaveDot(true); }
+        })
+        .on('postgres_changes',{event:'DELETE',schema:'public',table:'cave_messages'},function(){ if(caveOpen)loadCave(); })
+        .subscribe();
+    }catch(e){console.warn('Cave realtime failed:',e);}
+  }
+  async function refreshCaveDot(force){
+    var btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
+    if(!btn||!dot)return;
+    try{
+      var r=await __sb.from('cave_messages').select('created_at,author_email').order('created_at',{ascending:false}).limit(1);
+      var data=r.data;
+      if(data&&data.length){
+        var t=new Date(data[0].created_at).getTime();
+        var fromOther=(data[0].author_email||'').toLowerCase()!==myEmail;
+        if((force||t>caveLastSeen)&&fromOther&&!caveOpen){ dot.style.display='';btn.classList.add('has-new'); }
+      }
+    }catch(_){}
+  }
+  function markCaveSeen(){
+    caveLastSeen=Date.now();
+    try{ localStorage.setItem('caveLastSeen',String(caveLastSeen)); }catch(_){}
+    var btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
+    if(dot)dot.style.display='none'; if(btn)btn.classList.remove('has-new');
+  }
+  async function openCave(){
+    caveOpen=true; document.getElementById('cavePanel').style.display='flex';
+    markCaveSeen(); await loadCave(); subscribeCave();
+  }
+  function closeCave(){ caveOpen=false; document.getElementById('cavePanel').style.display='none'; }
+  function caveBubble(m){
+    var mine=(m.author_email||'').toLowerCase()===myEmail;
+    var who=(m.author_email||'').toLowerCase()==='hestelae@gmail.com'?'Hestelae':'TMQ';
+    var when=new Date(m.created_at).toLocaleString();
+    var bubble=document.createElement('div');
+    bubble.dataset.id=m.id;
+    bubble.style.cssText='max-width:80%;align-self:'+(mine?'flex-end':'flex-start')+';background:'+(mine?'linear-gradient(180deg,#c98a5a,#a06840)':'#2e2016')+';color:'+(mine?'#fff':'#ffe8d0')+';padding:9px 13px;border-radius:14px;position:relative;';
+    var del=mine?'<button data-del="'+m.id+'" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.75rem;cursor:pointer;padding:0;margin-top:4px;">🗑️ delete</button>':'';
+    bubble.innerHTML='<div style="font-size:.9rem;line-height:1.4;white-space:pre-wrap;">'+(m.body||'').replace(/</g,'&lt;')+'</div><div style="font-size:.62rem;opacity:.7;margin-top:4px;">'+who+' · '+when+'</div>'+del;
+    var db=bubble.querySelector('[data-del]');
+    if(db)db.onclick=function(){ deleteCaveMsg(m.id); };
+    return bubble;
+  }
+  function appendCaveMessage(m){
+    var box=document.getElementById('caveMessages'); if(!box)return;
+    var ph=box.querySelector('[data-empty]'); if(ph)ph.remove();
+    box.appendChild(caveBubble(m)); box.scrollTop=box.scrollHeight;
+  }
+  async function loadCave(){
+    var box=document.getElementById('caveMessages');
+    box.innerHTML='<div style="text-align:center;color:#8a6a4a;font-size:.82rem;padding:20px;">…</div>';
+    try{
+      var r=await __sb.from('cave_messages').select('*').order('created_at',{ascending:true});
+      if(r.error)throw r.error;
+      var data=r.data;
+      if(!data||!data.length){ box.innerHTML='<div data-empty style="text-align:center;color:#8a6a4a;font-size:.85rem;padding:24px;line-height:1.5;">Nobody\'s written yet 🍪<br>Leave the first message.</div>'; return; }
+      box.innerHTML=''; data.forEach(function(m){ box.appendChild(caveBubble(m)); }); box.scrollTop=box.scrollHeight;
+    }catch(e){ box.innerHTML='<div style="text-align:center;color:#c88;font-size:.82rem;padding:20px;">Couldn\'t load the cave. '+(e.message||'')+'</div>'; }
+  }
+  async function sendCave(){
+    var input=document.getElementById('caveInput');
+    var body=input.value.trim(); if(!body)return; input.value='';
+    var r=await __sb.from('cave_messages').insert({author_email:myEmail,author_name:myEmail==='hestelae@gmail.com'?'Hestelae':'TMQ',body});
+    if(r.error){input.value=body;alert('Could not send: '+r.error.message);return;}
+    markCaveSeen(); if(!caveChannel)await loadCave();
+  }
+  async function deleteCaveMsg(id){
+    if(!confirm('Delete this message?'))return;
+    var r=await __sb.from('cave_messages').delete().eq('id',id);
+    if(r.error){alert('Could not delete: '+r.error.message);return;}
+    var box=document.getElementById('caveMessages');
+    var el=box&&box.querySelector('[data-id="'+id+'"]'); if(el)el.remove();
+  }
+  window.deleteCaveMsg=deleteCaveMsg;
+
+  document.getElementById('caveBtn')&&document.getElementById('caveBtn').addEventListener('click',openCave);
+  document.getElementById('caveClose')&&document.getElementById('caveClose').addEventListener('click',closeCave);
+  document.getElementById('caveSend')&&document.getElementById('caveSend').addEventListener('click',sendCave);
+  document.getElementById('caveInput')&&document.getElementById('caveInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendCave();});
+
+  // Detect the logged-in user's email (session), then decide whether to show the cave.
+  __sb.auth.getSession().then(function(res){
+    myEmail=((res&&res.data&&res.data.session&&res.data.session.user&&res.data.session.user.email)||'').toLowerCase();
+    maybeShowCave();
+  }).catch(function(){});
+  __sb.auth.onAuthStateChange(function(_e,session){
+    myEmail=((session&&session.user&&session.user.email)||'').toLowerCase();
+    maybeShowCave();
+  });
+})();
+</script>
+
 </body>
 </html>
