@@ -596,6 +596,8 @@ function T(k){return I18N[LANG]?.t[k]||I18N.en.t[k]||k;}
 // pre-selection when creating a new character (taken from ?s= if present).
 function getState(){const s=new URLSearchParams(location.search).get('s');return (s&&/^\d{3,5}$/.test(s))?s:'3139';}
 const PAGE_STATE=getState();
+// Keep the "States" nav button on the current state, not always 3139
+(function(){const nb=document.getElementById('navHomeBtn');if(nb)nb.href=(PAGE_STATE==='3139'?'phoenix-state.html':'phoenix-state.html?s='+PAGE_STATE);})();
 // Build a link to a state's public pages, carrying the state in the URL.
 // One set of files; state travels as ?s=. (Pretty URLs later = change here only.)
 function stateBasePath(stateId){
@@ -799,12 +801,13 @@ async function loadProfile(){
     }
   }catch(e){
     console.error('Profile load error:',e);
-    // Only surface an error if we genuinely have nothing on screen.
-    // A late timeout after the picker/view already rendered must stay silent.
+    // A late timeout or a transient error must never nag the user if anything
+    // is already on screen or in memory. Only show it on a truly blank first load.
     const onResultScreen = !$('#picker').classList.contains('hidden')
                         || !$('#view').classList.contains('hidden')
                         || !$('#edit').classList.contains('hidden');
-    if(!onResultScreen && myProfiles.length===0 && !currentProfile){
+    const isTimeout = (e&&(e.message==='timeout'));
+    if(!onResultScreen && !isTimeout && myProfiles.length===0 && !currentProfile && !currentUser){
       toast('Connection error. Check Supabase settings.',true);
       show('empty');
     }
@@ -995,7 +998,7 @@ function renderView(p){
     const navTag=$('#navAllianceTag');
     const navIc=$('#navAllianceIc');
     if(navTag)navTag.textContent=myAlliance.tag||'Alliance';
-    if(navBtn)navBtn.href=`phoenix-alliance.html?tag=${myAlliance.tag}`;
+    if(navBtn)navBtn.href=statePublicUrl(currentProfile?.state_id||PAGE_STATE,`phoenix-alliance.html?tag=${myAlliance.tag}`);
     const logoUrl=myAlliance.config?.logoUrl||'';
     if(navIc){
       if(logoUrl)navIc.innerHTML=`<img src="${logoUrl}" style="width:1.5rem;height:1.5rem;border-radius:6px;object-fit:cover;">`;
