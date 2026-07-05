@@ -323,30 +323,13 @@ input,textarea,select{font-family:'Inter',sans-serif;}
     <p class="form-sub" id="authSub">One account, one page, your data.</p>
     <div class="err-msg" id="authErr"></div>
     <div class="ok-msg" id="authOk"></div>
-    <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"></div>
-    <div class="field"><label>Password <span class="req">*</span></label><input type="password" id="authPwd" placeholder="Min. 6 characters" autocomplete="current-password"></div>
+    <div class="field"><label><span data-i18n="auth.email">Email</span> <span class="req">*</span></label><input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"></div>
+    <div class="field"><label><span data-i18n="auth.pwd">Password</span> <span class="req">*</span></label><input type="password" id="authPwd" data-i18n-ph="auth.pwd.hint" placeholder="Min. 6 characters" autocomplete="current-password"></div>
     <div class="form-actions">
       <button class="btn btn-fire" id="authSubmit" style="flex:1">Create account</button>
-      <button class="btn btn-ghost btn-sm" id="authBack">← Back</button>
+      <button class="btn btn-ghost btn-sm" id="authBack" data-i18n="back">← Back</button>
     </div>
     <div class="auth-switch"><span id="authSwitchTxt">Already have a page?</span> <button id="authSwitch">Sign in instead</button></div>
-    <div id="forgotWrap" style="text-align:center;margin-top:10px;display:none;">
-      <button id="forgotBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.78rem;font-family:'Fredoka';cursor:pointer;text-decoration:underline;">Forgot your password?</button>
-    </div>
-    <div class="ok-msg" id="resetOk" style="margin-top:8px;"></div>
-  </div>
-</div>
-
-<!-- PROFILE PICKER (multi-account, grouped by state) -->
-<div id="picker" class="hidden">
-  <div class="form-wrap">
-    <h2 data-i18n="pick.title">Your characters</h2>
-    <p class="form-sub" data-i18n="pick.sub">Pick a character to manage, or create a new one.</p>
-    <button class="btn btn-fire" id="pickerNewBtn" style="width:100%;margin-bottom:16px;">➕ <span data-i18n="pick.new">Create new character</span></button>
-    <div id="pickerList"></div>
-    <div style="text-align:center;margin-top:16px;">
-      <button class="btn btn-ghost btn-sm" id="pickerSignOut" data-i18n="pick.signout">Sign out</button>
-    </div>
   </div>
 </div>
 
@@ -371,10 +354,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
       </div>
     </div>
 
-    <div class="field" id="fStateWrap" style="display:none;"><label data-i18n="f.state">State / Server <span class="req">*</span></label>
-      <select id="fState"></select>
-      <div class="hint" data-i18n="f.state.hint">Which state is this character in?</div>
-    </div>
     <div class="field"><label data-i18n="f.gid">Governor ID <span class="req">*</span></label>
       <input type="text" id="fGid" placeholder="9-digit ID" maxlength="12" inputmode="numeric">
       <div class="hint" data-i18n="f.gid.hint">Required. Leaders use this to verify you're in the alliance.</div>
@@ -476,7 +455,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
     <div id="premiumUpsell" style="display:none;margin-top:18px;"></div>
     <div class="foot-actions">
       <button class="btn btn-fire btn-sm" id="editBtn2" data-i18n="edit.long">Edit my page</button>
-      <button class="btn btn-ghost btn-sm" id="switchCharBtn" style="display:none;">🔄 <span data-i18n="pick.switch">My characters</span></button>
       <button class="btn btn-ghost btn-sm" id="browseBtnView">👥 <span data-i18n="dir.browse">Browse players</span></button>
       <button class="btn btn-ghost btn-sm" id="signOutView">Sign out</button>
     </div>
@@ -528,50 +506,52 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 
 <div class="toast" id="toast"></div>
 
-<nav class="botnav">
-  <a href="./phoenix-state.html" id="navHomeBtn"><span class="nav-ic">🌍</span><span data-i18n="nav.states">States</span></a>
-  <a href="./phoenix-profile.html" class="active"><span class="nav-ic">👤</span><span data-i18n="nav.me">My characters</span></a>
+<nav class="botnav" id="botnav">
+  <a href="#" data-page="state"><span class="nav-ic">🌍</span><span id="navStateLabel">3139</span></a>
+  <a href="#" data-page="alliance" id="navAllianceBtn"><span class="nav-ic" id="navAllianceIc">🏰</span><span id="navAllianceTag">Alianza</span></a>
+  <a href="#" data-page="profile" class="active"><span class="nav-ic">👤</span>Perfil</a>
+  <a href="#" data-page="admin" id="adminNavBtn" style="display:none"><span class="nav-ic">🔐</span>Admin</a>
 </nav>
 
-<!-- 🍪 THE CAVE — only appears for the two of us -->
-<button id="caveBtn" style="display:none;position:fixed;bottom:78px;right:16px;z-index:60;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(180deg,#8a5a3a,#6a3f28);box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:1.5rem;cursor:pointer;">🍪<span id="caveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#ff3b3b;border:2px solid #1a1009;border-radius:50%;"></span></button>
-<style>
-@keyframes caveNudge{0%,100%{transform:translateY(0) rotate(0);}25%{transform:translateY(-6px) rotate(-8deg);}75%{transform:translateY(-3px) rotate(8deg);}}
-#caveBtn.has-new{animation:caveNudge 1.1s ease-in-out infinite;}
-</style>
-
-<div id="cavePanel" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(20,12,8,.75);backdrop-filter:blur(4px);align-items:flex-end;">
-  <div style="background:linear-gradient(180deg,#2a1c14,#1a1009);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;border:1px solid #4a3020;max-height:85vh;display:flex;flex-direction:column;">
-    <div style="padding:16px 18px;border-bottom:1px solid #3a2818;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:1.4rem;">🍪</span>
-      <div style="flex:1;">
-        <div style="font-family:'Baloo 2',cursive;font-weight:800;color:#ffd9a0;font-size:1.05rem;">Our cave</div>
-        <div style="font-size:.72rem;color:#b0876a;">Just us. Nobody else can see this. 🤍</div>
-      </div>
-      <button id="caveClose" style="background:none;border:none;color:#b0876a;font-size:1.5rem;cursor:pointer;">×</button>
-    </div>
-    <div id="caveMessages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;"></div>
-    <div style="padding:12px 16px;border-top:1px solid #3a2818;display:flex;gap:8px;">
-      <input id="caveInput" placeholder="Leave a message…" style="flex:1;background:#1a1009;border:1.5px solid #4a3020;border-radius:12px;color:#ffe8d0;font-family:Inter,sans-serif;font-size:.9rem;padding:11px 13px;outline:none;">
-      <button id="caveSend" style="background:linear-gradient(180deg,#c98a5a,#a06840);border:none;border-radius:12px;color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;padding:0 18px;cursor:pointer;">Send</button>
-    </div>
-  </div>
-</div>
-
 <script>
+// ── PHX CORE: shared multi-state routing (state persists across pages) ──
+(function(){
+  const p=new URLSearchParams(location.search);
+  let s=p.get('s');
+  if(s){ try{localStorage.setItem('phx_state',s);}catch(e){} }
+  else{ try{s=localStorage.getItem('phx_state');}catch(e){} }
+  window.__PHX_STATE=s||'3139';
+})();
+function getState(){ return window.__PHX_STATE||'3139'; }
+function setState(s){ if(!s)return; window.__PHX_STATE=String(s); try{localStorage.setItem('phx_state',String(s));}catch(e){} if(typeof updateNav==='function')updateNav(); }
+function getTag(){ try{return localStorage.getItem('phx_tag')||'';}catch(e){return '';} }
+function setTag(t){ if(!t)return; try{localStorage.setItem('phx_tag',String(t).toUpperCase());}catch(e){} if(typeof updateNav==='function')updateNav(); }
+function stateUrl(page,extra){ const p=new URLSearchParams(extra||{}); p.set('s',getState()); return page+'?'+p.toString(); }
+const PHX_PAGES={state:'phoenix-state.html',alliance:'phoenix-alliance.html',profile:'phoenix-profile.html',admin:'phoenix-admin.html'};
+function updateNav(activePage){
+  const nav=document.getElementById('botnav'); if(!nav) return;
+  nav.querySelectorAll('a[data-page]').forEach(a=>{
+    const page=a.dataset.page; const extra={};
+    if(page==='alliance'){ const tg=getTag(); if(tg) extra.tag=tg; }
+    a.href=stateUrl(PHX_PAGES[page],extra);
+    a.classList.toggle('active', activePage?page===activePage:a.classList.contains('active'));
+  });
+  const stLbl=document.getElementById('navStateLabel'); if(stLbl) stLbl.textContent=getState();
+  const alLbl=document.getElementById('navAllianceLabel'); if(alLbl) alLbl.textContent=getTag()||'—';
+}
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 const I18N={
-  en:{name:"English",dir:"ltr",t:{"empty.title":"Your page is waiting","empty.l1":"A leader from your alliance invited you to create your Phoenix page.","empty.l2":"You decide what to show. It's yours.","empty.cta":"Create my page","signin.link":"Already have a page? Sign in","dir.browse":"Browse player pages","dir.title":"PXR Players","back":"Back","nav.profile":"Profile","form.title":"My page","form.sub":"Fill in what you want. Anything left blank won't be shown.","f.photo":"Profile photo","f.photo.hint":"Or leave blank — we'll use your initials.","f.gid":"Governor ID","f.gid.hint":"Required. Leaders use this to verify you're in the alliance.","f.name":"In-game name","f.avatar":"Initials","f.lang":"Language(s)","f.country":"Country / TZ","f.alliance":"Alliance","f.alliance.hint":"Pending until a leader confirms.","f.bio":"About me","help.label":"Available to help with","sec.power":"Power (optional)","sec.about":"About me","sec.badges":"Badges","power.t":"Show my power","power.s":"Hidden by default.","save":"Save my page","cancel":"Cancel","edit":"Edit","edit.long":"Edit my page","show":"Show","hide":"Hide","badges.note":"Special badges are awarded by leaders (R5 + R4) — they recognize who you are, not your numbers.","pending":"pending confirmation","pick.title":"Your characters","pick.sub":"Pick a character to manage, or create a new one.","pick.new":"Create new character","pick.signout":"Sign out","pick.server":"Server","pick.switch":"My characters","f.state":"State / Server","f.state.hint":"Which state is this character in?","nav.states":"States","nav.me":"My characters"}},
-  es:{name:"Español",dir:"ltr",t:{"empty.title":"Tu página te espera","empty.l1":"Un líder de tu alianza te invitó a crear tu página en Phoenix.","empty.l2":"Tú decides qué mostrar. Es tuya.","empty.cta":"Crear mi página","signin.link":"¿Ya tienes página? Inicia sesión","dir.browse":"Ver páginas de jugadores","dir.title":"Jugadores PXR","back":"Volver","nav.profile":"Perfil","form.title":"Mi página","form.sub":"Rellena lo que quieras. Lo que dejes vacío no se muestra.","f.photo":"Foto de perfil","f.photo.hint":"O déjalo vacío — usaremos tus iniciales.","f.gid":"ID de gobernador","f.gid.hint":"Obligatorio. Los líderes lo usan para verificarte.","f.name":"Nombre en el juego","f.avatar":"Iniciales","f.lang":"Idioma(s)","f.country":"País / Zona horaria","f.alliance":"Alianza","f.alliance.hint":"Pendiente hasta que un líder confirme.","f.bio":"Sobre mí","help.label":"Disponible para ayudar con","sec.power":"Poder (opcional)","sec.about":"Sobre mí","sec.badges":"Insignias","power.t":"Mostrar mi poder","power.s":"Oculto por defecto.","save":"Guardar mi página","cancel":"Cancelar","edit":"Editar","edit.long":"Editar mi página","show":"Mostrar","hide":"Ocultar","badges.note":"Las insignias especiales las otorgan los líderes (R5 + R4).","pending":"pendiente de confirmar","pick.title":"Tus personajes","pick.sub":"Elige un personaje para gestionar, o crea uno nuevo.","pick.new":"Crear nuevo personaje","pick.signout":"Cerrar sesión","pick.server":"Servidor","pick.switch":"Mis personajes","f.state":"Estado / Servidor","f.state.hint":"¿En qué estado está este personaje?","nav.states":"Estados","nav.me":"Mis personajes"}},
+  en:{name:"English",dir:"ltr",t:{"auth.signup.title":"Create your account","auth.signup.sub":"One account, one page, your data.","auth.signin.title":"Welcome back","auth.signin.sub":"Sign in to your Phoenix page","auth.signup.btn":"Create account","auth.signin.btn":"Sign in","auth.have":"Already have a page?","auth.havent":"Don't have a page yet?","auth.switch.signin":"Sign in instead","auth.switch.signup":"Create one","auth.email":"Email","auth.pwd":"Password","auth.pwd.hint":"Min. 6 characters","empty.title":"Your page is waiting","empty.l1":"A leader from your alliance invited you to create your Phoenix page.","empty.l2":"You decide what to show. It's yours.","empty.cta":"Create my page","signin.link":"Already have a page? Sign in","dir.browse":"Browse player pages","dir.title":"PXR Players","back":"Back","nav.profile":"Profile","form.title":"My page","form.sub":"Fill in what you want. Anything left blank won't be shown.","f.photo":"Profile photo","f.photo.hint":"Or leave blank — we'll use your initials.","f.gid":"Governor ID","f.gid.hint":"Required. Leaders use this to verify you're in the alliance.","f.name":"In-game name","f.avatar":"Initials","f.lang":"Language(s)","f.country":"Country / TZ","f.alliance":"Alliance","f.alliance.hint":"Pending until a leader confirms.","f.bio":"About me","help.label":"Available to help with","sec.power":"Power (optional)","sec.about":"About me","sec.badges":"Badges","power.t":"Show my power","power.s":"Hidden by default.","save":"Save my page","cancel":"Cancel","edit":"Edit","edit.long":"Edit my page","show":"Show","hide":"Hide","badges.note":"Special badges are awarded by leaders (R5 + R4) — they recognize who you are, not your numbers.","pending":"pending confirmation"}},
+  es:{name:"Español",dir:"ltr",t:{"auth.signup.title":"Crea tu cuenta","auth.signup.sub":"Una cuenta, una página, tus datos.","auth.signin.title":"Bienvenido de nuevo","auth.signin.sub":"Inicia sesión en tu página de Phoenix","auth.signup.btn":"Crear cuenta","auth.signin.btn":"Iniciar sesión","auth.have":"¿Ya tienes página?","auth.havent":"¿Aún no tienes página?","auth.switch.signin":"Iniciar sesión","auth.switch.signup":"Crear una","auth.email":"Correo","auth.pwd":"Contraseña","auth.pwd.hint":"Mín. 6 caracteres","empty.title":"Tu página te espera","empty.l1":"Un líder de tu alianza te invitó a crear tu página en Phoenix.","empty.l2":"Tú decides qué mostrar. Es tuya.","empty.cta":"Crear mi página","signin.link":"¿Ya tienes página? Inicia sesión","dir.browse":"Ver páginas de jugadores","dir.title":"Jugadores PXR","back":"Volver","nav.profile":"Perfil","form.title":"Mi página","form.sub":"Rellena lo que quieras. Lo que dejes vacío no se muestra.","f.photo":"Foto de perfil","f.photo.hint":"O déjalo vacío — usaremos tus iniciales.","f.gid":"ID de gobernador","f.gid.hint":"Obligatorio. Los líderes lo usan para verificarte.","f.name":"Nombre en el juego","f.avatar":"Iniciales","f.lang":"Idioma(s)","f.country":"País / Zona horaria","f.alliance":"Alianza","f.alliance.hint":"Pendiente hasta que un líder confirme.","f.bio":"Sobre mí","help.label":"Disponible para ayudar con","sec.power":"Poder (opcional)","sec.about":"Sobre mí","sec.badges":"Insignias","power.t":"Mostrar mi poder","power.s":"Oculto por defecto.","save":"Guardar mi página","cancel":"Cancelar","edit":"Editar","edit.long":"Editar mi página","show":"Mostrar","hide":"Ocultar","badges.note":"Las insignias especiales las otorgan los líderes (R5 + R4).","pending":"pendiente de confirmar"}},
   ko:{name:"한국어",dir:"ltr",t:{"empty.title":"당신의 페이지가 기다립니다","empty.cta":"내 페이지 만들기","signin.link":"이미 페이지가 있나요? 로그인","dir.browse":"플레이어 페이지 보기","dir.title":"PXR 플레이어","back":"뒤로","nav.profile":"프로필","form.title":"내 페이지","form.sub":"원하는 것만 입력하세요.","f.photo":"프로필 사진","f.photo.hint":"비워두면 이니셜을 사용합니다.","f.gid":"군주 ID","f.gid.hint":"필수.","f.name":"게임 내 이름","f.avatar":"이니셜","f.lang":"언어","f.country":"국가 / 시간대","f.alliance":"동맹","f.alliance.hint":"리더 확인까지 보류.","f.bio":"소개","help.label":"도와줄 수 있는 것","sec.power":"전투력","sec.about":"소개","sec.badges":"배지","power.t":"전투력 표시","power.s":"기본은 숨김.","save":"저장","cancel":"취소","edit":"편집","edit.long":"페이지 편집","show":"표시","hide":"숨기기","badges.note":"특별 배지는 리더(R5+R4)가 수여합니다.","pending":"확인 대기 중"}},
   ja:{name:"日本語",dir:"ltr",t:{"empty.title":"あなたのページが待っています","empty.cta":"ページを作成","signin.link":"すでにページがありますか？","dir.browse":"プレイヤーページを見る","dir.title":"PXRプレイヤー","back":"戻る","nav.profile":"プロフィール","form.title":"マイページ","form.sub":"必要な項目だけ入力。","f.photo":"プロフィール写真","f.photo.hint":"空欄なら頭文字を使用。","f.gid":"総督ID","f.gid.hint":"必須。","f.name":"ゲーム内の名前","f.avatar":"頭文字","f.lang":"言語","f.country":"国 / TZ","f.alliance":"同盟","f.alliance.hint":"リーダーが確認するまで保留。","f.bio":"自己紹介","help.label":"手伝えること","sec.power":"戦力","sec.about":"自己紹介","sec.badges":"バッジ","power.t":"戦力を表示","power.s":"既定は非表示。","save":"保存","cancel":"キャンセル","edit":"編集","edit.long":"ページを編集","show":"表示","hide":"非表示","badges.note":"特別バッジはリーダー（R5+R4）が授与。","pending":"確認待ち"}},
   "zh-Hant":{name:"繁體中文",dir:"ltr",t:{"empty.title":"你的頁面在等你","empty.cta":"建立我的頁面","signin.link":"已有頁面？登入","dir.browse":"瀏覽玩家頁面","dir.title":"PXR玩家","back":"返回","nav.profile":"個人頁","form.title":"我的頁面","form.sub":"填寫你想要的。","f.photo":"個人照片","f.photo.hint":"留空則使用縮寫。","f.gid":"領主ID","f.gid.hint":"必填。","f.name":"遊戲內名稱","f.avatar":"縮寫","f.lang":"語言","f.country":"國家 / 時區","f.alliance":"聯盟","f.alliance.hint":"待領袖確認。","f.bio":"關於我","help.label":"可以幫忙的事","sec.power":"戰力","sec.about":"關於我","sec.badges":"徽章","power.t":"顯示我的戰力","power.s":"預設隱藏。","save":"儲存","cancel":"取消","edit":"編輯","edit.long":"編輯我的頁面","show":"顯示","hide":"隱藏","badges.note":"特殊徽章由領袖（R5+R4）授予。","pending":"待確認"}},
   "zh-Hans":{name:"简体中文",dir:"ltr",t:{"empty.title":"你的页面在等你","empty.cta":"创建我的页面","signin.link":"已有页面？登录","dir.browse":"浏览玩家页面","dir.title":"PXR玩家","back":"返回","nav.profile":"个人页","form.title":"我的页面","form.sub":"填写你想要的。","f.photo":"个人照片","f.photo.hint":"留空则使用缩写。","f.gid":"领主ID","f.gid.hint":"必填。","f.name":"游戏内名称","f.avatar":"缩写","f.lang":"语言","f.country":"国家 / 时区","f.alliance":"联盟","f.alliance.hint":"待领袖确认。","f.bio":"关于我","help.label":"可以帮忙的事","sec.power":"战力","sec.about":"关于我","sec.badges":"徽章","power.t":"显示我的战力","power.s":"默认隐藏。","save":"保存","cancel":"取消","edit":"编辑","edit.long":"编辑我的页面","show":"显示","hide":"隐藏","badges.note":"特殊徽章由领袖（R5+R4）授予。","pending":"待确认"}},
   de:{name:"Deutsch",dir:"ltr",t:{"empty.title":"Deine Seite wartet","empty.cta":"Meine Seite erstellen","signin.link":"Schon eine Seite? Anmelden","dir.browse":"Spielerseiten durchsuchen","dir.title":"PXR Spieler","back":"Zurück","nav.profile":"Profil","form.title":"Meine Seite","form.sub":"Fülle aus, was du willst.","f.photo":"Profilfoto","f.photo.hint":"Leer lassen = Initialen.","f.gid":"Gouverneurs-ID","f.gid.hint":"Pflichtfeld.","f.name":"Spielname","f.avatar":"Initialen","f.lang":"Sprache(n)","f.country":"Land / TZ","f.alliance":"Allianz","f.alliance.hint":"Bis zur Bestätigung ausstehend.","f.bio":"Über mich","help.label":"Kann helfen bei","sec.power":"Macht","sec.about":"Über mich","sec.badges":"Abzeichen","power.t":"Meine Macht zeigen","power.s":"Standardmäßig verborgen.","save":"Speichern","cancel":"Abbrechen","edit":"Bearbeiten","edit.long":"Meine Seite bearbeiten","show":"Anzeigen","hide":"Verbergen","badges.note":"Besondere Abzeichen werden von Anführern (R5+R4) verliehen.","pending":"ausstehend"}},
-  fr:{name:"Français",dir:"ltr",t:{"empty.title":"Ta page t'attend","empty.cta":"Créer ma page","signin.link":"Déjà une page ? Se connecter","dir.browse":"Voir les pages des joueurs","dir.title":"Joueurs PXR","back":"Retour","nav.profile":"Profil","form.title":"Ma page","form.sub":"Remplis ce que tu veux.","f.photo":"Photo de profil","f.photo.hint":"Laisser vide = initiales.","f.gid":"ID de gouverneur","f.gid.hint":"Requis.","f.name":"Nom en jeu","f.avatar":"Initiales","f.lang":"Langue(s)","f.country":"Pays / TZ","f.alliance":"Alliance","f.alliance.hint":"En attente de confirmation.","f.bio":"À propos de moi","help.label":"Disponible pour aider","sec.power":"Puissance","sec.about":"À propos","sec.badges":"Badges","power.t":"Afficher ma puissance","power.s":"Masquée par défaut.","save":"Enregistrer","cancel":"Annuler","edit":"Modifier","edit.long":"Modifier ma page","show":"Afficher","hide":"Masquer","badges.note":"Les badges spéciaux sont attribués par les chefs (R5+R4).","pending":"en attente"}},
+  fr:{name:"Français",dir:"ltr",t:{"auth.signup.title":"Crée ton compte","auth.signup.sub":"Un compte, une page, tes données.","auth.signin.title":"Bon retour","auth.signin.sub":"Connecte-toi à ta page Phoenix","auth.signup.btn":"Créer un compte","auth.signin.btn":"Se connecter","auth.have":"Déjà une page ?","auth.havent":"Pas encore de page ?","auth.switch.signin":"Se connecter","auth.switch.signup":"En créer une","auth.email":"E-mail","auth.pwd":"Mot de passe","auth.pwd.hint":"Min. 6 caractères","empty.title":"Ta page t'attend","empty.cta":"Créer ma page","signin.link":"Déjà une page ? Se connecter","dir.browse":"Voir les pages des joueurs","dir.title":"Joueurs PXR","back":"Retour","nav.profile":"Profil","form.title":"Ma page","form.sub":"Remplis ce que tu veux.","f.photo":"Photo de profil","f.photo.hint":"Laisser vide = initiales.","f.gid":"ID de gouverneur","f.gid.hint":"Requis.","f.name":"Nom en jeu","f.avatar":"Initiales","f.lang":"Langue(s)","f.country":"Pays / TZ","f.alliance":"Alliance","f.alliance.hint":"En attente de confirmation.","f.bio":"À propos de moi","help.label":"Disponible pour aider","sec.power":"Puissance","sec.about":"À propos","sec.badges":"Badges","power.t":"Afficher ma puissance","power.s":"Masquée par défaut.","save":"Enregistrer","cancel":"Annuler","edit":"Modifier","edit.long":"Modifier ma page","show":"Afficher","hide":"Masquer","badges.note":"Les badges spéciaux sont attribués par les chefs (R5+R4).","pending":"en attente"}},
   ar:{name:"العربية",dir:"rtl",t:{"empty.title":"صفحتك بانتظارك","empty.cta":"إنشاء صفحتي","signin.link":"لديك صفحة؟ تسجيل الدخول","dir.browse":"تصفح صفحات اللاعبين","dir.title":"لاعبو PXR","back":"رجوع","nav.profile":"صفحتي","form.title":"صفحتي","form.sub":"املأ ما تريد.","f.photo":"صورة الملف الشخصي","f.photo.hint":"اتركه فارغًا للاستخدام الأحرف الأولى.","f.gid":"معرّف الحاكم","f.gid.hint":"مطلوب.","f.name":"الاسم داخل اللعبة","f.avatar":"الأحرف الأولى","f.lang":"اللغة","f.country":"البلد / المنطقة الزمنية","f.alliance":"التحالف","f.alliance.hint":"بانتظار التأكيد.","f.bio":"نبذة عني","help.label":"مستعد للمساعدة في","sec.power":"القوة","sec.about":"نبذة عني","sec.badges":"الأوسمة","power.t":"إظهار قوتي","power.s":"مخفية افتراضيًا.","save":"حفظ","cancel":"إلغاء","edit":"تعديل","edit.long":"تعديل صفحتي","show":"إظهار","hide":"إخفاء","badges.note":"الأوسمة الخاصة يمنحها القادة (R5+R4).","pending":"بانتظار التأكيد"}},
   ru:{name:"Русский",dir:"ltr",t:{"empty.title":"Ваша страница ждёт","empty.cta":"Создать мою страницу","signin.link":"Есть страница? Войти","dir.browse":"Просмотр страниц игроков","dir.title":"Игроки PXR","back":"Назад","nav.profile":"Профиль","form.title":"Моя страница","form.sub":"Заполните что хотите.","f.photo":"Фото профиля","f.photo.hint":"Оставьте пустым — используем инициалы.","f.gid":"ID губернатора","f.gid.hint":"Обязательно.","f.name":"Имя в игре","f.avatar":"Инициалы","f.lang":"Язык(и)","f.country":"Страна / ЧП","f.alliance":"Альянс","f.alliance.hint":"До подтверждения лидером.","f.bio":"Обо мне","help.label":"Готов помочь с","sec.power":"Сила","sec.about":"Обо мне","sec.badges":"Значки","power.t":"Показать силу","power.s":"Скрыто по умолчанию.","save":"Сохранить","cancel":"Отмена","edit":"Изменить","edit.long":"Редактировать","show":"Показать","hide":"Скрыть","badges.note":"Особые значки вручают лидеры (R5+R4).","pending":"ожидает"}},
   tr:{name:"Türkçe",dir:"ltr",t:{"empty.title":"Sayfan seni bekliyor","empty.cta":"Sayfamı oluştur","signin.link":"Sayfan var mı? Giriş yap","dir.browse":"Oyuncu sayfalarına bak","dir.title":"PXR Oyuncuları","back":"Geri","nav.profile":"Profil","form.title":"Sayfam","form.sub":"İstediğini doldur.","f.photo":"Profil fotoğrafı","f.photo.hint":"Boş bırak = baş harfler.","f.gid":"Vali ID","f.gid.hint":"Zorunlu.","f.name":"Oyun içi ad","f.avatar":"Baş harfler","f.lang":"Dil(ler)","f.country":"Ülke / TZ","f.alliance":"İttifak","f.alliance.hint":"Lider onaylayana kadar beklemede.","f.bio":"Hakkımda","help.label":"Yardım edebileceğim","sec.power":"Güç","sec.about":"Hakkımda","sec.badges":"Rozetler","power.t":"Gücümü göster","power.s":"Varsayılan gizli.","save":"Kaydet","cancel":"İptal","edit":"Düzenle","edit.long":"Sayfamı düzenle","show":"Göster","hide":"Gizle","badges.note":"Özel rozetleri liderler (R5+R4) verir.","pending":"onay bekliyor"}},
@@ -583,36 +563,12 @@ const I18N={
 const WEEDS_TR={es:"Somos como la maleza de la tierra. Siempre creciendo. Bellos para algunos, feos para otros. Un regalo para muchos, una maldición para pocos. Nutrientes cuando hacen falta, y veneno a veces.",ko:"우리는 대지의 잡초와 같다. 늘 자라난다. 누군가에겐 아름답고, 누군가에겐 보기 싫다.",ja:"我々は大地の雑草のようなもの。常に育ち続ける。ある者には美しく、ある者には醜い。","zh-Hant":"我們如同大地的野草。永遠在生長。對某些人是美，對某些人是醜。","zh-Hans":"我们如同大地的野草。永远在生长。对某些人是美，对某些人是丑。",de:"Wie das Unkraut der Erde sind wir. Immer wachsend. Für manche schön, für andere hässlich.",fr:"Nous sommes comme les mauvaises herbes de la terre. Toujours à croître.",ar:"نحن كأعشاب الأرض. ننمو دائمًا. جميلون لدى البعض، قبيحون لدى آخرين.",ru:"Мы как сорняки земли. Всегда растём. Для одних красивы, для других уродливы.",tr:"Biz toprağın yabani otları gibiyiz. Hep büyürüz. Kimine güzel, kimine çirkin.",it:"Siamo come le erbacce della terra. Sempre in crescita. Belle per alcuni, brutte per altri.",pl:"Jesteśmy jak chwasty ziemi. Wciąż rosnące. Dla jednych piękne, dla innych brzydkie.",pt:"Somos como o mato da terra. Sempre crescendo. Belos para uns, feios para outros."};
 
 let LANG='en',currentUser=null,currentProfile=null,prevState='empty';
-let myProfiles=[]; // all profiles owned by this user (across states)
-let creatingNew=false; // true when creating an additional profile
 let alliances=[],badges=[],playerBadges=[],powerOn=false,signupMode=true;
-let allStates=['3139']; // populated from Supabase states table
 const $=s=>document.querySelector(s);
 function T(k){return I18N[LANG]?.t[k]||I18N.en.t[k]||k;}
 
-// ── GLOBAL PROFILE HUB ────────────────────────────────────────
-// This page is the global login/profile center, not tied to any state.
-// Each character carries its own state_id. PAGE_STATE is only a default
-// pre-selection when creating a new character (taken from ?s= if present).
-function getState(){const s=new URLSearchParams(location.search).get('s');return (s&&/^\d{3,5}$/.test(s))?s:'3139';}
-const PAGE_STATE=getState();
-// Keep the "States" nav button on the current state, not always 3139
-(function(){const nb=document.getElementById('navHomeBtn');if(nb)nb.href=(PAGE_STATE==='3139'?'phoenix-state.html':'phoenix-state.html?s='+PAGE_STATE);})();
-// Build a link to a state's public pages, carrying the state in the URL.
-// One set of files; state travels as ?s=. (Pretty URLs later = change here only.)
-function stateBasePath(stateId){
-  // base = the folder this profile lives in (everything up to the filename)
-  const base=location.pathname.replace(/[^/]*$/,'');
-  return {base, s:String(stateId)};
-}
-function statePublicUrl(stateId, page){
-  const s=String(stateId);
-  const base=location.pathname.replace(/[^/]*$/,'');
-  return s==='3139' ? base+page : base+page+(page.includes('?')?'&':'?')+'s='+s;
-}
-
 // ── SHOW ──────────────────────────────────────────────────────
-const ALL_STATES=['loading','empty','auth','picker','edit','view','directory','pubview'];
+const ALL_STATES=['loading','empty','auth','edit','view','directory','pubview'];
 function show(s){
   if(!['loading'].includes(s)&&!['loading'].includes(prevState)) prevState=s==='pubview'||s==='directory'?prevState:s;
   ALL_STATES.forEach(x=>{const el=$('#'+x);if(el)el.classList.toggle('hidden',x!==s);});
@@ -626,12 +582,18 @@ function toast(msg,err=false){const t=$('#toast');t.textContent=msg;t.className=
 function applyLang(){
   const pack=I18N[LANG]||I18N.en;
   document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(pack.t[k])el.textContent=pack.t[k];});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const k=el.getAttribute('data-i18n-ph');const v=pack.t[k]||I18N.en.t[k];if(v)el.setAttribute('placeholder',v);});
   document.documentElement.lang=LANG;document.documentElement.dir=pack.dir;
   $('#langLabel').textContent=LANG.toUpperCase().replace('ZH-HANT','繁').replace('ZH-HANS','简');
   $('#langMenu').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.code===LANG));
   const qt=$('#quoteTr');
   if(LANG!=='en'&&WEEDS_TR[LANG]){qt.textContent=WEEDS_TR[LANG];qt.classList.add('show');}
   else{qt.textContent='';qt.classList.remove('show');}
+  // keep the auth screen (sign in / create account) in the selected language
+  if(typeof setAuthMode==='function' && document.getElementById('auth') && !document.getElementById('auth').classList.contains('hidden')){
+    setAuthMode(signupMode);
+  }
+  if(typeof updateNav==='function') updateNav('profile');
 }
 const lm=$('#langMenu');
 Object.keys(I18N).forEach(code=>{const b=document.createElement('button');b.textContent=I18N[code].name;b.dataset.code=code;b.onclick=()=>{LANG=code;applyLang();lm.classList.remove('open');};lm.appendChild(b);});
@@ -710,54 +672,17 @@ $('#fName').addEventListener('input',updatePreview);
 // ── AUTH ──────────────────────────────────────────────────────
 function setAuthMode(signup){
   signupMode=signup;
-  $('#authTitle').textContent=signup?'Create your account':'Welcome back';
-  $('#authSub').textContent=signup?'One account, one page, your data.':'Sign in to your Phoenix page';
-  $('#authSubmit').textContent=signup?'Create account':'Sign in';
-  $('#authSwitchTxt').textContent=signup?'Already have a page?':"Don't have a page yet?";
-  $('#authSwitch').textContent=signup?'Sign in instead':'Create one';
-  updateForgotVisibility();
+  $('#authTitle').textContent=signup?T('auth.signup.title'):T('auth.signin.title');
+  $('#authSub').textContent=signup?T('auth.signup.sub'):T('auth.signin.sub');
+  $('#authSubmit').textContent=signup?T('auth.signup.btn'):T('auth.signin.btn');
+  $('#authSwitchTxt').textContent=signup?T('auth.have'):T('auth.havent');
+  $('#authSwitch').textContent=signup?T('auth.switch.signin'):T('auth.switch.signup');
   $('#authErr').classList.remove('show');$('#authOk').classList.remove('show');
 }
 $('#createBtn').onclick=()=>{setAuthMode(true);show('auth');};
 $('#loginBtn').onclick=()=>{setAuthMode(false);show('auth');};
 $('#authBack').onclick=()=>show('empty');
-// Picker buttons
-if($('#pickerNewBtn'))$('#pickerNewBtn').onclick=()=>{
-  creatingNew=true; currentProfile=null;
-  // reset form for a fresh profile
-  ['#fPhotoUrl','#fGid','#fName','#fAvatar','#fLang','#fCountry','#fBio','#fHelp','#fNickSuggest','#fBannerUrl','#fGal1','#fGal2','#fGal3'].forEach(s=>{const el=$(s);if(el)el.value='';});
-  const sw=$('#fStateWrap'); if(sw)sw.style.display=''; // show state picker for new char
-  renderStateOptions(); populateAlliances(); show('edit'); applyLang();
-};
-if($('#pickerSignOut'))$('#pickerSignOut').onclick=()=>signOut();
 $('#authSwitch').onclick=()=>setAuthMode(!signupMode);
-
-// Show/hide forgot password link — only in sign-in mode
-function updateForgotVisibility(){
-  const wrap=$('#forgotWrap');
-  if(wrap) wrap.style.display=signupMode?'none':'block';
-}
-
-$('#forgotBtn').onclick=async()=>{
-  const email=$('#authEmail').value.trim();
-  const okEl=$('#resetOk');
-  okEl.textContent='';
-  okEl.classList.remove('show');
-  if(!email){
-    okEl.textContent='✉️ Enter your email above first, then click "Forgot your password?"';
-    okEl.classList.add('show');
-    return;
-  }
-  const{error}=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo: window.location.href
-  });
-  if(error){
-    okEl.textContent='❌ '+error.message;
-  } else {
-    okEl.textContent='✉️ Password reset email sent! Check your inbox.';
-  }
-  okEl.classList.add('show');
-};
 
 $('#authSubmit').addEventListener('click',async()=>{
   const email=$('#authEmail').value.trim(),pwd=$('#authPwd').value;
@@ -770,99 +695,42 @@ $('#authSubmit').addEventListener('click',async()=>{
     if(signupMode){
       const{data,error}=await sb.auth.signUp({email,password:pwd});
       if(error){errEl.textContent=error.message;errEl.classList.add('show');btn.textContent='Create account';btn.disabled=false;return;}
-      if(data.session){currentUser=data.user;await loadProfile();maybeShowCave();}
+      if(data.session){currentUser=data.user;await loadProfile();}
       else{okEl.textContent='✉️ Check your email to confirm your account, then come back and sign in.';okEl.classList.add('show');btn.textContent='Create account';btn.disabled=false;}
     }else{
       const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
       if(error){errEl.textContent=error.message;errEl.classList.add('show');btn.textContent='Sign in';btn.disabled=false;return;}
-      currentUser=data.user;await loadProfile();maybeShowCave();
+      currentUser=data.user;await loadProfile();
     }
   }catch(e){errEl.textContent='Error: '+e.message;errEl.classList.add('show');}
   btn.disabled=false;
 });
 
-// ── LOAD PROFILE (multi-profile, resilient) ───────────────────
+// ── LOAD PROFILE (FIX: maybeSingle + timeout) ─────────────────
 async function loadProfile(){
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),25000));
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
   try{
-    // Load ALL profiles owned by this user, across every state
-    const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false});
+    // Load the profile that matches the state currently being browsed —
+    // a governor can have one profile per state, so we must not just grab
+    // whichever profile was created most recently across all states.
+    const query=sb.from('players').select('*').eq('owner',currentUser.id).eq('state_id',getState()).order('created_at',{ascending:false}).limit(1);
     const{data:rows,error}=await Promise.race([query,timeout]);
     if(error){throw error;}
-    myProfiles=rows||[];
-
-    if(myProfiles.length===0){
-      // No profiles yet → go straight to creating the first one
-      currentProfile=null; creatingNew=true;
-      renderStateOptions(); populateAlliances(); show('edit');
-    } else {
-      // Always show the character picker (the control center for all accounts)
-      renderPicker(); show('picker');
-    }
+    const data=rows&&rows.length?rows[0]:null;
+    if(data){
+      currentProfile=data;
+      try{
+        const{data:pb}=await sb.from('player_badges').select('badge_id').eq('player_id',data.id);
+        playerBadges=pb?pb.map(p=>p.badge_id):[];
+      }catch(badgeErr){console.warn('Badges load failed (non-critical):',badgeErr);playerBadges=[];}
+      try{ renderView(data); }catch(rvErr){ console.error('renderView failed:',rvErr); }
+      show('view');
+    }else{currentProfile=null;populateAlliances();show('edit');}
   }catch(e){
     console.error('Profile load error:',e);
-    // A late timeout or a transient error must never nag the user if anything
-    // is already on screen or in memory. Only show it on a truly blank first load.
-    const onResultScreen = !$('#picker').classList.contains('hidden')
-                        || !$('#view').classList.contains('hidden')
-                        || !$('#edit').classList.contains('hidden');
-    const isTimeout = (e&&(e.message==='timeout'));
-    if(!onResultScreen && !isTimeout && myProfiles.length===0 && !currentProfile && !currentUser){
-      toast('Connection error. Check Supabase settings.',true);
-      show('empty');
-    }
+    // Only show error if we have no profile to display
+    if(!currentProfile){toast('Connection error. Check Supabase settings.',true);show('empty');}
   }
-  applyLang();
-}
-
-// Render the character picker, grouped by state (mirrors the in-game screen)
-function renderPicker(){
-  const list=$('#pickerList'); if(!list)return;
-  list.innerHTML='';
-  // group profiles by state_id
-  const byState={};
-  myProfiles.forEach(p=>{const s=p.state_id||'—';(byState[s]=byState[s]||[]).push(p);});
-  const states=Object.keys(byState).sort();
-  states.forEach(st=>{
-    const head=document.createElement('div');
-    head.style.cssText='font-family:Fredoka;font-weight:600;font-size:.82rem;color:var(--ink-soft);background:var(--ice-soft,#e8f2fb);border-radius:10px;padding:7px 12px;margin:14px 0 8px;';
-    head.textContent=`⭐ ${T('pick.server')||'Server'} #${st}`;
-    list.appendChild(head);
-    byState[st].forEach(p=>{
-      const a=alliances.find(x=>x.id===p.alliance_id);
-      const lbl=a?`[${a.tag}] ${p.name}`:p.name;
-      const av=isUrl(p.avatar)?`<img src="${p.avatar}" style="width:46px;height:46px;border-radius:11px;object-fit:cover;flex:none;">`:`<div style="width:46px;height:46px;border-radius:11px;background:var(--acc,#ff7a2e);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:1.05rem;flex:none;">${(p.avatar||p.name||'?').slice(0,2).toUpperCase()}</div>`;
-      const conf=p.alliance_confirmed?'🔥':'⏳';
-      const card=document.createElement('div');
-      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--panel-edge);border-radius:14px;padding:12px 14px;margin-bottom:9px;box-shadow:0 2px 0 var(--panel-edge);';
-      card.innerHTML=`${av}
-        <div style="flex:1;min-width:0;cursor:pointer;" class="pk-open">
-          <div style="font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</div>
-          <div style="font-size:.74rem;color:var(--muted);">${conf} ${p.governor_id?'ID: '+p.governor_id:''}</div>
-        </div>
-        <button class="pk-goto" title="Go to state ${st}" style="flex:none;background:var(--acc,#ff7a2e);color:#fff;border:none;border-radius:10px;padding:8px 11px;font-family:Fredoka;font-weight:600;font-size:.78rem;cursor:pointer;">🗺️ #${st}</button>
-        <div class="pk-open" style="color:var(--acc,#ff7a2e);font-size:1.2rem;cursor:pointer;">›</div>`;
-      card.querySelectorAll('.pk-open').forEach(el=>el.onclick=()=>selectProfile(p.id));
-      const goto=card.querySelector('.pk-goto');
-      if(goto)goto.onclick=(e)=>{e.stopPropagation();const a2=alliances.find(x=>x.id===p.alliance_id);location.href = a2 ? statePublicUrl(p.state_id,`phoenix-alliance.html?tag=${a2.tag}`) : statePublicUrl(p.state_id,'phoenix-state.html');};
-      list.appendChild(card);
-    });
-  });
-}
-
-// Select a specific profile to manage/view
-async function selectProfile(profileId){
-  const data=myProfiles.find(p=>p.id===profileId);
-  if(!data)return;
-  currentProfile=data; creatingNew=false;
-  try{
-    const{data:pb}=await sb.from('player_badges').select('badge_id').eq('player_id',data.id);
-    playerBadges=pb?pb.map(p=>p.badge_id):[];
-  }catch(badgeErr){console.warn('Badges load failed:',badgeErr);playerBadges=[];}
-  try{ renderView(data); }catch(rvErr){ console.error('renderView failed:',rvErr); }
-  // Show "My characters" button only if the user has more than one profile
-  const sw=$('#switchCharBtn'); if(sw)sw.style.display=myProfiles.length>1?'':'none';
-  show('view');
   applyLang();
 }
 
@@ -871,25 +739,11 @@ async function selectProfile(profileId){
 const INVITE_TAG=new URLSearchParams(location.search).get('invite');
 const isViewMode=!!new URLSearchParams(location.search).get('view');
 
-// Populate the state selector when creating a new character
-function renderStateOptions(){
-  const sel=$('#fState'); if(!sel)return;
-  sel.innerHTML='';
-  const states=allStates.length?allStates:['3139'];
-  states.forEach(st=>{const o=document.createElement('option');o.value=st;o.textContent=`State #${st}`;sel.appendChild(o);});
-  // default to the state of the page you're on
-  if(states.includes(PAGE_STATE))sel.value=PAGE_STATE;
-  sel.onchange=()=>populateAlliances();
-}
-
 function populateAlliances(){
   const sel=$('#fAlliance');
   sel.innerHTML=`<option value="">— ${T('f.alliance')} —</option>`;
-  // Filter alliances by the chosen state (new char) or the profile's state (editing)
-  const targetState=creatingNew ? ($('#fState')?.value||PAGE_STATE) : (currentProfile?.state_id||PAGE_STATE);
-  alliances.filter(a=>!a.state_id||String(a.state_id)===String(targetState)).forEach(a=>{
-    const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name}`;sel.appendChild(o);
-  });
+  alliances.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name}`;sel.appendChild(o);});
+  // Preselect from existing profile, or from invite link
   if(currentProfile?.alliance_id){sel.value=currentProfile.alliance_id;}
   else if(INVITE_TAG){
     const inv=alliances.find(a=>a.tag.toUpperCase()===INVITE_TAG.toUpperCase());
@@ -921,7 +775,9 @@ function openEditor(){
   $('#fGal2').value=gal[1]||'';
   $('#fGal3').value=gal[2]||'';
   powerOn=false;
-  const sw=$('#fStateWrap'); if(sw)sw.style.display='none'; // state is fixed when editing
+  
+  
+  
   updatePreview();
   populateAlliances();
   show('edit');
@@ -936,22 +792,19 @@ $('#saveBtn').addEventListener('click',async()=>{
   const photoUrl=$('#fPhotoUrl').value.trim();
   const ini=($('#fAvatar').value.trim()||name.slice(0,2)).toUpperCase();
   const avatarVal=photoUrl||ini;
-  const newState=creatingNew ? ($('#fState')?.value||PAGE_STATE) : ((currentProfile?.state_id)||PAGE_STATE);
-  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:newState,bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
+  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:getState(),bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
   const btn=$('#saveBtn');btn.textContent='...';btn.disabled=true;
-  // Update by THIS profile's id (not owner) so other profiles are untouched. Insert if new.
-  const{error}=(currentProfile&&!creatingNew)?await sb.from('players').update(pd).eq('id',currentProfile.id):await sb.from('players').insert(pd);
+  const{error}=currentProfile?await sb.from('players').update(pd).eq('owner',currentUser.id):await sb.from('players').insert(pd);
   btn.textContent=T('save');btn.disabled=false;
   if(error){errEl.textContent='Error: '+error.message;errEl.classList.add('show');}
   else{
     toast('Saved ✓');
-    creatingNew=false;
     await loadProfile();
     // If they picked an alliance, offer a quick jump to that alliance page
     const allianceId=$('#fAlliance').value;
     if(allianceId){
       const a=alliances.find(x=>x.id===allianceId);
-      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=statePublicUrl(newState,`phoenix-alliance.html?tag=${a.tag}`);},400);}
+      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=`phoenix-alliance.html?tag=${a.tag}`;},400);}
     }
   }
 });
@@ -998,7 +851,8 @@ function renderView(p){
     const navTag=$('#navAllianceTag');
     const navIc=$('#navAllianceIc');
     if(navTag)navTag.textContent=myAlliance.tag||'Alliance';
-    if(navBtn)navBtn.href=statePublicUrl(currentProfile?.state_id||PAGE_STATE,`phoenix-alliance.html?tag=${myAlliance.tag}`);
+    if(navBtn)navBtn.href=stateUrl('phoenix-alliance.html',{tag:myAlliance.tag});
+    setTag(myAlliance.tag);
     const logoUrl=myAlliance.config?.logoUrl||'';
     if(navIc){
       if(logoUrl)navIc.innerHTML=`<img src="${logoUrl}" style="width:1.5rem;height:1.5rem;border-radius:6px;object-fit:cover;">`;
@@ -1028,7 +882,7 @@ function renderView(p){
 // ── DIRECTORY ─────────────────────────────────────────────────
 async function loadDirectory(){
   show('directory');
-  const{data}=await sb.from('players').select('id,name,avatar,alliance_id,state_id,languages').limit(50).order('created_at',{ascending:false});
+  const{data}=await sb.from('players').select('id,name,avatar,alliance_id,state_id,languages').eq('state_id',getState()).limit(50).order('created_at',{ascending:false});
   const list=$('#dirList');
   if(!data||data.length===0){list.innerHTML=`<div class="dir-empty">No player pages yet. Be the first! 🌱</div>`;return;}
   list.innerHTML='';
@@ -1068,13 +922,7 @@ async function loadPublicProfile(playerId){
 
 // ── NAVIGATION ────────────────────────────────────────────────
 $('#editBtn').onclick=openEditor;$('#editBtn2').onclick=openEditor;
-if($('#switchCharBtn'))$('#switchCharBtn').onclick=()=>{renderPicker();show('picker');};
-$('#cancelBtn').onclick=()=>{
-  if(creatingNew && myProfiles.length>0){ creatingNew=false; renderPicker(); show('picker'); }
-  else if(currentProfile){ show('view'); }
-  else if(myProfiles.length>0){ renderPicker(); show('picker'); }
-  else { show('empty'); }
-};
+$('#cancelBtn').onclick=()=>{currentProfile?show('view'):show('empty');};
 $('#browseBtn').onclick=loadDirectory;$('#browseBtnView').onclick=loadDirectory;
 $('#dirBack').onclick=()=>show(currentUser?'view':'empty');
 $('#pubBack').onclick=()=>show('directory');
@@ -1128,7 +976,7 @@ function renderGovBadges(leftEl, rightEl, extraWrap, extraGrid, earnedIds){
   }
 }
 
-async function signOut(){await sb.auth.signOut();currentUser=null;currentProfile=null;myProfiles=[];creatingNew=false;playerBadges=[];show('empty');applyLang();}
+async function signOut(){await sb.auth.signOut();currentUser=null;currentProfile=null;playerBadges=[];show('empty');applyLang();}
 $('#signOutEdit').onclick=signOut;$('#signOutView').onclick=signOut;
 
 // ── INIT ──────────────────────────────────────────────────────
@@ -1136,17 +984,15 @@ async function init(){
   applyLang();
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000));
-    const[ar,br,sr]=await Promise.race([
+    const[ar,br]=await Promise.race([
       Promise.all([
-        sb.from('alliances').select('id,tag,name,state_id'),
-        sb.from('badges').select('*').order('created_at'),
-        sb.from('states').select('id')
+        sb.from('alliances').select('id,tag,name').eq('state_id',getState()),
+        sb.from('badges').select('*').order('created_at')
       ]),
       timeout
     ]);
     if(ar.data)alliances=ar.data;
     if(br.data)badges=br.data;
-    if(sr.data)allStates=sr.data.map(s=>String(s.id)).sort();
   }catch(e){console.warn('Init fetch timed out, continuing:',e.message);}
 
   // ── VIEW ANOTHER PLAYER'S PROFILE (?view=ID) ────────────────
@@ -1171,7 +1017,16 @@ async function init(){
 
   try{
     const{data:{session}}=await sb.auth.getSession();
-    if(session?.user){currentUser=session.user;await loadProfile();maybeShowCave();}
+    if(session?.user){
+      currentUser=session.user;
+      await loadProfile();
+      try{
+        const{data:player}=await sb.from('players').select('role').eq('owner',session.user.id).eq('state_id',getState()).maybeSingle();
+        if(player&&(player.role==='admin'||player.role==='r4'||player.role==='r5')){
+          const btn=document.getElementById('adminNavBtn'); if(btn) btn.style.display='';
+        }
+      }catch(roleErr){console.warn('Admin check failed (non-critical):',roleErr);}
+    }
     else{
       // If arriving via invite link, customize the welcome message
       if(INVITE_TAG){
@@ -1187,147 +1042,9 @@ async function init(){
 }
 
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();maybeShowCave();}
-  else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');document.getElementById('caveBtn').style.display='none';}
+  if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();}
+  else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');}
 });
-
-// ── 🍪 THE CAVE — private space for the two of us ──────────────
-const CAVE_EMAILS=['hestelae@gmail.com','ld9791@gmail.com'];
-let caveOpen=false, caveChannel=null, caveLastSeen=0;
-try{ caveLastSeen=parseInt(localStorage.getItem('caveLastSeen')||'0',10)||0; }catch(_){}
-
-function maybeShowCave(){
-  const email=(currentUser?.email||'').toLowerCase();
-  const btn=document.getElementById('caveBtn');
-  if(!btn)return;
-  if(CAVE_EMAILS.includes(email)){
-    btn.style.display='';
-    subscribeCave();
-    refreshCaveDot();
-  }else{
-    btn.style.display='none';
-  }
-}
-document.getElementById('caveBtn')?.addEventListener('click',openCave);
-document.getElementById('caveClose')?.addEventListener('click',closeCave);
-document.getElementById('caveSend')?.addEventListener('click',sendCave);
-document.getElementById('caveInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendCave();});
-
-// Realtime: listen for new messages even when the cave is closed
-function subscribeCave(){
-  if(caveChannel)return;
-  try{
-    caveChannel=sb.channel('cave-rt')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'cave_messages'},(payload)=>{
-        if(caveOpen){ appendCaveMessage(payload.new); markCaveSeen(); }
-        else { refreshCaveDot(true); }
-      })
-      .on('postgres_changes',{event:'DELETE',schema:'public',table:'cave_messages'},()=>{
-        if(caveOpen)loadCave();
-      })
-      .subscribe();
-  }catch(e){console.warn('Cave realtime failed:',e);}
-}
-
-async function refreshCaveDot(force){
-  // Show the red dot + nudge if there's a message newer than last seen (from the other person)
-  const btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
-  if(!btn||!dot)return;
-  try{
-    const{data}=await sb.from('cave_messages').select('created_at,author_email').order('created_at',{ascending:false}).limit(1);
-    if(data&&data.length){
-      const t=new Date(data[0].created_at).getTime();
-      const fromOther=(data[0].author_email||'').toLowerCase()!==(currentUser?.email||'').toLowerCase();
-      if((force||t>caveLastSeen)&&fromOther&&!caveOpen){
-        dot.style.display='';btn.classList.add('has-new');
-      }
-    }
-  }catch(_){}
-}
-
-function markCaveSeen(){
-  caveLastSeen=Date.now();
-  try{ localStorage.setItem('caveLastSeen',String(caveLastSeen)); }catch(_){}
-  const btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
-  if(dot)dot.style.display='none';
-  if(btn)btn.classList.remove('has-new');
-}
-
-async function openCave(){
-  caveOpen=true;
-  document.getElementById('cavePanel').style.display='flex';
-  markCaveSeen();
-  await loadCave();
-  subscribeCave();
-}
-function closeCave(){
-  caveOpen=false;
-  document.getElementById('cavePanel').style.display='none';
-}
-
-function caveBubble(m){
-  const myEmail=(currentUser?.email||'').toLowerCase();
-  const mine=(m.author_email||'').toLowerCase()===myEmail;
-  const who=(m.author_email||'').toLowerCase()==='hestelae@gmail.com'?'Hestelae':'TMQ';
-  const when=new Date(m.created_at).toLocaleString();
-  const bubble=document.createElement('div');
-  bubble.dataset.id=m.id;
-  bubble.style.cssText=`max-width:80%;align-self:${mine?'flex-end':'flex-start'};background:${mine?'linear-gradient(180deg,#c98a5a,#a06840)':'#2e2016'};color:${mine?'#fff':'#ffe8d0'};padding:9px 13px;border-radius:14px;position:relative;`;
-  const del=mine?`<button onclick="deleteCaveMsg('${m.id}')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.75rem;cursor:pointer;padding:0;margin-top:4px;">🗑️ delete</button>`:'';
-  bubble.innerHTML=`<div style="font-size:.9rem;line-height:1.4;white-space:pre-wrap;">${(m.body||'').replace(/</g,'&lt;')}</div><div style="font-size:.62rem;opacity:.7;margin-top:4px;">${who} · ${when}</div>${del}`;
-  return bubble;
-}
-function appendCaveMessage(m){
-  const box=document.getElementById('caveMessages');
-  if(!box)return;
-  const ph=box.querySelector('[data-empty]'); if(ph)ph.remove();
-  box.appendChild(caveBubble(m));
-  box.scrollTop=box.scrollHeight;
-}
-
-async function loadCave(){
-  const box=document.getElementById('caveMessages');
-  box.innerHTML='<div style="text-align:center;color:#8a6a4a;font-size:.82rem;padding:20px;">…</div>';
-  try{
-    const{data,error}=await sb.from('cave_messages').select('*').order('created_at',{ascending:true});
-    if(error)throw error;
-    if(!data||!data.length){
-      box.innerHTML='<div data-empty style="text-align:center;color:#8a6a4a;font-size:.85rem;padding:24px;line-height:1.5;">Nobody\'s written yet 🍪<br>Leave the first message.</div>';
-      return;
-    }
-    box.innerHTML='';
-    data.forEach(m=>box.appendChild(caveBubble(m)));
-    box.scrollTop=box.scrollHeight;
-  }catch(e){
-    box.innerHTML='<div style="text-align:center;color:#c88;font-size:.82rem;padding:20px;">Couldn\'t load the cave. '+(e.message||'')+'</div>';
-  }
-}
-
-async function sendCave(){
-  const input=document.getElementById('caveInput');
-  const body=input.value.trim();
-  if(!body)return;
-  input.value='';
-  const email=(currentUser?.email||'').toLowerCase();
-  const{error}=await sb.from('cave_messages').insert({author_email:email,author_name:email==='hestelae@gmail.com'?'Hestelae':'TMQ',body});
-  if(error){input.value=body;alert('Could not send: '+error.message);return;}
-  markCaveSeen();
-  // Realtime will append it; but load once in case realtime is off
-  if(!caveChannel)await loadCave();
-}
-
-async function deleteCaveMsg(id){
-  if(!confirm('Delete this message?'))return;
-  const{error}=await sb.from('cave_messages').delete().eq('id',id);
-  if(error){alert('Could not delete: '+error.message);return;}
-  const box=document.getElementById('caveMessages');
-  const el=box&&box.querySelector(`[data-id="${id}"]`);
-  if(el)el.remove();
-}
-
-// Try to show the cave button on initial load too (if already logged in)
-setTimeout(maybeShowCave,1500);
-
 
 // ── GLOBAL FAILSAFE: never stay stuck on the loading spinner ──
 setTimeout(()=>{
