@@ -415,7 +415,7 @@ body{padding-bottom:72px !important;}
     <!-- STATE RANKING (admins only) -->
     <div class="esec" id="sec-ranking">
       <div class="card">
-        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Drag-free ranking editor. Set each alliance's position number in the state. Lower = higher rank.</p>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Top 20 alliances in your state. Use ▲▼ to reorder — moving one up shifts the other down. 🛡️ marks NAP-protected alliances.</p>
         <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">⚡ This is the global state list — only you and TMQ can edit it.</p>
         <div id="rankRows" class="dlist"></div>
         <div class="errmsg" id="rankErr" style="margin-top:10px;"></div>
@@ -1455,33 +1455,60 @@ $('#importCfgFile').addEventListener('change', async(e)=>{
 
 // ── STATE RANKING EDITOR (admins only) ────────────────────────
 let rankCache=[];
-function rankRowHTML(i,a={}){
+function rankRowHTML(i,a={},total){
   return `<div class="ditem" data-i="${i}" data-id="${a.id||''}">
-    <div class="ditem-header"><span class="dtag">[${a.tag}] ${a.name}</span></div>
+    <div class="ditem-header">
+      <span class="dtag">#${i+1} · [${a.tag}] ${a.name}</span>
+      <div style="display:flex;gap:4px;">
+        <button type="button" class="rk-up" ${i===0?'disabled':''} style="padding:4px 9px;">▲</button>
+        <button type="button" class="rk-down" ${i===total-1?'disabled':''} style="padding:4px 9px;">▼</button>
+      </div>
+    </div>
     <div class="row2">
-      <input placeholder="Rank (#)" class="rk-pos" value="${(a.state_rank||'').replace('#','')}" inputmode="numeric">
       <input placeholder="Members" class="rk-mem" value="${a.members||''}" inputmode="numeric">
+      <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;white-space:nowrap;">
+        <input type="checkbox" class="rk-nap" ${a.nap_protected?'checked':''}> 🛡️ NAP
+      </label>
     </div>
   </div>`;
+}
+function renderRankRows(){
+  const wrap=$('#rankRows');
+  wrap.innerHTML='';
+  rankCache.forEach((a,i)=>{
+    const d=document.createElement('div');
+    d.innerHTML=rankRowHTML(i,a,rankCache.length);
+    const el=d.firstElementChild;
+    el.querySelector('.rk-up').onclick=()=>moveRank(i,-1);
+    el.querySelector('.rk-down').onclick=()=>moveRank(i,1);
+    wrap.appendChild(el);
+  });
+}
+function moveRank(i,dir){
+  const j=i+dir;
+  if(j<0||j>=rankCache.length)return;
+  [rankCache[i],rankCache[j]]=[rankCache[j],rankCache[i]];
+  renderRankRows();
 }
 async function loadRankingEditor(){
   const wrap=$('#rankRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members').eq('state_id','3139').order('state_rank');
+  const stateId=currentPlayer?.state_id||'3139';
+  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members,nap_protected').eq('state_id',stateId).order('state_rank',{ascending:true,nullsFirst:false}).limit(20);
   rankCache=data||[];
-  wrap.innerHTML='';
-  rankCache.forEach((a,i)=>{const d=document.createElement('div');d.innerHTML=rankRowHTML(i,a);wrap.appendChild(d.firstElementChild);});
+  renderRankRows();
 };
 $('#saveRankBtn').onclick=async()=>{
   hideErr('#rankErr');
   const btn=$('#saveRankBtn');btn.textContent='Saving…';btn.disabled=true;
   const rows=Array.from($('#rankRows').children).filter(r=>r.classList&&r.classList.contains('ditem'));
   let errors=[];
-  for(const row of rows){
-    const id=row.dataset.id;if(!id)continue;
-    const pos=row.querySelector('.rk-pos')?.value.trim();
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];
+    const id=rankCache[i]?.id;if(!id)continue;
     const mem=row.querySelector('.rk-mem')?.value.trim();
-    const{error}=await sb.from('alliances').update({state_rank:pos?'#'+pos.replace('#',''):null,members:mem||null}).eq('id',id);
+    const nap=row.querySelector('.rk-nap')?.checked||false;
+    const{error}=await sb.from('alliances').update({state_rank:'#'+(i+1),members:mem||null,nap_protected:nap}).eq('id',id);
     if(error)errors.push(error.message);
   }
   btn.textContent='💾 Save state ranking';btn.disabled=false;
@@ -1607,13 +1634,15 @@ let isStateAdmin=false;
 async function checkAccess(user){
  try{
   const timeout=ms=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms));
-  // Get player profile to check role (limit(1) to survive duplicate rows)
+  // Get ALL of this user's profiles — a person can have one per state, and
+  // the most recently created one isn't necessarily the admin one.
   const{data:rows,error:perr}=await Promise.race([
-    sb.from('players').select('*').eq('owner',user.id).order('created_at',{ascending:false}).limit(1),
+    sb.from('players').select('*').eq('owner',user.id).order('created_at',{ascending:false}),
     timeout(8000)
   ]);
   if(perr)throw perr;
-  const player=rows&&rows.length?rows[0]:null;
+  const rank={admin:0,r5:1,r4:2};
+  const player=(rows||[]).filter(p=>p.role in rank).sort((a,b)=>rank[a.role]-rank[b.role])[0]||null;
   if(!player){show('scDenied');return;}
 
   const isAdmin=player.role==='admin'||player.role==='r4'||player.role==='r5';
