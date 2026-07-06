@@ -56,6 +56,11 @@
     font-size:.62rem; font-weight:700; color:#0a1420; cursor:pointer; border:2px solid transparent;}
   .swatch.selected{border-color:#fff; box-shadow:0 0 0 2px var(--bg), 0 0 10px rgba(255,255,255,.5);}
   .swatch.eraser{background:var(--city-empty); color:var(--text-dim); border:1px dashed var(--line);}
+  .swatch-remove{
+    position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%;
+    background:#c0392b; color:#fff; font-size:.6rem; font-weight:700; line-height:16px;
+    text-align:center; cursor:pointer; border:1px solid rgba(255,255,255,.5);
+  }
 
   .add-alliance{display:flex; gap:6px; align-items:center;}
   .add-alliance input[type=text]{flex:1; background:var(--bg-deep); border:1px solid var(--line);
@@ -353,6 +358,14 @@ function renderPalette(){
       activeLabel.textContent = a.name;
       renderPalette();
     });
+    const removeBtn = document.createElement('div');
+    removeBtn.className = 'swatch-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeAlliance(a.name);
+    });
+    sw.appendChild(removeBtn);
     paletteRow.appendChild(sw);
   });
   const eraser = document.createElement('div');
@@ -365,6 +378,20 @@ function renderPalette(){
     renderPalette();
   });
   paletteRow.appendChild(eraser);
+}
+
+function removeAlliance(name){
+  alliances = alliances.filter(a => a.name !== name);
+  Object.keys(assignments).forEach(key => {
+    if(assignments[key] === name) delete assignments[key];
+  });
+  paintOrder = paintOrder.filter(key => assignments[key] !== undefined);
+  if(activeTool === name){
+    activeTool = null;
+    activeDot.style.background = '#c7d6e4';
+    activeLabel.textContent = t('eraserLabel');
+  }
+  render(); renderPalette(); renderLegend();
 }
 
 function renderLegend(){
