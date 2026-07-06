@@ -75,7 +75,7 @@
   .active-chip .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
 
   .board-panel{display:flex; flex-direction:column; align-items:center; padding:18px 6px 22px;}
-  .board-outer{width:100%; overflow:hidden; display:flex; justify-content:center; padding:10px 0;}
+  .board-outer{width:100%; overflow-x:auto; overflow-y:hidden; display:flex; justify-content:center; padding:10px 0;}
   .board{display:grid; transform:rotate(45deg); gap:2px;}
   .cell{width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:3px; position:relative;}
   .cell-inner{transform:rotate(-45deg); font-size:.5rem; font-weight:700; text-align:center; line-height:1; color:#08131f; pointer-events:none;}
@@ -296,7 +296,13 @@ function render(){
   const {noTeleportShell, totalSide} = currentGeometry();
   const numbers = computeNumbers();
   boardEl.innerHTML = '';
-  const cellPx = totalSide <= 16 ? 26 : totalSide <= 22 ? 20 : 16;
+
+  // Fit the whole rotated diamond inside the visible width of its container.
+  const outer = boardEl.parentElement;
+  const availableWidth = (outer.clientWidth || 340) - 16;
+  const idealCellPx = Math.floor(availableWidth / (totalSide * Math.SQRT2));
+  const cellPx = Math.max(8, Math.min(26, idealCellPx));
+
   boardEl.style.gridTemplateColumns = `repeat(${totalSide}, ${cellPx}px)`;
   boardEl.style.gridTemplateRows = `repeat(${totalSide}, ${cellPx}px)`;
 
@@ -307,6 +313,7 @@ function render(){
       const classes = ['cell'];
       const inner = document.createElement('div');
       inner.className = 'cell-inner';
+      inner.style.fontSize = Math.max(6, Math.round(cellPx * 0.42)) + 'px';
 
       if(type === 'castle'){
         classes.push('castle'); inner.textContent = '🏰';
@@ -551,6 +558,12 @@ async function init(){
 }
 
 init();
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { render(); }, 150);
+});
 </script>
 </body>
 </html>
