@@ -109,6 +109,10 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .al-pick .arr{color:var(--muted);font-size:1.1rem;}
 
 /* TABS for editor sections */
+.egroupbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px;}
+.egroupbar::-webkit-scrollbar{display:none;}
+.egroup{flex:none;font-family:'Fredoka';font-weight:700;font-size:.82rem;padding:9px 16px;border-radius:12px;border:2px solid var(--panel-edge);background:#eef6ff;color:var(--ink-soft);white-space:nowrap;}
+.egroup.active{background:var(--fire);color:#fff;border-color:var(--fire-deep);box-shadow:0 3px 0 var(--fire-deep);}
 .etabbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin-bottom:4px;}
 .etabbar::-webkit-scrollbar{display:none;}
 .etab{flex:none;font-family:'Fredoka';font-weight:600;font-size:.78rem;padding:8px 14px;border-radius:11px;border:2px solid var(--panel-edge);background:#fff;color:var(--ink-soft);white-space:nowrap;box-shadow:0 2px 0 var(--panel-edge);}
@@ -185,19 +189,31 @@ body{padding-bottom:72px !important;}
       <select id="switchAllianceSel" style="width:100%;padding:11px 14px;border:2px solid var(--panel-edge);border-radius:12px;background:#fff;color:var(--ink);font-size:.9rem;font-family:'Fredoka';font-weight:600;outline:none;"></select>
     </div>
 
-    <!-- EDITOR TABS -->
+    <!-- EDITOR TABS: two levels — groups on top, their sub-tabs below -->
+    <div class="egroupbar">
+      <button class="egroup active" data-group="identity">🏷️ Identity</button>
+      <button class="egroup" data-group="people">👥 People</button>
+      <button class="egroup" data-group="content">📢 Content</button>
+      <button class="egroup" data-group="fixed">📌 Fixed</button>
+      <button class="egroup" data-group="admin" id="adminGroup" style="display:none">🔑 Admin</button>
+    </div>
     <div class="etabbar">
-      <button class="etab active" data-sec="identity">🏷️ Identity</button>
-      <button class="etab" data-sec="style">🎨 Style</button>
-      <button class="etab" data-sec="leaders">👥 Leaders</button>
-      <button class="etab" data-sec="members">📋 Members</button>
-      <button class="etab" data-sec="events">📅 Events</button>
-      <button class="etab" data-sec="rules">📜 Rules</button>
-      <button class="etab" data-sec="news">📢 News</button>
-      <button class="etab" data-sec="gallery">📸 Gallery</button>
-      <button class="etab" data-sec="memberzone">🔒 Members Zone</button>
-      <button class="etab" data-sec="ranking" id="rankingTab" style="display:none">🏆 State Ranking</button>
-      <button class="etab" data-sec="access" id="accessTab" style="display:none">🔑 Access</button>
+      <!-- Identity group -->
+      <button class="etab active" data-sec="identity" data-g="identity">🏷️ Identity</button>
+      <button class="etab" data-sec="style" data-g="identity">🎨 Style</button>
+      <!-- People group -->
+      <button class="etab" data-sec="members" data-g="people" style="display:none">📋 Members &amp; IDs</button>
+      <button class="etab" data-sec="leaders" data-g="people" style="display:none">👥 Leaders</button>
+      <!-- Content group -->
+      <button class="etab" data-sec="news" data-g="content" style="display:none">📢 News</button>
+      <button class="etab" data-sec="events" data-g="content" style="display:none">📅 Events</button>
+      <button class="etab" data-sec="gallery" data-g="content" style="display:none">📸 Gallery</button>
+      <button class="etab" data-sec="memberzone" data-g="content" style="display:none">🔒 Members Zone</button>
+      <!-- Fixed group -->
+      <button class="etab" data-sec="rules" data-g="fixed" style="display:none">📜 Rules</button>
+      <!-- Admin group -->
+      <button class="etab" data-sec="ranking" data-g="admin" id="rankingTab" style="display:none">🏆 State Ranking</button>
+      <button class="etab" data-sec="access" data-g="admin" id="accessTab" style="display:none">🔑 Access</button>
     </div>
 
     <!-- IDENTITY -->
@@ -608,18 +624,31 @@ $('#fTag').addEventListener('input',updateSwatches);
 $('#fName').addEventListener('input',updateSwatches);
 
 // ── EDITOR TABS ───────────────────────────────────────────────
-document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x===t));
-  const sec=t.dataset.sec;
+function openSection(sec){
+  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x.dataset.sec===sec));
   document.querySelectorAll('.esec').forEach(s=>s.classList.toggle('active',s.id==='sec-'+sec));
-  // Members, Ranking and Access have their own controls — hide the main save button
   const mainBar=document.getElementById('mainSaveBar');
   if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access')?'none':'';
-  // Lazy-load data for these tabs
   if(sec==='members')loadMembersEditor();
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
-});
+}
+function openGroup(group){
+  document.querySelectorAll('.egroup').forEach(g=>g.classList.toggle('active',g.dataset.group===group));
+  // Show only sub-tabs of this group
+  let firstSec=null;
+  document.querySelectorAll('.etab').forEach(t=>{
+    const inGroup=t.dataset.g===group;
+    // keep admin-only tabs hidden unless they were enabled
+    const adminOnly=(t.id==='rankingTab'||t.id==='accessTab');
+    const show=inGroup && (!adminOnly || isStateAdmin);
+    t.style.display=show?'':'none';
+    if(show && !firstSec)firstSec=t.dataset.sec;
+  });
+  if(firstSec)openSection(firstSec);
+}
+document.querySelectorAll('.egroup').forEach(g=>g.onclick=()=>openGroup(g.dataset.group));
+document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>openSection(t.dataset.sec));
 
 // ── DYNAMIC LIST HELPERS ──────────────────────────────────────
 function leaderHTML(i,l={}){
@@ -909,8 +938,8 @@ function loadEditor(al){
     });
   };
 
-  // Activate first tab
-  document.querySelectorAll('.etab')[0].click();
+  // Open the first group (Identity), which shows its sub-tabs and opens the first
+  openGroup('identity');
   show('scEditor');}
 
 // ── SAVE ──────────────────────────────────────────────────────
@@ -1651,8 +1680,9 @@ async function checkAccess(user){
   currentPlayer=player;
   isStateAdmin=(player.role==='admin'); // only full admins (you + TMQ) edit the state ranking
   if(isStateAdmin){
-    const rt=document.getElementById('rankingTab');if(rt)rt.style.display='';
-    const at=document.getElementById('accessTab');if(at)at.style.display='';
+    const ag=document.getElementById('adminGroup');if(ag)ag.style.display='';
+    const rt=document.getElementById('rankingTab');if(rt)rt.style.display='none';
+    const at=document.getElementById('accessTab');if(at)at.style.display='none';
   }
 
   // Load alliances this player can manage (same alliance they belong to, or all if super-admin)
