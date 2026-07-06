@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Castle Map · Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1420; --bg-deep:#060d16; --panel:#101f34; --panel-2:#16283f; --line:#223a54;
+    --ice:#7fd9ee; --ice-dim:#4f95a8; --castle:#d64550; --tower:#f0b93d; --noteleport:#2a3a4d;
+    --city-empty:#1a2c42; --text:#eaf3f9; --text-dim:#86a0b7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top, #10233a 0%, var(--bg) 55%, var(--bg-deep) 100%);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:16px 14px 60px;
+  }
+  h1,.display{font-family:'Rajdhani',sans-serif; letter-spacing:.02em;}
+  .wrap{max-width:520px;margin:0 auto;}
+  header{text-align:center;margin-bottom:14px; position:relative;}
+  header .eyebrow{font-size:.68rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ice-dim); margin-bottom:4px;}
+  header h1{font-size:1.5rem; font-weight:700; margin:0 0 4px; text-shadow:0 0 18px rgba(127,217,238,.25);}
+  header p{font-size:.82rem;color:var(--text-dim);margin:0;}
+
+  .lang-box{position:absolute; right:0; top:0;}
+  .lang-btn{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    font-weight:600;font-size:.72rem;padding:6px 10px;border-radius:12px;cursor:pointer;}
+  .lang-menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel-2);border:1px solid var(--line);
+    border-radius:12px;padding:6px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:210px;
+    max-height:60vh;overflow-y:auto;z-index:60;}
+  .lang-menu.open{display:grid;}
+  .lang-menu button{background:none;border:none;color:var(--text-dim);text-align:left;font-size:.76rem;
+    padding:7px 8px;border-radius:8px;cursor:pointer;}
+  .lang-menu button:hover{background:var(--panel);color:var(--text);}
+  .lang-menu button.active{color:var(--ice);font-weight:700;}
+
+  .panel{background:linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--line);
+    border-radius:14px; padding:14px; margin-bottom:14px;}
+  .panel-title{font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--ice-dim); margin-bottom:10px; font-weight:600;}
+
+  .stepper-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .stepper-row:last-child{margin-bottom:0;}
+  .stepper-label{font-size:.82rem;}
+  .stepper-label small{display:block; color:var(--text-dim); font-size:.7rem; font-weight:400;}
+  .stepper{display:flex; align-items:center; gap:10px;}
+  .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--ice); font-size:1.1rem; font-weight:700; cursor:pointer; line-height:1;}
+  .stepper .val{min-width:22px; text-align:center; font-weight:700; font-size:.95rem;}
+
+  .palette-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+  .swatch{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:.62rem; font-weight:700; color:#0a1420; cursor:pointer; border:2px solid transparent;}
+  .swatch.selected{border-color:#fff; box-shadow:0 0 0 2px var(--bg), 0 0 10px rgba(255,255,255,.5);}
+  .swatch.eraser{background:var(--city-empty); color:var(--text-dim); border:1px dashed var(--line);}
+
+  .add-alliance{display:flex; gap:6px; align-items:center;}
+  .add-alliance input[type=text]{flex:1; background:var(--bg-deep); border:1px solid var(--line);
+    border-radius:8px; padding:8px 9px; color:var(--text); font-size:.8rem; min-width:0;}
+  .add-alliance input[type=color]{width:38px;height:38px;border:none;border-radius:9px;background:none;padding:0;cursor:pointer;}
+  .add-alliance button{background:var(--ice); color:#06222b; border:none; border-radius:8px;
+    padding:0 12px; height:38px; font-weight:700; font-size:.85rem; cursor:pointer;}
+
+  .active-tool{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:.78rem; color:var(--text-dim);}
+  .active-chip{display:inline-flex; align-items:center; gap:6px; background:var(--bg-deep); border:1px solid var(--line);
+    padding:4px 10px; border-radius:20px; font-weight:600; color:var(--text);}
+  .active-chip .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  .board-panel{display:flex; flex-direction:column; align-items:center; padding:18px 6px 22px;}
+  .board-outer{width:100%; overflow:hidden; display:flex; justify-content:center; padding:10px 0;}
+  .board{display:grid; transform:rotate(45deg); gap:2px;}
+  .cell{width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:3px; position:relative;}
+  .cell-inner{transform:rotate(-45deg); font-size:.5rem; font-weight:700; text-align:center; line-height:1; color:#08131f; pointer-events:none;}
+  .cell.castle{background:radial-gradient(circle at 35% 30%, #ff7a68, var(--castle)); box-shadow:0 0 10px rgba(214,69,80,.7);}
+  .cell.castle .cell-inner{color:#3a0a0a; font-size:.8rem;}
+  .cell.tower{background:linear-gradient(160deg, #ffe08a, var(--tower));}
+  .cell.tower .cell-inner{color:#4a3300; font-size:.48rem;}
+  .cell.city{background:var(--city-empty); border:1px solid rgba(255,255,255,.04); cursor:pointer;}
+  .cell.city.assigned{border:none;}
+  .cell.city .cell-inner{font-size:.62rem; font-weight:800;}
+  .cell.city.hatch{background-image:repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0, rgba(0,0,0,.28) 3px, transparent 3px, transparent 7px);}
+  .cell.city.hatch:not(.assigned){background-color:var(--noteleport);}
+
+  .compass{display:flex; justify-content:space-between; width:100%; max-width:280px; font-size:.68rem; color:var(--text-dim); margin-bottom:6px;}
+
+  .legend{margin-top:4px;}
+  .legend-title{font-size:.7rem;color:var(--ice-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600;}
+  .legend-item{display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:.82rem; border-bottom:1px solid var(--line);}
+  .legend-item:last-child{border-bottom:none;}
+  .legend-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
+  .legend-count{margin-left:auto; color:var(--text-dim); font-size:.75rem;}
+  .legend-empty{color:var(--text-dim); font-size:.8rem; text-align:center; padding:8px 0;}
+
+  .footer-actions{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .btn-ghost{flex:1; min-width:100px; background:transparent; border:1px solid var(--line); color:var(--text-dim);
+    padding:10px; border-radius:9px; font-size:.8rem; font-weight:600; cursor:pointer;}
+  .btn-primary{flex:1; min-width:100px; background:var(--ice); border:none; color:#06222b;
+    padding:10px; border-radius:9px; font-size:.8rem; font-weight:700; cursor:pointer;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d1b2a;
+    color:#fff;padding:10px 20px;border-radius:14px;font-weight:600;font-size:.85rem;opacity:0;transition:.25s;
+    z-index:999;white-space:nowrap; border:1px solid var(--line);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .gate{max-width:420px;margin:80px auto;text-align:center;font-size:.9rem;color:var(--text-dim);}
+  #app{display:none;}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">Checking access…</div>
+
+<div class="wrap" id="app">
+
+  <header>
+    <div class="lang-box">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
+    <div class="eyebrow">Phoenix · R4/R5 tool</div>
+    <h1>🏰 <span data-i18n="appTitle">Castle Map</span></h1>
+    <p data-i18n="appSubtitle">Design your zone assignments for the battle</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title" data-i18n="sizeSectionTitle">1 · Grid size</div>
+    <div class="stepper-row">
+      <div class="stepper-label"><span data-i18n="noTeleportLabel">No-teleport zone</span><br><small data-i18n="noTeleportNote">tower-to-tower side (even number)</small></div>
+      <div class="stepper">
+        <button id="tMinus">−</button>
+        <div class="val" id="tVal">6</div>
+        <button id="tPlus">+</button>
+      </div>
+    </div>
+    <div class="stepper-row">
+      <div class="stepper-label"><span data-i18n="marginLabel">Margin depth</span><br><small data-i18n="marginNote">cities from that zone to the border</small></div>
+      <div class="stepper">
+        <button id="rMinus">−</button>
+        <div class="val" id="rVal">4</div>
+        <button id="rPlus">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" data-i18n="allianceSectionTitle">2 · Choose an alliance</div>
+    <div class="palette-row" id="paletteRow"></div>
+    <div class="add-alliance">
+      <input type="color" id="newColor" value="#5ec4ff">
+      <input type="text" id="newName" data-i18n-ph="addPlaceholder" placeholder="Tag, e.g. AAA" maxlength="6">
+      <button id="addAllianceBtn">＋</button>
+    </div>
+    <div class="active-tool">
+      <span data-i18n="paintingWith">Painting with:</span>
+      <span class="active-chip"><span class="dot" id="activeDot" style="background:#c7d6e4"></span><span id="activeLabel" data-i18n="eraserLabel">Eraser</span></span>
+    </div>
+  </div>
+
+  <div class="panel board-panel">
+    <div class="panel-title" style="align-self:flex-start;" data-i18n="boardSectionTitle">3 · Tap a city to paint it (whole block)</div>
+    <div class="compass"><span><span data-i18n="compassWest">West</span> ◄</span><span data-i18n="compassNorth">▲ North</span><span><span data-i18n="compassEast">East</span> ►</span></div>
+    <div class="board-outer"><div class="board" id="board"></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="legend">
+      <div class="legend-title" data-i18n="zonesSectionTitle">Assigned zones</div>
+      <div id="legendList"><div class="legend-empty" data-i18n="zonesEmpty">No zones assigned yet</div></div>
+    </div>
+    <div class="footer-actions">
+      <div class="btn-ghost" id="clearAllBtn" data-i18n="clearAll">🧹 Clear all</div>
+      <div class="btn-ghost" id="downloadBtn" data-i18n="download">🖼️ Download</div>
+      <div class="btn-primary" id="saveBtn" data-i18n="save">💾 Save</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- i18n ---------- */
+const I18N = {
+en:{name:"English",dir:"ltr",t:{appTitle:"Castle Map",appSubtitle:"Design your zone assignments for the battle",sizeSectionTitle:"1 · Grid size",noTeleportLabel:"No-teleport zone",noTeleportNote:"tower-to-tower side (even number)",marginLabel:"Margin depth",marginNote:"cities from that zone to the border",allianceSectionTitle:"2 · Choose an alliance",addPlaceholder:"Tag, e.g. AAA",paintingWith:"Painting with:",eraserLabel:"Eraser",boardSectionTitle:"3 · Tap a city to paint it (whole block)",compassWest:"West",compassNorth:"North",compassEast:"East",zonesSectionTitle:"Assigned zones",zonesEmpty:"No zones assigned yet",zonesUnit:"zone(s)",clearAll:"🧹 Clear all",download:"🖼️ Download",save:"💾 Save",saved:"Saved ✓",saving:"Saving…",loadingDraft:"Loading your draft…",accessDenied:"This tool is only available to R4/R5/admin.",duplicateAlliance:"That alliance already exists in the list"}},
+es:{name:"Español",dir:"ltr",t:{appTitle:"Mapa del Castillo",appSubtitle:"Diseña el reparto de zonas para la batalla",sizeSectionTitle:"1 · Tamaño de la cuadrícula",noTeleportLabel:"Zona sin teletransporte",noTeleportNote:"lado de torreta a torreta (número par)",marginLabel:"Profundidad hasta el margen",marginNote:"ciudades desde esa zona hasta el borde",allianceSectionTitle:"2 · Elige una alianza",addPlaceholder:"Tag, ej. AAA",paintingWith:"Pintando con:",eraserLabel:"Borrador",boardSectionTitle:"3 · Toca una ciudad para pintarla (entera)",compassWest:"Oeste",compassNorth:"Norte",compassEast:"Este",zonesSectionTitle:"Zonas asignadas",zonesEmpty:"Aún no has asignado ninguna zona",zonesUnit:"zona(s)",clearAll:"🧹 Borrar todo",download:"🖼️ Descargar",save:"💾 Guardar",saved:"Guardado ✓",saving:"Guardando…",loadingDraft:"Cargando tu diseño…",accessDenied:"Esta herramienta es solo para R4/R5/admin.",duplicateAlliance:"Esa alianza ya existe en la lista"}},
+ko:{name:"한국어",dir:"ltr",t:{appTitle:"성 지도",appSubtitle:"전투를 위한 구역 배정을 설계하세요",sizeSectionTitle:"1 · 격자 크기",noTeleportLabel:"텔레포트 불가 구역",noTeleportNote:"탑에서 탑까지의 변 (짝수)",marginLabel:"경계까지 깊이",marginNote:"그 구역에서 경계까지의 도시 수",allianceSectionTitle:"2 · 동맹 선택",addPlaceholder:"태그, 예: AAA",paintingWith:"칠하는 중:",eraserLabel:"지우개",boardSectionTitle:"3 · 도시를 눌러 칠하세요 (블록 전체)",compassWest:"서",compassNorth:"북",compassEast:"동",zonesSectionTitle:"배정된 구역",zonesEmpty:"아직 배정된 구역이 없습니다",zonesUnit:"구역",clearAll:"🧹 전체 지우기",download:"🖼️ 다운로드",save:"💾 저장",saved:"저장됨 ✓",saving:"저장 중…",loadingDraft:"디자인 불러오는 중…",accessDenied:"이 도구는 R4/R5/관리자만 사용할 수 있습니다.",duplicateAlliance:"이미 목록에 있는 동맹입니다"}},
+ja:{name:"日本語",dir:"ltr",t:{appTitle:"城マップ",appSubtitle:"バトル用のゾーン割り当てをデザイン",sizeSectionTitle:"1 · グリッドサイズ",noTeleportLabel:"テレポート不可ゾーン",noTeleportNote:"塔から塔までの辺（偶数）",marginLabel:"境界までの深さ",marginNote:"そのゾーンから境界までの都市数",allianceSectionTitle:"2 · 同盟を選択",addPlaceholder:"タグ、例：AAA",paintingWith:"塗り中：",eraserLabel:"消しゴム",boardSectionTitle:"3 · 都市をタップして塗る（ブロック全体）",compassWest:"西",compassNorth:"北",compassEast:"東",zonesSectionTitle:"割り当て済みゾーン",zonesEmpty:"まだゾーンが割り当てられていません",zonesUnit:"ゾーン",clearAll:"🧹 すべて消去",download:"🖼️ ダウンロード",save:"💾 保存",saved:"保存済み ✓",saving:"保存中…",loadingDraft:"デザインを読み込み中…",accessDenied:"このツールはR4/R5/管理者のみ利用できます。",duplicateAlliance:"その同盟はすでにリストにあります"}},
+"zh-Hant":{name:"繁體中文",dir:"ltr",t:{appTitle:"城堡地圖",appSubtitle:"為戰鬥設計區域分配",sizeSectionTitle:"1 · 格線大小",noTeleportLabel:"無法傳送區域",noTeleportNote:"塔到塔的邊長（偶數）",marginLabel:"到邊界的深度",marginNote:"從該區域到邊界的城市數",allianceSectionTitle:"2 · 選擇聯盟",addPlaceholder:"標籤，例：AAA",paintingWith:"正在塗色：",eraserLabel:"橡皮擦",boardSectionTitle:"3 · 點擊城市塗色（整個區塊）",compassWest:"西",compassNorth:"北",compassEast:"東",zonesSectionTitle:"已分配區域",zonesEmpty:"尚未分配任何區域",zonesUnit:"區域",clearAll:"🧹 全部清除",download:"🖼️ 下載",save:"💾 儲存",saved:"已儲存 ✓",saving:"儲存中…",loadingDraft:"載入設計中…",accessDenied:"此工具僅供 R4/R5/管理員使用。",duplicateAlliance:"該聯盟已在清單中"}},
+"zh-Hans":{name:"简体中文",dir:"ltr",t:{appTitle:"城堡地图",appSubtitle:"为战斗设计区域分配",sizeSectionTitle:"1 · 网格大小",noTeleportLabel:"无法传送区域",noTeleportNote:"塔到塔的边长（偶数）",marginLabel:"到边界的深度",marginNote:"从该区域到边界的城市数",allianceSectionTitle:"2 · 选择联盟",addPlaceholder:"标签，例：AAA",paintingWith:"正在涂色：",eraserLabel:"橡皮擦",boardSectionTitle:"3 · 点击城市涂色（整个区块）",compassWest:"西",compassNorth:"北",compassEast:"东",zonesSectionTitle:"已分配区域",zonesEmpty:"尚未分配任何区域",zonesUnit:"区域",clearAll:"🧹 全部清除",download:"🖼️ 下载",save:"💾 保存",saved:"已保存 ✓",saving:"保存中…",loadingDraft:"加载设计中…",accessDenied:"此工具仅供 R4/R5/管理员使用。",duplicateAlliance:"该联盟已在列表中"}},
+de:{name:"Deutsch",dir:"ltr",t:{appTitle:"Burgkarte",appSubtitle:"Gestalte die Zonenverteilung für die Schlacht",sizeSectionTitle:"1 · Rastergröße",noTeleportLabel:"Teleport-Sperrzone",noTeleportNote:"Seite von Turm zu Turm (gerade Zahl)",marginLabel:"Tiefe bis zum Rand",marginNote:"Städte von dieser Zone bis zum Rand",allianceSectionTitle:"2 · Allianz wählen",addPlaceholder:"Tag, z. B. AAA",paintingWith:"Male mit:",eraserLabel:"Radierer",boardSectionTitle:"3 · Stadt antippen zum Bemalen (ganzer Block)",compassWest:"West",compassNorth:"Nord",compassEast:"Ost",zonesSectionTitle:"Zugewiesene Zonen",zonesEmpty:"Noch keine Zone zugewiesen",zonesUnit:"Zone(n)",clearAll:"🧹 Alles löschen",download:"🖼️ Herunterladen",save:"💾 Speichern",saved:"Gespeichert ✓",saving:"Speichert…",loadingDraft:"Entwurf wird geladen…",accessDenied:"Dieses Tool ist nur für R4/R5/Admin verfügbar.",duplicateAlliance:"Diese Allianz ist bereits in der Liste"}},
+fr:{name:"Français",dir:"ltr",t:{appTitle:"Carte du Château",appSubtitle:"Conçois la répartition des zones pour la bataille",sizeSectionTitle:"1 · Taille de la grille",noTeleportLabel:"Zone sans téléportation",noTeleportNote:"côté de tour à tour (nombre pair)",marginLabel:"Profondeur jusqu'à la marge",marginNote:"villes depuis cette zone jusqu'au bord",allianceSectionTitle:"2 · Choisis une alliance",addPlaceholder:"Tag, ex. AAA",paintingWith:"Peint avec :",eraserLabel:"Gomme",boardSectionTitle:"3 · Touche une ville pour la peindre (bloc entier)",compassWest:"Ouest",compassNorth:"Nord",compassEast:"Est",zonesSectionTitle:"Zones assignées",zonesEmpty:"Aucune zone assignée pour l'instant",zonesUnit:"zone(s)",clearAll:"🧹 Tout effacer",download:"🖼️ Télécharger",save:"💾 Enregistrer",saved:"Enregistré ✓",saving:"Enregistrement…",loadingDraft:"Chargement de ton design…",accessDenied:"Cet outil est réservé aux R4/R5/admin.",duplicateAlliance:"Cette alliance est déjà dans la liste"}},
+ar:{name:"العربية",dir:"rtl",t:{appTitle:"خريطة القلعة",appSubtitle:"صمّم توزيع المناطق للمعركة",sizeSectionTitle:"1 · حجم الشبكة",noTeleportLabel:"منطقة بلا انتقال",noTeleportNote:"الضلع من برج لبرج (عدد زوجي)",marginLabel:"العمق حتى الحدود",marginNote:"عدد المدن من تلك المنطقة حتى الحدود",allianceSectionTitle:"2 · اختر تحالفًا",addPlaceholder:"الوسم، مثل AAA",paintingWith:"التلوين بـ:",eraserLabel:"ممحاة",boardSectionTitle:"3 · اضغط على مدينة لتلوينها (الكتلة كاملة)",compassWest:"غرب",compassNorth:"شمال",compassEast:"شرق",zonesSectionTitle:"المناطق المخصصة",zonesEmpty:"لم يتم تخصيص أي منطقة بعد",zonesUnit:"منطقة",clearAll:"🧹 مسح الكل",download:"🖼️ تنزيل",save:"💾 حفظ",saved:"تم الحفظ ✓",saving:"جارٍ الحفظ…",loadingDraft:"جارٍ تحميل تصميمك…",accessDenied:"هذه الأداة متاحة فقط لـ R4/R5/المشرف.",duplicateAlliance:"هذا التحالف موجود بالفعل في القائمة"}},
+ru:{name:"Русский",dir:"ltr",t:{appTitle:"Карта замка",appSubtitle:"Спланируйте распределение зон для битвы",sizeSectionTitle:"1 · Размер сетки",noTeleportLabel:"Зона без телепорта",noTeleportNote:"сторона от башни до башни (чётное число)",marginLabel:"Глубина до границы",marginNote:"городов от этой зоны до края",allianceSectionTitle:"2 · Выберите альянс",addPlaceholder:"Тег, напр. AAA",paintingWith:"Закрашиваю:",eraserLabel:"Ластик",boardSectionTitle:"3 · Нажмите на город, чтобы закрасить (весь блок)",compassWest:"Запад",compassNorth:"Север",compassEast:"Восток",zonesSectionTitle:"Назначенные зоны",zonesEmpty:"Пока не назначено ни одной зоны",zonesUnit:"зон(а)",clearAll:"🧹 Очистить всё",download:"🖼️ Скачать",save:"💾 Сохранить",saved:"Сохранено ✓",saving:"Сохранение…",loadingDraft:"Загрузка вашего дизайна…",accessDenied:"Этот инструмент доступен только R4/R5/админам.",duplicateAlliance:"Этот альянс уже есть в списке"}},
+tr:{name:"Türkçe",dir:"ltr",t:{appTitle:"Kale Haritası",appSubtitle:"Savaş için bölge dağılımını tasarla",sizeSectionTitle:"1 · Izgara boyutu",noTeleportLabel:"Işınlanma yasak bölgesi",noTeleportNote:"kuleden kuleye kenar (çift sayı)",marginLabel:"Sınıra kadar derinlik",marginNote:"o bölgeden sınıra kadar şehir sayısı",allianceSectionTitle:"2 · Bir ittifak seç",addPlaceholder:"Etiket, örn. AAA",paintingWith:"Boyanıyor:",eraserLabel:"Silgi",boardSectionTitle:"3 · Boyamak için bir şehre dokun (tüm blok)",compassWest:"Batı",compassNorth:"Kuzey",compassEast:"Doğu",zonesSectionTitle:"Atanan bölgeler",zonesEmpty:"Henüz bölge atanmadı",zonesUnit:"bölge",clearAll:"🧹 Hepsini temizle",download:"🖼️ İndir",save:"💾 Kaydet",saved:"Kaydedildi ✓",saving:"Kaydediliyor…",loadingDraft:"Tasarımın yükleniyor…",accessDenied:"Bu araç yalnızca R4/R5/admin içindir.",duplicateAlliance:"Bu ittifak zaten listede"}},
+it:{name:"Italiano",dir:"ltr",t:{appTitle:"Mappa del Castello",appSubtitle:"Progetta l'assegnazione delle zone per la battaglia",sizeSectionTitle:"1 · Dimensione della griglia",noTeleportLabel:"Zona senza teletrasporto",noTeleportNote:"lato da torre a torre (numero pari)",marginLabel:"Profondità fino al margine",marginNote:"città da quella zona fino al bordo",allianceSectionTitle:"2 · Scegli un'alleanza",addPlaceholder:"Tag, es. AAA",paintingWith:"Dipingi con:",eraserLabel:"Gomma",boardSectionTitle:"3 · Tocca una città per dipingerla (blocco intero)",compassWest:"Ovest",compassNorth:"Nord",compassEast:"Est",zonesSectionTitle:"Zone assegnate",zonesEmpty:"Nessuna zona ancora assegnata",zonesUnit:"zona/e",clearAll:"🧹 Cancella tutto",download:"🖼️ Scarica",save:"💾 Salva",saved:"Salvato ✓",saving:"Salvataggio…",loadingDraft:"Caricamento del tuo design…",accessDenied:"Questo strumento è riservato a R4/R5/admin.",duplicateAlliance:"Questa alleanza è già nella lista"}},
+pl:{name:"Polski",dir:"ltr",t:{appTitle:"Mapa Zamku",appSubtitle:"Zaprojektuj podział stref na bitwę",sizeSectionTitle:"1 · Rozmiar siatki",noTeleportLabel:"Strefa bez teleportacji",noTeleportNote:"bok od wieży do wieży (liczba parzysta)",marginLabel:"Głębokość do granicy",marginNote:"miast od tej strefy do granicy",allianceSectionTitle:"2 · Wybierz sojusz",addPlaceholder:"Tag, np. AAA",paintingWith:"Maluję:",eraserLabel:"Gumka",boardSectionTitle:"3 · Dotknij miasta, aby je pomalować (cały blok)",compassWest:"Zachód",compassNorth:"Północ",compassEast:"Wschód",zonesSectionTitle:"Przypisane strefy",zonesEmpty:"Nie przypisano jeszcze żadnej strefy",zonesUnit:"strefa/y",clearAll:"🧹 Wyczyść wszystko",download:"🖼️ Pobierz",save:"💾 Zapisz",saved:"Zapisano ✓",saving:"Zapisywanie…",loadingDraft:"Wczytywanie projektu…",accessDenied:"To narzędzie jest tylko dla R4/R5/admina.",duplicateAlliance:"Ten sojusz jest już na liście"}},
+pt:{name:"Português",dir:"ltr",t:{appTitle:"Mapa do Castelo",appSubtitle:"Planeje a divisão de zonas para a batalha",sizeSectionTitle:"1 · Tamanho da grade",noTeleportLabel:"Zona sem teletransporte",noTeleportNote:"lado de torre a torre (número par)",marginLabel:"Profundidade até a margem",marginNote:"cidades dessa zona até a borda",allianceSectionTitle:"2 · Escolha uma aliança",addPlaceholder:"Tag, ex. AAA",paintingWith:"Pintando com:",eraserLabel:"Borracha",boardSectionTitle:"3 · Toque numa cidade para pintá-la (bloco inteiro)",compassWest:"Oeste",compassNorth:"Norte",compassEast:"Leste",zonesSectionTitle:"Zonas atribuídas",zonesEmpty:"Nenhuma zona atribuída ainda",zonesUnit:"zona(s)",clearAll:"🧹 Limpar tudo",download:"🖼️ Baixar",save:"💾 Salvar",saved:"Salvo ✓",saving:"Salvando…",loadingDraft:"Carregando seu design…",accessDenied:"Esta ferramenta é só para R4/R5/admin.",duplicateAlliance:"Essa aliança já está na lista"}},
+th:{name:"ไทย",dir:"ltr",t:{appTitle:"แผนที่ปราสาท",appSubtitle:"ออกแบบการแบ่งเขตสำหรับการต่อสู้",sizeSectionTitle:"1 · ขนาดตาราง",noTeleportLabel:"เขตห้ามเทเลพอร์ต",noTeleportNote:"ด้านจากหอคอยถึงหอคอย (เลขคู่)",marginLabel:"ความลึกถึงขอบ",marginNote:"จำนวนเมืองจากเขตนั้นถึงขอบ",allianceSectionTitle:"2 · เลือกพันธมิตร",addPlaceholder:"แท็ก เช่น AAA",paintingWith:"กำลังทาสี:",eraserLabel:"ยางลบ",boardSectionTitle:"3 · แตะเมืองเพื่อทาสี (ทั้งบล็อก)",compassWest:"ตะวันตก",compassNorth:"เหนือ",compassEast:"ตะวันออก",zonesSectionTitle:"เขตที่กำหนดแล้ว",zonesEmpty:"ยังไม่มีการกำหนดเขต",zonesUnit:"เขต",clearAll:"🧹 ล้างทั้งหมด",download:"🖼️ ดาวน์โหลด",save:"💾 บันทึก",saved:"บันทึกแล้ว ✓",saving:"กำลังบันทึก…",loadingDraft:"กำลังโหลดการออกแบบของคุณ…",accessDenied:"เครื่องมือนี้ใช้ได้เฉพาะ R4/R5/แอดมิน",duplicateAlliance:"พันธมิตรนี้อยู่ในรายการแล้ว"}},
+id:{name:"Indonesia",dir:"ltr",t:{appTitle:"Peta Kastil",appSubtitle:"Rancang pembagian zona untuk pertempuran",sizeSectionTitle:"1 · Ukuran grid",noTeleportLabel:"Zona tanpa teleport",noTeleportNote:"sisi dari menara ke menara (angka genap)",marginLabel:"Kedalaman hingga batas",marginNote:"kota dari zona itu hingga batas",allianceSectionTitle:"2 · Pilih aliansi",addPlaceholder:"Tag, mis. AAA",paintingWith:"Mengecat dengan:",eraserLabel:"Penghapus",boardSectionTitle:"3 · Ketuk kota untuk mengecatnya (satu blok penuh)",compassWest:"Barat",compassNorth:"Utara",compassEast:"Timur",zonesSectionTitle:"Zona yang ditetapkan",zonesEmpty:"Belum ada zona yang ditetapkan",zonesUnit:"zona",clearAll:"🧹 Hapus semua",download:"🖼️ Unduh",save:"💾 Simpan",saved:"Tersimpan ✓",saving:"Menyimpan…",loadingDraft:"Memuat rancanganmu…",accessDenied:"Alat ini hanya untuk R4/R5/admin.",duplicateAlliance:"Aliansi itu sudah ada di daftar"}}
+};
+let LANG='en';
+function t(key){ return (I18N[LANG]&&I18N[LANG].t[key]) || (I18N.en.t[key]) || key; }
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = (I18N[LANG]||I18N.en).dir;
+  document.getElementById('langLabel').textContent = LANG.toUpperCase().replace('ZH-HANT','繁').replace('ZH-HANS','简');
+  document.querySelectorAll('#langMenu button').forEach(b=>b.classList.toggle('active', b.dataset.code===LANG));
+  renderPalette(); renderLegend();
+}
+function buildLangMenu(){
+  const menu = document.getElementById('langMenu');
+  menu.innerHTML='';
+  Object.keys(I18N).forEach(code=>{
+    const b=document.createElement('button');
+    b.textContent = I18N[code].name;
+    b.dataset.code = code;
+    b.addEventListener('click', ()=>{ LANG=code; applyLang(); menu.classList.remove('open'); });
+    menu.appendChild(b);
+  });
+}
+document.getElementById('langBtn').addEventListener('click', ()=>{
+  document.getElementById('langMenu').classList.toggle('open');
+});
+
+/* ---------- Supabase ---------- */
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentUser = null;
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* ---------- Board state ---------- */
+let alliances = [];         // {name,color}
+let activeTool = null;      // null = eraser
+let noTeleportSide = 6;
+let marginDepth = 4;
+const cornerExtra = false;  // confirmed not needed
+let assignments = {};       // key "i,j" -> alliance name
+let paintOrder = [];        // keys in the order they were assigned, per current state
+
+const boardEl = document.getElementById('board');
+const paletteRow = document.getElementById('paletteRow');
+const legendList = document.getElementById('legendList');
+const activeDot = document.getElementById('activeDot');
+const activeLabel = document.getElementById('activeLabel');
+
+function ring(idx, totalSide){
+  const c = totalSide / 2;
+  return idx < c ? (c - 1 - idx) : (idx - c);
+}
+function cellType(i, j, totalSide, noTeleportShell){
+  const ri = ring(i, totalSide), rj = ring(j, totalSide);
+  const shell = Math.max(ri, rj);
+  if(shell === 0) return 'castle';
+  if(shell === noTeleportShell && ri === noTeleportShell && rj === noTeleportShell) return 'tower';
+  if(shell <= noTeleportShell) return 'city-hatch';
+  return 'city';
+}
+function currentGeometry(){
+  const noTeleportShell = noTeleportSide / 2 - 1;
+  const totalShell = noTeleportShell + marginDepth;
+  const totalSide = 2 * (totalShell + 1);
+  return {noTeleportShell, totalSide};
+}
+
+function computeNumbers(){
+  const counters = {};
+  const numbers = {};
+  paintOrder.forEach(key => {
+    const alliance = assignments[key];
+    if(!alliance) return;
+    counters[alliance] = (counters[alliance] || 0) + 1;
+    numbers[key] = counters[alliance];
+  });
+  return numbers;
+}
+
+function render(){
+  const {noTeleportShell, totalSide} = currentGeometry();
+  const numbers = computeNumbers();
+  boardEl.innerHTML = '';
+  const cellPx = totalSide <= 16 ? 26 : totalSide <= 22 ? 20 : 16;
+  boardEl.style.gridTemplateColumns = `repeat(${totalSide}, ${cellPx}px)`;
+  boardEl.style.gridTemplateRows = `repeat(${totalSide}, ${cellPx}px)`;
+
+  for(let j = 0; j < totalSide; j++){
+    for(let i = 0; i < totalSide; i++){
+      const type = cellType(i, j, totalSide, noTeleportShell);
+      const div = document.createElement('div');
+      const classes = ['cell'];
+      const inner = document.createElement('div');
+      inner.className = 'cell-inner';
+
+      if(type === 'castle'){
+        classes.push('castle'); inner.textContent = '🏰';
+      } else if(type === 'tower'){
+        classes.push('tower'); inner.textContent = '🗼';
+      } else {
+        classes.push('city');
+        if(type === 'city-hatch') classes.push('hatch');
+        const key = i + ',' + j;
+        const assigned = assignments[key];
+        if(assigned){
+          const alliance = alliances.find(a => a.name === assigned);
+          if(alliance){
+            div.style.backgroundColor = alliance.color;
+            classes.push('assigned');
+            inner.textContent = numbers[key] || '';
+          }
+        }
+        div.addEventListener('click', () => paintCell(key));
+      }
+      div.className = classes.join(' ');
+      div.appendChild(inner);
+      boardEl.appendChild(div);
+    }
+  }
+}
+
+function paintCell(key){
+  if(activeTool === null){
+    delete assignments[key];
+    paintOrder = paintOrder.filter(k => k !== key);
+  } else {
+    if(!(key in assignments)) paintOrder.push(key);
+    assignments[key] = activeTool;
+  }
+  render(); renderLegend();
+}
+
+function renderPalette(){
+  paletteRow.innerHTML = '';
+  alliances.forEach(a => {
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (activeTool === a.name ? ' selected' : '');
+    sw.style.background = a.color;
+    sw.textContent = a.name;
+    sw.addEventListener('click', () => {
+      activeTool = a.name;
+      activeDot.style.background = a.color;
+      activeLabel.textContent = a.name;
+      renderPalette();
+    });
+    paletteRow.appendChild(sw);
+  });
+  const eraser = document.createElement('div');
+  eraser.className = 'swatch eraser' + (activeTool === null ? ' selected' : '');
+  eraser.textContent = '✕';
+  eraser.addEventListener('click', () => {
+    activeTool = null;
+    activeDot.style.background = '#c7d6e4';
+    activeLabel.textContent = t('eraserLabel');
+    renderPalette();
+  });
+  paletteRow.appendChild(eraser);
+}
+
+function renderLegend(){
+  const counts = {};
+  Object.values(assignments).forEach(name => { counts[name] = (counts[name] || 0) + 1; });
+  const names = Object.keys(counts);
+  if(names.length === 0){
+    legendList.innerHTML = `<div class="legend-empty">${t('zonesEmpty')}</div>`;
+    return;
+  }
+  legendList.innerHTML = '';
+  names.forEach(name => {
+    const alliance = alliances.find(a => a.name === name);
+    const row = document.createElement('div');
+    row.className = 'legend-item';
+    row.innerHTML = `<span class="legend-swatch" style="background:${alliance ? alliance.color : '#666'}"></span>
+      <span>${name}</span><span class="legend-count">${counts[name]} ${t('zonesUnit')}</span>`;
+    legendList.appendChild(row);
+  });
+}
+
+function clampAndRender(){
+  if(noTeleportSide < 2) noTeleportSide = 2;
+  if(marginDepth < 1) marginDepth = 1;
+  document.getElementById('tVal').textContent = noTeleportSide;
+  document.getElementById('rVal').textContent = marginDepth;
+  render(); renderLegend();
+}
+
+document.getElementById('tMinus').addEventListener('click', () => { noTeleportSide = Math.max(2, noTeleportSide - 2); clampAndRender(); });
+document.getElementById('tPlus').addEventListener('click', () => { noTeleportSide = noTeleportSide + 2; clampAndRender(); });
+document.getElementById('rMinus').addEventListener('click', () => { marginDepth = Math.max(1, marginDepth - 1); clampAndRender(); });
+document.getElementById('rPlus').addEventListener('click', () => { marginDepth = marginDepth + 1; clampAndRender(); });
+
+document.getElementById('addAllianceBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('newName');
+  const colorInput = document.getElementById('newColor');
+  const name = nameInput.value.trim().toUpperCase();
+  if(!name) return;
+  if(alliances.find(a => a.name === name)){ alert(t('duplicateAlliance')); return; }
+  alliances.push({name, color: colorInput.value});
+  nameInput.value = '';
+  renderPalette();
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  assignments = {};
+  paintOrder = [];
+  render(); renderLegend();
+});
+
+/* ---------- Download as PNG ---------- */
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const {noTeleportShell, totalSide} = currentGeometry();
+  const numbers = computeNumbers();
+  const cellPx = 28;
+  const size = totalSide * cellPx * 1.45; // extra room for the 45° rotation
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a1420';
+  ctx.fillRect(0,0,size,size);
+  ctx.translate(size/2, size/2);
+  ctx.rotate(Math.PI/4);
+  const offset = (totalSide * cellPx) / 2;
+
+  for(let j = 0; j < totalSide; j++){
+    for(let i = 0; i < totalSide; i++){
+      const type = cellType(i, j, totalSide, noTeleportShell);
+      const x = i * cellPx - offset;
+      const y = j * cellPx - offset;
+      let fill = '#1a2c42', label = '', labelColor = '#08131f';
+      if(type === 'castle'){ fill = '#d64550'; label = ''; }
+      else if(type === 'tower'){ fill = '#f0b93d'; label = ''; }
+      else {
+        const key = i + ',' + j;
+        const assigned = assignments[key];
+        if(assigned){
+          const alliance = alliances.find(a => a.name === assigned);
+          if(alliance){ fill = alliance.color; label = String(numbers[key] || ''); }
+        } else if(type === 'city-hatch'){ fill = '#2a3a4d'; }
+      }
+      ctx.fillStyle = fill;
+      ctx.fillRect(x, y, cellPx - 1, cellPx - 1);
+      if(label){
+        ctx.save();
+        ctx.translate(x + cellPx/2, y + cellPx/2);
+        ctx.rotate(-Math.PI/4);
+        ctx.fillStyle = labelColor;
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
+    }
+  }
+
+  const link = document.createElement('a');
+  link.download = 'castle-map.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+/* ---------- Save / load personal draft ---------- */
+async function loadDraft(){
+  try{
+    const {data, error} = await sb.from('castle_map_drafts').select('*').eq('owner', currentUser.id).maybeSingle();
+    if(error) throw error;
+    if(data){
+      const cfg = data.grid_config || {};
+      noTeleportSide = cfg.noTeleportSide || 6;
+      marginDepth = cfg.marginDepth || 4;
+      alliances = cfg.alliances || [];
+      paintOrder = cfg.paintOrder || [];
+      assignments = data.assignments || {};
+    }
+  }catch(e){ console.error(e); }
+  clampAndRender();
+  renderPalette();
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  toast(t('saving'));
+  try{
+    const payload = {
+      owner: currentUser.id,
+      grid_config: { noTeleportSide, marginDepth, alliances, paintOrder },
+      assignments,
+      updated_at: new Date().toISOString()
+    };
+    const {error} = await sb.from('castle_map_drafts').upsert(payload, {onConflict:'owner'});
+    if(error) throw error;
+    toast(t('saved'));
+  }catch(e){
+    console.error(e);
+    toast('⚠️ ' + (e.message || 'Error'));
+  }
+});
+
+/* ---------- Access check + init ---------- */
+async function init(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){ document.getElementById('gate').textContent = t('accessDenied'); return; }
+  currentUser = session.user;
+
+  const {data:rows} = await sb.from('players').select('role').eq('owner', currentUser.id).order('created_at',{ascending:false});
+  const isStaff = (rows||[]).some(p => p.role==='admin' || p.role==='r4' || p.role==='r5');
+  if(!isStaff){ document.getElementById('gate').textContent = t('accessDenied'); return; }
+
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  buildLangMenu();
+  applyLang();
+  await loadDraft();
+}
+
+init();
+</script>
+</body>
+</html>
