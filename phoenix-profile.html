@@ -200,53 +200,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
   overflow:hidden;flex:none;
 }
 .gov-avatar img{width:100%;height:100%;object-fit:cover;}
-
-/* ── PROFILE AVATAR FRAMES (marcos) — driven by players.active_frame ── */
-.gov-avatar.frame-legend{ /* 👑 Leyenda · Globo del estado — gold + frost */
-  border-color:#ffe9b0;
-  box-shadow:0 0 0 3px #fff,0 0 0 6px #e9b949,0 0 0 8px #7fd0f0,
-             0 6px 24px -4px rgba(233,185,73,.7),0 0 22px 2px rgba(127,208,240,.55);
-  animation:frLegend 3.2s ease-in-out infinite;
-}
-@keyframes frLegend{
-  0%,100%{box-shadow:0 0 0 3px #fff,0 0 0 6px #e9b949,0 0 0 8px #7fd0f0,0 6px 24px -4px rgba(233,185,73,.7),0 0 22px 2px rgba(127,208,240,.55);}
-  50%{box-shadow:0 0 0 3px #fff,0 0 0 6px #f4cf6a,0 0 0 8px #a6e2f7,0 6px 30px -2px rgba(244,207,106,.95),0 0 32px 6px rgba(166,226,247,.8);}
-}
-.gov-avatar.frame-meteor{ /* ☄️ Campeón de Meteoro — fire */
-  border-color:#ffd0a8;
-  box-shadow:0 0 0 3px #fff,0 0 0 6px #ff8a3c,
-             0 6px 22px -4px rgba(255,138,60,.7),0 0 20px 2px rgba(255,120,40,.5);
-  animation:frMeteor 3.2s ease-in-out infinite;
-}
-@keyframes frMeteor{
-  0%,100%{box-shadow:0 0 0 3px #fff,0 0 0 6px #ff8a3c,0 6px 22px -4px rgba(255,138,60,.7),0 0 20px 2px rgba(255,120,40,.5);}
-  50%{box-shadow:0 0 0 3px #fff,0 0 0 6px #ffa45c,0 6px 28px -2px rgba(255,164,92,.95),0 0 30px 6px rgba(255,150,70,.75);}
-}
-.gov-avatar.frame-svs{ /* ⚔️ SvS MVP — steel + crimson */
-  border-color:#ffc9c9;
-  box-shadow:0 0 0 3px #fff,0 0 0 6px #c0392b,0 0 0 8px #8895a3,
-             0 6px 22px -4px rgba(192,57,43,.6),0 0 18px 2px rgba(140,149,163,.5);
-}
-.gov-avatar.frame-perf{ /* ⭐ Perfecto — violet star */
-  border-color:#e6d4ff;
-  box-shadow:0 0 0 3px #fff,0 0 0 6px #7b5cd6,
-             0 6px 22px -4px rgba(123,92,214,.6),0 0 18px 2px rgba(180,150,255,.5);
-}
-.gov-avatar.frame-bear{ /* 🐻 Cazador — earthy brown/green */
-  border-color:#e2d3b0;
-  box-shadow:0 0 0 3px #fff,0 0 0 6px #7a5230,0 0 0 8px #5a7d4a,
-             0 6px 20px -4px rgba(122,82,48,.6);
-}
-.frame-emblem{
-  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-  font-size:1.25rem;line-height:1;z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));
-  pointer-events:none;
-}
-/* Frame picker (own profile) */
-.frame-picker{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 20px 4px;}
-.frame-picker .fp-chip{border:1.5px solid var(--panel-edge);background:#fff;border-radius:11px;padding:6px 11px;font-family:'Fredoka';font-weight:600;font-size:.76rem;cursor:pointer;color:var(--ink-soft);}
-.frame-picker .fp-chip.active{border-color:var(--fire);background:#fff2e8;color:var(--fire);}
-.frame-picker .fp-title{width:100%;text-align:center;font-size:.72rem;color:var(--muted);font-family:'Fredoka';margin-bottom:2px;}
 .gov-name-block{text-align:center;margin-top:10px;padding:0 4px;}
 .gov-name-block h1{font-size:1.3rem;line-height:1.15;}
 .gov-name-block .gid{text-align:center;}
@@ -377,23 +330,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
       <button class="btn btn-ghost btn-sm" id="authBack">← Back</button>
     </div>
     <div class="auth-switch"><span id="authSwitchTxt">Already have a page?</span> <button id="authSwitch">Sign in instead</button></div>
-    <div id="forgotWrap" style="text-align:center;margin-top:10px;display:none;">
-      <button id="forgotBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.78rem;font-family:'Fredoka';cursor:pointer;text-decoration:underline;">Forgot your password?</button>
-    </div>
-    <div class="ok-msg" id="resetOk" style="margin-top:8px;"></div>
-  </div>
-</div>
-
-<!-- PROFILE PICKER (multi-account, grouped by state) -->
-<div id="picker" class="hidden">
-  <div class="form-wrap">
-    <h2 data-i18n="pick.title">Your characters</h2>
-    <p class="form-sub" data-i18n="pick.sub">Pick a character to manage, or create a new one.</p>
-    <button class="btn btn-fire" id="pickerNewBtn" style="width:100%;margin-bottom:16px;">➕ <span data-i18n="pick.new">Create new character</span></button>
-    <div id="pickerList"></div>
-    <div style="text-align:center;margin-top:16px;">
-      <button class="btn btn-ghost btn-sm" id="pickerSignOut" data-i18n="pick.signout">Sign out</button>
-    </div>
   </div>
 </div>
 
@@ -418,10 +354,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
       </div>
     </div>
 
-    <div class="field" id="fStateWrap" style="display:none;"><label data-i18n="f.state">State / Server <span class="req">*</span></label>
-      <select id="fState"></select>
-      <div class="hint" data-i18n="f.state.hint">Which state is this character in?</div>
-    </div>
     <div class="field"><label data-i18n="f.gid">Governor ID <span class="req">*</span></label>
       <input type="text" id="fGid" placeholder="9-digit ID" maxlength="12" inputmode="numeric">
       <div class="hint" data-i18n="f.gid.hint">Required. Leaders use this to verify you're in the alliance.</div>
@@ -503,7 +435,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
     </div>
     <!-- Stats row below hero -->
     <div class="meta" id="vMeta" style="padding:0 20px 16px;"></div>
-    <div class="frame-picker" id="framePicker" style="display:none;"></div>
     <div id="vBioWrap" class="hidden"><div class="section-t" data-i18n="sec.about">About me</div><div class="bio-text" id="vBio"></div></div>
     <div id="vHelpWrap" class="hidden">
       <div class="help-box" style="margin:14px 24px 0;">
@@ -524,7 +455,6 @@ input,textarea,select{font-family:'Inter',sans-serif;}
     <div id="premiumUpsell" style="display:none;margin-top:18px;"></div>
     <div class="foot-actions">
       <button class="btn btn-fire btn-sm" id="editBtn2" data-i18n="edit.long">Edit my page</button>
-      <button class="btn btn-ghost btn-sm" id="switchCharBtn" style="display:none;">🔄 <span data-i18n="pick.switch">My characters</span></button>
       <button class="btn btn-ghost btn-sm" id="browseBtnView">👥 <span data-i18n="dir.browse">Browse players</span></button>
       <button class="btn btn-ghost btn-sm" id="signOutView">Sign out</button>
     </div>
@@ -577,34 +507,10 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 <div class="toast" id="toast"></div>
 
 <nav class="botnav">
-  <a href="./phoenix-state.html" id="navHomeBtn"><span class="nav-ic">🌍</span><span data-i18n="nav.states">States</span></a>
-  <a href="./phoenix-profile.html" class="active"><span class="nav-ic">👤</span><span data-i18n="nav.me">My characters</span></a>
+  <a href="./phoenix-state.html"><span class="nav-ic">🌍</span>3139</a>
+  <a href="./phoenix-alliance.html" id="navAllianceBtn"><span class="nav-ic" id="navAllianceIc">🏰</span><span id="navAllianceTag">Alliance</span></a>
+  <a href="./phoenix-profile.html" class="active"><span class="nav-ic">🚪</span>Entrar</a>
 </nav>
-
-<!-- 🍪 THE CAVE — only appears for the two of us -->
-<button id="caveBtn" style="display:none;position:fixed;bottom:78px;right:16px;z-index:60;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(180deg,#8a5a3a,#6a3f28);box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:1.5rem;cursor:pointer;">🍪<span id="caveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#ff3b3b;border:2px solid #1a1009;border-radius:50%;"></span></button>
-<style>
-@keyframes caveNudge{0%,100%{transform:translateY(0) rotate(0);}25%{transform:translateY(-6px) rotate(-8deg);}75%{transform:translateY(-3px) rotate(8deg);}}
-#caveBtn.has-new{animation:caveNudge 1.1s ease-in-out infinite;}
-</style>
-
-<div id="cavePanel" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(20,12,8,.75);backdrop-filter:blur(4px);align-items:flex-end;">
-  <div style="background:linear-gradient(180deg,#2a1c14,#1a1009);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;border:1px solid #4a3020;max-height:85vh;display:flex;flex-direction:column;">
-    <div style="padding:16px 18px;border-bottom:1px solid #3a2818;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:1.4rem;">🍪</span>
-      <div style="flex:1;">
-        <div style="font-family:'Baloo 2',cursive;font-weight:800;color:#ffd9a0;font-size:1.05rem;">Our cave</div>
-        <div style="font-size:.72rem;color:#b0876a;">Just us. Nobody else can see this. 🤍</div>
-      </div>
-      <button id="caveClose" style="background:none;border:none;color:#b0876a;font-size:1.5rem;cursor:pointer;">×</button>
-    </div>
-    <div id="caveMessages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;"></div>
-    <div style="padding:12px 16px;border-top:1px solid #3a2818;display:flex;gap:8px;">
-      <input id="caveInput" placeholder="Leave a message…" style="flex:1;background:#1a1009;border:1.5px solid #4a3020;border-radius:12px;color:#ffe8d0;font-family:Inter,sans-serif;font-size:.9rem;padding:11px 13px;outline:none;">
-      <button id="caveSend" style="background:linear-gradient(180deg,#c98a5a,#a06840);border:none;border-radius:12px;color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;padding:0 18px;cursor:pointer;">Send</button>
-    </div>
-  </div>
-</div>
 
 <script>
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
@@ -612,8 +518,8 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 const I18N={
-  en:{name:"English",dir:"ltr",t:{"empty.title":"Your page is waiting","empty.l1":"A leader from your alliance invited you to create your Phoenix page.","empty.l2":"You decide what to show. It's yours.","empty.cta":"Create my page","signin.link":"Already have a page? Sign in","dir.browse":"Browse player pages","dir.title":"PXR Players","back":"Back","nav.profile":"Profile","form.title":"My page","form.sub":"Fill in what you want. Anything left blank won't be shown.","f.photo":"Profile photo","f.photo.hint":"Or leave blank — we'll use your initials.","f.gid":"Governor ID","f.gid.hint":"Required. Leaders use this to verify you're in the alliance.","f.name":"In-game name","f.avatar":"Initials","f.lang":"Language(s)","f.country":"Country / TZ","f.alliance":"Alliance","f.alliance.hint":"Pending until a leader confirms.","f.bio":"About me","help.label":"Available to help with","sec.power":"Power (optional)","sec.about":"About me","sec.badges":"Badges","power.t":"Show my power","power.s":"Hidden by default.","save":"Save my page","cancel":"Cancel","edit":"Edit","edit.long":"Edit my page","show":"Show","hide":"Hide","badges.note":"Special badges are awarded by leaders (R5 + R4) — they recognize who you are, not your numbers.","pending":"pending confirmation","pick.title":"Your characters","pick.sub":"Pick a character to manage, or create a new one.","pick.new":"Create new character","pick.signout":"Sign out","pick.server":"Server","pick.switch":"My characters","f.state":"State / Server","f.state.hint":"Which state is this character in?","nav.states":"States","nav.me":"My characters"}},
-  es:{name:"Español",dir:"ltr",t:{"empty.title":"Tu página te espera","empty.l1":"Un líder de tu alianza te invitó a crear tu página en Phoenix.","empty.l2":"Tú decides qué mostrar. Es tuya.","empty.cta":"Crear mi página","signin.link":"¿Ya tienes página? Inicia sesión","dir.browse":"Ver páginas de jugadores","dir.title":"Jugadores PXR","back":"Volver","nav.profile":"Perfil","form.title":"Mi página","form.sub":"Rellena lo que quieras. Lo que dejes vacío no se muestra.","f.photo":"Foto de perfil","f.photo.hint":"O déjalo vacío — usaremos tus iniciales.","f.gid":"ID de gobernador","f.gid.hint":"Obligatorio. Los líderes lo usan para verificarte.","f.name":"Nombre en el juego","f.avatar":"Iniciales","f.lang":"Idioma(s)","f.country":"País / Zona horaria","f.alliance":"Alianza","f.alliance.hint":"Pendiente hasta que un líder confirme.","f.bio":"Sobre mí","help.label":"Disponible para ayudar con","sec.power":"Poder (opcional)","sec.about":"Sobre mí","sec.badges":"Insignias","power.t":"Mostrar mi poder","power.s":"Oculto por defecto.","save":"Guardar mi página","cancel":"Cancelar","edit":"Editar","edit.long":"Editar mi página","show":"Mostrar","hide":"Ocultar","badges.note":"Las insignias especiales las otorgan los líderes (R5 + R4).","pending":"pendiente de confirmar","pick.title":"Tus personajes","pick.sub":"Elige un personaje para gestionar, o crea uno nuevo.","pick.new":"Crear nuevo personaje","pick.signout":"Cerrar sesión","pick.server":"Servidor","pick.switch":"Mis personajes","f.state":"Estado / Servidor","f.state.hint":"¿En qué estado está este personaje?","nav.states":"Estados","nav.me":"Mis personajes"}},
+  en:{name:"English",dir:"ltr",t:{"empty.title":"Your page is waiting","empty.l1":"A leader from your alliance invited you to create your Phoenix page.","empty.l2":"You decide what to show. It's yours.","empty.cta":"Create my page","signin.link":"Already have a page? Sign in","dir.browse":"Browse player pages","dir.title":"PXR Players","back":"Back","nav.profile":"Profile","form.title":"My page","form.sub":"Fill in what you want. Anything left blank won't be shown.","f.photo":"Profile photo","f.photo.hint":"Or leave blank — we'll use your initials.","f.gid":"Governor ID","f.gid.hint":"Required. Leaders use this to verify you're in the alliance.","f.name":"In-game name","f.avatar":"Initials","f.lang":"Language(s)","f.country":"Country / TZ","f.alliance":"Alliance","f.alliance.hint":"Pending until a leader confirms.","f.bio":"About me","help.label":"Available to help with","sec.power":"Power (optional)","sec.about":"About me","sec.badges":"Badges","power.t":"Show my power","power.s":"Hidden by default.","save":"Save my page","cancel":"Cancel","edit":"Edit","edit.long":"Edit my page","show":"Show","hide":"Hide","badges.note":"Special badges are awarded by leaders (R5 + R4) — they recognize who you are, not your numbers.","pending":"pending confirmation"}},
+  es:{name:"Español",dir:"ltr",t:{"empty.title":"Tu página te espera","empty.l1":"Un líder de tu alianza te invitó a crear tu página en Phoenix.","empty.l2":"Tú decides qué mostrar. Es tuya.","empty.cta":"Crear mi página","signin.link":"¿Ya tienes página? Inicia sesión","dir.browse":"Ver páginas de jugadores","dir.title":"Jugadores PXR","back":"Volver","nav.profile":"Perfil","form.title":"Mi página","form.sub":"Rellena lo que quieras. Lo que dejes vacío no se muestra.","f.photo":"Foto de perfil","f.photo.hint":"O déjalo vacío — usaremos tus iniciales.","f.gid":"ID de gobernador","f.gid.hint":"Obligatorio. Los líderes lo usan para verificarte.","f.name":"Nombre en el juego","f.avatar":"Iniciales","f.lang":"Idioma(s)","f.country":"País / Zona horaria","f.alliance":"Alianza","f.alliance.hint":"Pendiente hasta que un líder confirme.","f.bio":"Sobre mí","help.label":"Disponible para ayudar con","sec.power":"Poder (opcional)","sec.about":"Sobre mí","sec.badges":"Insignias","power.t":"Mostrar mi poder","power.s":"Oculto por defecto.","save":"Guardar mi página","cancel":"Cancelar","edit":"Editar","edit.long":"Editar mi página","show":"Mostrar","hide":"Ocultar","badges.note":"Las insignias especiales las otorgan los líderes (R5 + R4).","pending":"pendiente de confirmar"}},
   ko:{name:"한국어",dir:"ltr",t:{"empty.title":"당신의 페이지가 기다립니다","empty.cta":"내 페이지 만들기","signin.link":"이미 페이지가 있나요? 로그인","dir.browse":"플레이어 페이지 보기","dir.title":"PXR 플레이어","back":"뒤로","nav.profile":"프로필","form.title":"내 페이지","form.sub":"원하는 것만 입력하세요.","f.photo":"프로필 사진","f.photo.hint":"비워두면 이니셜을 사용합니다.","f.gid":"군주 ID","f.gid.hint":"필수.","f.name":"게임 내 이름","f.avatar":"이니셜","f.lang":"언어","f.country":"국가 / 시간대","f.alliance":"동맹","f.alliance.hint":"리더 확인까지 보류.","f.bio":"소개","help.label":"도와줄 수 있는 것","sec.power":"전투력","sec.about":"소개","sec.badges":"배지","power.t":"전투력 표시","power.s":"기본은 숨김.","save":"저장","cancel":"취소","edit":"편집","edit.long":"페이지 편집","show":"표시","hide":"숨기기","badges.note":"특별 배지는 리더(R5+R4)가 수여합니다.","pending":"확인 대기 중"}},
   ja:{name:"日本語",dir:"ltr",t:{"empty.title":"あなたのページが待っています","empty.cta":"ページを作成","signin.link":"すでにページがありますか？","dir.browse":"プレイヤーページを見る","dir.title":"PXRプレイヤー","back":"戻る","nav.profile":"プロフィール","form.title":"マイページ","form.sub":"必要な項目だけ入力。","f.photo":"プロフィール写真","f.photo.hint":"空欄なら頭文字を使用。","f.gid":"総督ID","f.gid.hint":"必須。","f.name":"ゲーム内の名前","f.avatar":"頭文字","f.lang":"言語","f.country":"国 / TZ","f.alliance":"同盟","f.alliance.hint":"リーダーが確認するまで保留。","f.bio":"自己紹介","help.label":"手伝えること","sec.power":"戦力","sec.about":"自己紹介","sec.badges":"バッジ","power.t":"戦力を表示","power.s":"既定は非表示。","save":"保存","cancel":"キャンセル","edit":"編集","edit.long":"ページを編集","show":"表示","hide":"非表示","badges.note":"特別バッジはリーダー（R5+R4）が授与。","pending":"確認待ち"}},
   "zh-Hant":{name:"繁體中文",dir:"ltr",t:{"empty.title":"你的頁面在等你","empty.cta":"建立我的頁面","signin.link":"已有頁面？登入","dir.browse":"瀏覽玩家頁面","dir.title":"PXR玩家","back":"返回","nav.profile":"個人頁","form.title":"我的頁面","form.sub":"填寫你想要的。","f.photo":"個人照片","f.photo.hint":"留空則使用縮寫。","f.gid":"領主ID","f.gid.hint":"必填。","f.name":"遊戲內名稱","f.avatar":"縮寫","f.lang":"語言","f.country":"國家 / 時區","f.alliance":"聯盟","f.alliance.hint":"待領袖確認。","f.bio":"關於我","help.label":"可以幫忙的事","sec.power":"戰力","sec.about":"關於我","sec.badges":"徽章","power.t":"顯示我的戰力","power.s":"預設隱藏。","save":"儲存","cancel":"取消","edit":"編輯","edit.long":"編輯我的頁面","show":"顯示","hide":"隱藏","badges.note":"特殊徽章由領袖（R5+R4）授予。","pending":"待確認"}},
@@ -631,41 +537,16 @@ const I18N={
 const WEEDS_TR={es:"Somos como la maleza de la tierra. Siempre creciendo. Bellos para algunos, feos para otros. Un regalo para muchos, una maldición para pocos. Nutrientes cuando hacen falta, y veneno a veces.",ko:"우리는 대지의 잡초와 같다. 늘 자라난다. 누군가에겐 아름답고, 누군가에겐 보기 싫다.",ja:"我々は大地の雑草のようなもの。常に育ち続ける。ある者には美しく、ある者には醜い。","zh-Hant":"我們如同大地的野草。永遠在生長。對某些人是美，對某些人是醜。","zh-Hans":"我们如同大地的野草。永远在生长。对某些人是美，对某些人是丑。",de:"Wie das Unkraut der Erde sind wir. Immer wachsend. Für manche schön, für andere hässlich.",fr:"Nous sommes comme les mauvaises herbes de la terre. Toujours à croître.",ar:"نحن كأعشاب الأرض. ننمو دائمًا. جميلون لدى البعض، قبيحون لدى آخرين.",ru:"Мы как сорняки земли. Всегда растём. Для одних красивы, для других уродливы.",tr:"Biz toprağın yabani otları gibiyiz. Hep büyürüz. Kimine güzel, kimine çirkin.",it:"Siamo come le erbacce della terra. Sempre in crescita. Belle per alcuni, brutte per altri.",pl:"Jesteśmy jak chwasty ziemi. Wciąż rosnące. Dla jednych piękne, dla innych brzydkie.",pt:"Somos como o mato da terra. Sempre crescendo. Belos para uns, feios para outros."};
 
 let LANG='en',currentUser=null,currentProfile=null,prevState='empty';
-let myProfiles=[]; // all profiles owned by this user (across states)
-let creatingNew=false; // true when creating an additional profile
 let alliances=[],badges=[],playerBadges=[],powerOn=false,signupMode=true;
-let allStates=['3139']; // populated from Supabase states table
 const $=s=>document.querySelector(s);
 function T(k){return I18N[LANG]?.t[k]||I18N.en.t[k]||k;}
 
-// ── GLOBAL PROFILE HUB ────────────────────────────────────────
-// This page is the global login/profile center, not tied to any state.
-// Each character carries its own state_id. PAGE_STATE is only a default
-// pre-selection when creating a new character (taken from ?s= if present).
-function getState(){var q=new URLSearchParams(location.search).get('s');if(q&&/^\d{3,5}$/.test(q)){try{localStorage.setItem('phx_state',q);}catch(e){}return q;}try{var ls=localStorage.getItem('phx_state');if(ls&&/^\d{3,5}$/.test(ls))return ls;}catch(e){}return '3139';}
-const PAGE_STATE=getState();
-// Keep the "States" nav button on the current state, not always 3139
-(function(){const nb=document.getElementById('navHomeBtn');if(nb)nb.href=(PAGE_STATE==='3139'?'phoenix-state.html':'phoenix-state.html?s='+PAGE_STATE);})();
-// Build a link to a state's public pages, carrying the state in the URL.
-// One set of files; state travels as ?s=. (Pretty URLs later = change here only.)
-function stateBasePath(stateId){
-  // base = the folder this profile lives in (everything up to the filename)
-  const base=location.pathname.replace(/[^/]*$/,'');
-  return {base, s:String(stateId)};
-}
-function statePublicUrl(stateId, page){
-  const s=String(stateId);
-  const base=location.pathname.replace(/[^/]*$/,'');
-  return s==='3139' ? base+page : base+page+(page.includes('?')?'&':'?')+'s='+s;
-}
-
 // ── SHOW ──────────────────────────────────────────────────────
-const ALL_STATES=['loading','empty','auth','picker','edit','view','directory','pubview'];
+const ALL_STATES=['loading','empty','auth','edit','view','directory','pubview'];
 function show(s){
   if(!['loading'].includes(s)&&!['loading'].includes(prevState)) prevState=s==='pubview'||s==='directory'?prevState:s;
   ALL_STATES.forEach(x=>{const el=$('#'+x);if(el)el.classList.toggle('hidden',x!==s);});
   window.scrollTo({top:0});
-  if(typeof maybeShowCave==='function') maybeShowCave(); // keep the cave button visible across screens
 }
 
 // ── TOAST ─────────────────────────────────────────────────────
@@ -764,49 +645,12 @@ function setAuthMode(signup){
   $('#authSubmit').textContent=signup?'Create account':'Sign in';
   $('#authSwitchTxt').textContent=signup?'Already have a page?':"Don't have a page yet?";
   $('#authSwitch').textContent=signup?'Sign in instead':'Create one';
-  updateForgotVisibility();
   $('#authErr').classList.remove('show');$('#authOk').classList.remove('show');
 }
 $('#createBtn').onclick=()=>{setAuthMode(true);show('auth');};
 $('#loginBtn').onclick=()=>{setAuthMode(false);show('auth');};
 $('#authBack').onclick=()=>show('empty');
-// Picker buttons
-if($('#pickerNewBtn'))$('#pickerNewBtn').onclick=()=>{
-  creatingNew=true; currentProfile=null;
-  // reset form for a fresh profile
-  ['#fPhotoUrl','#fGid','#fName','#fAvatar','#fLang','#fCountry','#fBio','#fHelp','#fNickSuggest','#fBannerUrl','#fGal1','#fGal2','#fGal3'].forEach(s=>{const el=$(s);if(el)el.value='';});
-  const sw=$('#fStateWrap'); if(sw)sw.style.display=''; // show state picker for new char
-  renderStateOptions(); populateAlliances(); show('edit'); applyLang();
-};
-if($('#pickerSignOut'))$('#pickerSignOut').onclick=()=>signOut();
 $('#authSwitch').onclick=()=>setAuthMode(!signupMode);
-
-// Show/hide forgot password link — only in sign-in mode
-function updateForgotVisibility(){
-  const wrap=$('#forgotWrap');
-  if(wrap) wrap.style.display=signupMode?'none':'block';
-}
-
-$('#forgotBtn').onclick=async()=>{
-  const email=$('#authEmail').value.trim();
-  const okEl=$('#resetOk');
-  okEl.textContent='';
-  okEl.classList.remove('show');
-  if(!email){
-    okEl.textContent='✉️ Enter your email above first, then click "Forgot your password?"';
-    okEl.classList.add('show');
-    return;
-  }
-  const{error}=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo: window.location.href
-  });
-  if(error){
-    okEl.textContent='❌ '+error.message;
-  } else {
-    okEl.textContent='✉️ Password reset email sent! Check your inbox.';
-  }
-  okEl.classList.add('show');
-};
 
 $('#authSubmit').addEventListener('click',async()=>{
   const email=$('#authEmail').value.trim(),pwd=$('#authPwd').value;
@@ -819,99 +663,40 @@ $('#authSubmit').addEventListener('click',async()=>{
     if(signupMode){
       const{data,error}=await sb.auth.signUp({email,password:pwd});
       if(error){errEl.textContent=error.message;errEl.classList.add('show');btn.textContent='Create account';btn.disabled=false;return;}
-      if(data.session){currentUser=data.user;await loadProfile();maybeShowCave();}
+      if(data.session){currentUser=data.user;await loadProfile();}
       else{okEl.textContent='✉️ Check your email to confirm your account, then come back and sign in.';okEl.classList.add('show');btn.textContent='Create account';btn.disabled=false;}
     }else{
       const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
       if(error){errEl.textContent=error.message;errEl.classList.add('show');btn.textContent='Sign in';btn.disabled=false;return;}
-      currentUser=data.user;await loadProfile();maybeShowCave();
+      currentUser=data.user;await loadProfile();
     }
   }catch(e){errEl.textContent='Error: '+e.message;errEl.classList.add('show');}
   btn.disabled=false;
 });
 
-// ── LOAD PROFILE (multi-profile, resilient) ───────────────────
+// ── LOAD PROFILE (FIX: maybeSingle + timeout) ─────────────────
 async function loadProfile(){
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),25000));
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
   try{
-    // Load ALL profiles owned by this user, across every state
-    const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false});
+    // Use limit(1) + array instead of maybeSingle() to survive duplicate rows
+    const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false}).limit(1);
     const{data:rows,error}=await Promise.race([query,timeout]);
     if(error){throw error;}
-    myProfiles=rows||[];
-
-    if(myProfiles.length===0){
-      // No profiles yet → go straight to creating the first one
-      currentProfile=null; creatingNew=true;
-      renderStateOptions(); populateAlliances(); show('edit');
-    } else {
-      // Always show the character picker (the control center for all accounts)
-      renderPicker(); show('picker');
-    }
+    const data=rows&&rows.length?rows[0]:null;
+    if(data){
+      currentProfile=data;
+      try{
+        const{data:pb}=await sb.from('player_badges').select('badge_id').eq('player_id',data.id);
+        playerBadges=pb?pb.map(p=>p.badge_id):[];
+      }catch(badgeErr){console.warn('Badges load failed (non-critical):',badgeErr);playerBadges=[];}
+      try{ renderView(data); }catch(rvErr){ console.error('renderView failed:',rvErr); }
+      show('view');
+    }else{populateAlliances();show('edit');}
   }catch(e){
     console.error('Profile load error:',e);
-    // A late timeout or a transient error must never nag the user if anything
-    // is already on screen or in memory. Only show it on a truly blank first load.
-    const onResultScreen = !$('#picker').classList.contains('hidden')
-                        || !$('#view').classList.contains('hidden')
-                        || !$('#edit').classList.contains('hidden');
-    const isTimeout = (e&&(e.message==='timeout'));
-    if(!onResultScreen && !isTimeout && myProfiles.length===0 && !currentProfile && !currentUser){
-      toast('Connection error. Check Supabase settings.',true);
-      show('empty');
-    }
+    // Only show error if we have no profile to display
+    if(!currentProfile){toast('Connection error. Check Supabase settings.',true);show('empty');}
   }
-  applyLang();
-}
-
-// Render the character picker, grouped by state (mirrors the in-game screen)
-function renderPicker(){
-  const list=$('#pickerList'); if(!list)return;
-  list.innerHTML='';
-  // group profiles by state_id
-  const byState={};
-  myProfiles.forEach(p=>{const s=p.state_id||'—';(byState[s]=byState[s]||[]).push(p);});
-  const states=Object.keys(byState).sort();
-  states.forEach(st=>{
-    const head=document.createElement('div');
-    head.style.cssText='font-family:Fredoka;font-weight:600;font-size:.82rem;color:var(--ink-soft);background:var(--ice-soft,#e8f2fb);border-radius:10px;padding:7px 12px;margin:14px 0 8px;';
-    head.textContent=`⭐ ${T('pick.server')||'Server'} #${st}`;
-    list.appendChild(head);
-    byState[st].forEach(p=>{
-      const a=alliances.find(x=>x.id===p.alliance_id);
-      const lbl=a?`[${a.tag}] ${p.name}`:p.name;
-      const av=isUrl(p.avatar)?`<img src="${p.avatar}" style="width:46px;height:46px;border-radius:11px;object-fit:cover;flex:none;">`:`<div style="width:46px;height:46px;border-radius:11px;background:var(--acc,#ff7a2e);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:1.05rem;flex:none;">${(p.avatar||p.name||'?').slice(0,2).toUpperCase()}</div>`;
-      const conf=p.alliance_confirmed?'🔥':'⏳';
-      const card=document.createElement('div');
-      card.style.cssText='display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--panel-edge);border-radius:14px;padding:12px 14px;margin-bottom:9px;box-shadow:0 2px 0 var(--panel-edge);';
-      card.innerHTML=`${av}
-        <div style="flex:1;min-width:0;cursor:pointer;" class="pk-open">
-          <div style="font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lbl}</div>
-          <div style="font-size:.74rem;color:var(--muted);">${conf} ${p.governor_id?'ID: '+p.governor_id:''}</div>
-        </div>
-        <button class="pk-goto" title="Go to state ${st}" style="flex:none;background:var(--acc,#ff7a2e);color:#fff;border:none;border-radius:10px;padding:8px 11px;font-family:Fredoka;font-weight:600;font-size:.78rem;cursor:pointer;">🗺️ #${st}</button>
-        <div class="pk-open" style="color:var(--acc,#ff7a2e);font-size:1.2rem;cursor:pointer;">›</div>`;
-      card.querySelectorAll('.pk-open').forEach(el=>el.onclick=()=>selectProfile(p.id));
-      const goto=card.querySelector('.pk-goto');
-      if(goto)goto.onclick=(e)=>{e.stopPropagation();const a2=alliances.find(x=>x.id===p.alliance_id);location.href = a2 ? statePublicUrl(p.state_id,`phoenix-alliance.html?tag=${a2.tag}`) : statePublicUrl(p.state_id,'phoenix-state.html');};
-      list.appendChild(card);
-    });
-  });
-}
-
-// Select a specific profile to manage/view
-async function selectProfile(profileId){
-  const data=myProfiles.find(p=>p.id===profileId);
-  if(!data)return;
-  currentProfile=data; creatingNew=false;
-  try{
-    const{data:pb}=await sb.from('player_badges').select('badge_id').eq('player_id',data.id);
-    playerBadges=pb?pb.map(p=>p.badge_id):[];
-  }catch(badgeErr){console.warn('Badges load failed:',badgeErr);playerBadges=[];}
-  try{ renderView(data); }catch(rvErr){ console.error('renderView failed:',rvErr); }
-  // Show "My characters" button only if the user has more than one profile
-  const sw=$('#switchCharBtn'); if(sw)sw.style.display=myProfiles.length>1?'':'none';
-  show('view');
   applyLang();
 }
 
@@ -920,25 +705,11 @@ async function selectProfile(profileId){
 const INVITE_TAG=new URLSearchParams(location.search).get('invite');
 const isViewMode=!!new URLSearchParams(location.search).get('view');
 
-// Populate the state selector when creating a new character
-function renderStateOptions(){
-  const sel=$('#fState'); if(!sel)return;
-  sel.innerHTML='';
-  const states=allStates.length?allStates:['3139'];
-  states.forEach(st=>{const o=document.createElement('option');o.value=st;o.textContent=`State #${st}`;sel.appendChild(o);});
-  // default to the state of the page you're on
-  if(states.includes(PAGE_STATE))sel.value=PAGE_STATE;
-  sel.onchange=()=>populateAlliances();
-}
-
 function populateAlliances(){
   const sel=$('#fAlliance');
   sel.innerHTML=`<option value="">— ${T('f.alliance')} —</option>`;
-  // Filter alliances by the chosen state (new char) or the profile's state (editing)
-  const targetState=creatingNew ? ($('#fState')?.value||PAGE_STATE) : (currentProfile?.state_id||PAGE_STATE);
-  alliances.filter(a=>!a.state_id||String(a.state_id)===String(targetState)).forEach(a=>{
-    const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name}`;sel.appendChild(o);
-  });
+  alliances.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name}`;sel.appendChild(o);});
+  // Preselect from existing profile, or from invite link
   if(currentProfile?.alliance_id){sel.value=currentProfile.alliance_id;}
   else if(INVITE_TAG){
     const inv=alliances.find(a=>a.tag.toUpperCase()===INVITE_TAG.toUpperCase());
@@ -970,13 +741,21 @@ function openEditor(){
   $('#fGal2').value=gal[1]||'';
   $('#fGal3').value=gal[2]||'';
   powerOn=false;
-  const sw=$('#fStateWrap'); if(sw)sw.style.display='none'; // state is fixed when editing
+  
+  
+  
   updatePreview();
   populateAlliances();
   show('edit');
 }
 
 // ── SAVE ──────────────────────────────────────────────────────
+function normGid(v){
+  let s=String(v||'').trim().replace(/\s+/g,'');
+  if(/^\d+\.0$/.test(s))s=s.slice(0,-2);
+  s=s.replace(/^0+(?=\d)/,'');
+  return s;
+}
 $('#saveBtn').addEventListener('click',async()=>{
   const gid=$('#fGid').value.trim(),name=$('#fName').value.trim();
   const errEl=$('#editErr');errEl.classList.remove('show');
@@ -985,89 +764,42 @@ $('#saveBtn').addEventListener('click',async()=>{
   const photoUrl=$('#fPhotoUrl').value.trim();
   const ini=($('#fAvatar').value.trim()||name.slice(0,2)).toUpperCase();
   const avatarVal=photoUrl||ini;
-  const newState=creatingNew ? ($('#fState')?.value||PAGE_STATE) : ((currentProfile?.state_id)||PAGE_STATE);
-  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:newState,bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
+  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:'3139',bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
   const btn=$('#saveBtn');btn.textContent='...';btn.disabled=true;
-  // Update by THIS profile's id (not owner) so other profiles are untouched. Insert if new.
-  const{error}=(currentProfile&&!creatingNew)?await sb.from('players').update(pd).eq('id',currentProfile.id):await sb.from('players').insert(pd);
+  let error;
+  if(currentProfile){
+    ({error}=await sb.from('players').update(pd).eq('owner',currentUser.id));
+  }else{
+    // First time this account saves a page. If a leader already added this
+    // Governor ID manually to their roster (owner still empty), claim that
+    // row instead of creating a duplicate — this keeps the R4/R5 roster and
+    // the player's own page in sync as the same person, not two entries.
+    const normalizedGid=normGid(gid);
+    const{data:unclaimed}=await sb.from('players').select('id,governor_id,owner').is('owner',null);
+    const match=(unclaimed||[]).find(m=>normGid(m.governor_id)===normalizedGid);
+    if(match){
+      ({error}=await sb.from('players').update(pd).eq('id',match.id));
+    }else{
+      ({error}=await sb.from('players').insert(pd));
+    }
+  }
   btn.textContent=T('save');btn.disabled=false;
   if(error){errEl.textContent='Error: '+error.message;errEl.classList.add('show');}
   else{
     toast('Saved ✓');
-    creatingNew=false;
     await loadProfile();
     // If they picked an alliance, offer a quick jump to that alliance page
     const allianceId=$('#fAlliance').value;
     if(allianceId){
       const a=alliances.find(x=>x.id===allianceId);
-      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=statePublicUrl(newState,`phoenix-alliance.html?tag=${a.tag}`);},400);}
+      if(a){setTimeout(()=>{if(confirm(`Profile saved! View [${a.tag}] ${a.name} page?`))location.href=`phoenix-alliance.html?tag=${a.tag}`;},400);}
     }
   }
 });
 
-// ── LEGEND FRAME (marco) — show a decorative frame + emblem when the
-//    player holds a badge that carries a `frame` value (globe > meteor). ──
-// ── PROFILE FRAMES (marcos) ───────────────────────────────────
-// Uses the platform's frame system: players.unlocked_frames (array of ids)
-// + players.active_frame (the one the player chose to show).
-const FRAME_EMBLEM={legend:'👑',meteor:'☄️',svs:'⚔️',perf:'⭐',bear:'🐻'};
-const FRAME_LABEL={legend:'👑 Leyenda',meteor:'☄️ Meteoro',svs:'⚔️ SvS MVP',perf:'⭐ Perfecto',bear:'🐻 Cazador'};
-const FRAME_PRIORITY=['legend','meteor','svs','perf','bear'];
-function pickFrame(p){
-  const unlocked=Array.isArray(p.unlocked_frames)?p.unlocked_frames:[];
-  if(!unlocked.length) return null;
-  if(p.active_frame && unlocked.includes(p.active_frame)) return p.active_frame; // honor player's choice
-  return FRAME_PRIORITY.find(f=>unlocked.includes(f))||null;                     // else highest tier
-}
-function applyFrame(avatarEl, p){
-  if(!avatarEl) return;
-  FRAME_PRIORITY.forEach(f=>avatarEl.classList.remove('frame-'+f));
-  const parent=avatarEl.parentElement;
-  if(parent){ const old=parent.querySelector('.frame-emblem'); if(old) old.remove(); }
-  const fr=pickFrame(p);
-  if(!fr) return;
-  avatarEl.classList.add('frame-'+fr);
-  if(parent){
-    parent.style.position='relative';
-    const em=document.createElement('div');
-    em.className='frame-emblem';
-    em.textContent=FRAME_EMBLEM[fr]||'';
-    parent.appendChild(em);
-  }
-}
-// Frame picker (own profile only): lets the player choose which unlocked frame to display.
-function renderFramePicker(p){
-  const box=$('#framePicker'); if(!box) return;
-  const unlocked=Array.isArray(p.unlocked_frames)?p.unlocked_frames:[];
-  if(unlocked.length<2){ box.style.display='none'; box.innerHTML=''; return; } // nothing to choose
-  const current=pickFrame(p);
-  box.style.display='flex';
-  let html='<div class="fp-title" data-i18n="frame.pick">Choose your frame</div>';
-  html+=`<div class="fp-chip${!p.active_frame?' active':''}" data-frame="">✖ None</div>`;
-  FRAME_PRIORITY.filter(f=>unlocked.includes(f)).forEach(f=>{
-    html+=`<div class="fp-chip${current===f&&p.active_frame===f?' active':''}" data-frame="${f}">${FRAME_LABEL[f]}</div>`;
-  });
-  box.innerHTML=html;
-  box.querySelectorAll('.fp-chip').forEach(chip=>{
-    chip.onclick=async()=>{
-      const val=chip.dataset.frame||null;
-      try{
-        const{error}=await sb.from('players').update({active_frame:val}).eq('id',p.id);
-        if(error){toast('No se pudo guardar el marco',true);return;}
-        p.active_frame=val;
-        applyFrame($('#vAvatar'),p);
-        renderFramePicker(p);
-        toast('Marco actualizado ✓');
-      }catch(e){toast('Error al guardar',true);}
-    };
-  });
-}
-
 // ── RENDER OWN PROFILE ────────────────────────────────────────
 function renderView(p){
   setAvatarEl($('#vAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
-  applyFrame($('#vAvatar'),p);
-  renderFramePicker(p);
   $('#vName').textContent=p.name||'—';
   $('#vGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#vMeta');meta.innerHTML='';
@@ -1107,7 +839,7 @@ function renderView(p){
     const navTag=$('#navAllianceTag');
     const navIc=$('#navAllianceIc');
     if(navTag)navTag.textContent=myAlliance.tag||'Alliance';
-    if(navBtn)navBtn.href=statePublicUrl(currentProfile?.state_id||PAGE_STATE,`phoenix-alliance.html?tag=${myAlliance.tag}`);
+    if(navBtn)navBtn.href=`phoenix-alliance.html?tag=${myAlliance.tag}`;
     const logoUrl=myAlliance.config?.logoUrl||'';
     if(navIc){
       if(logoUrl)navIc.innerHTML=`<img src="${logoUrl}" style="width:1.5rem;height:1.5rem;border-radius:6px;object-fit:cover;">`;
@@ -1163,7 +895,6 @@ async function loadPublicProfile(playerId){
   if(!p){toast('Profile not found.',true);show('directory');return;}
   const earnedIds=pb?pb.map(x=>x.badge_id):[];
   setAvatarEl($('#pAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
-  applyFrame($('#pAvatar'),p);
   $('#pName').textContent=p.name||'—';
   $('#pGid').textContent=p.governor_id?'ID '+p.governor_id:'ID —';
   const meta=$('#pMeta');meta.innerHTML='';
@@ -1178,13 +909,7 @@ async function loadPublicProfile(playerId){
 
 // ── NAVIGATION ────────────────────────────────────────────────
 $('#editBtn').onclick=openEditor;$('#editBtn2').onclick=openEditor;
-if($('#switchCharBtn'))$('#switchCharBtn').onclick=()=>{renderPicker();show('picker');};
-$('#cancelBtn').onclick=()=>{
-  if(creatingNew && myProfiles.length>0){ creatingNew=false; renderPicker(); show('picker'); }
-  else if(currentProfile){ show('view'); }
-  else if(myProfiles.length>0){ renderPicker(); show('picker'); }
-  else { show('empty'); }
-};
+$('#cancelBtn').onclick=()=>{currentProfile?show('view'):show('empty');};
 $('#browseBtn').onclick=loadDirectory;$('#browseBtnView').onclick=loadDirectory;
 $('#dirBack').onclick=()=>show(currentUser?'view':'empty');
 $('#pubBack').onclick=()=>show('directory');
@@ -1238,7 +963,7 @@ function renderGovBadges(leftEl, rightEl, extraWrap, extraGrid, earnedIds){
   }
 }
 
-async function signOut(){await sb.auth.signOut();currentUser=null;currentProfile=null;myProfiles=[];creatingNew=false;playerBadges=[];show('empty');applyLang();}
+async function signOut(){await sb.auth.signOut();currentUser=null;currentProfile=null;playerBadges=[];show('empty');applyLang();}
 $('#signOutEdit').onclick=signOut;$('#signOutView').onclick=signOut;
 
 // ── INIT ──────────────────────────────────────────────────────
@@ -1246,17 +971,15 @@ async function init(){
   applyLang();
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000));
-    const[ar,br,sr]=await Promise.race([
+    const[ar,br]=await Promise.race([
       Promise.all([
-        sb.from('alliances').select('id,tag,name,state_id'),
-        sb.from('badges').select('*').order('created_at'),
-        sb.from('states').select('id')
+        sb.from('alliances').select('id,tag,name').eq('state_id','3139'),
+        sb.from('badges').select('*').order('created_at')
       ]),
       timeout
     ]);
     if(ar.data)alliances=ar.data;
     if(br.data)badges=br.data;
-    if(sr.data)allStates=sr.data.map(s=>String(s.id)).sort();
   }catch(e){console.warn('Init fetch timed out, continuing:',e.message);}
 
   // ── VIEW ANOTHER PLAYER'S PROFILE (?view=ID) ────────────────
@@ -1281,7 +1004,7 @@ async function init(){
 
   try{
     const{data:{session}}=await sb.auth.getSession();
-    if(session?.user){currentUser=session.user;await loadProfile();maybeShowCave();}
+    if(session?.user){currentUser=session.user;await loadProfile();}
     else{
       // If arriving via invite link, customize the welcome message
       if(INVITE_TAG){
@@ -1297,155 +1020,9 @@ async function init(){
 }
 
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(session?.user){
-    // Any event that carries a valid session (SIGNED_IN, INITIAL_SESSION,
-    // TOKEN_REFRESHED, USER_UPDATED) should (re)assert the cave button.
-    if(!currentUser){ currentUser=session.user; await loadProfile(); }
-    else { currentUser=session.user; }
-    maybeShowCave();
-  } else if(event==='SIGNED_OUT'){
-    currentUser=null;currentProfile=null;show('empty');
-    const cb=document.getElementById('caveBtn'); if(cb) cb.style.display='none';
-  }
+  if(event==='SIGNED_IN'&&session?.user&&!currentUser){currentUser=session.user;await loadProfile();}
+  else if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;show('empty');}
 });
-
-// ── 🍪 THE CAVE — private space for the two of us ──────────────
-const CAVE_EMAILS=['hestelae@gmail.com','ld9791@gmail.com'];
-let caveOpen=false, caveChannel=null, caveLastSeen=0;
-try{ caveLastSeen=parseInt(localStorage.getItem('caveLastSeen')||'0',10)||0; }catch(_){}
-
-function maybeShowCave(){
-  const email=(currentUser?.email||'').toLowerCase();
-  const btn=document.getElementById('caveBtn');
-  if(!btn)return;
-  if(CAVE_EMAILS.includes(email)){
-    btn.style.display='';
-    subscribeCave();
-    refreshCaveDot();
-  }else{
-    btn.style.display='none';
-  }
-}
-document.getElementById('caveBtn')?.addEventListener('click',openCave);
-document.getElementById('caveClose')?.addEventListener('click',closeCave);
-document.getElementById('caveSend')?.addEventListener('click',sendCave);
-document.getElementById('caveInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendCave();});
-
-// Realtime: listen for new messages even when the cave is closed
-function subscribeCave(){
-  if(caveChannel)return;
-  try{
-    caveChannel=sb.channel('cave-rt')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'cave_messages'},(payload)=>{
-        if(caveOpen){ appendCaveMessage(payload.new); markCaveSeen(); }
-        else { refreshCaveDot(true); }
-      })
-      .on('postgres_changes',{event:'DELETE',schema:'public',table:'cave_messages'},()=>{
-        if(caveOpen)loadCave();
-      })
-      .subscribe();
-  }catch(e){console.warn('Cave realtime failed:',e);}
-}
-
-async function refreshCaveDot(force){
-  // Show the red dot + nudge if there's a message newer than last seen (from the other person)
-  const btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
-  if(!btn||!dot)return;
-  try{
-    const{data}=await sb.from('cave_messages').select('created_at,author_email').order('created_at',{ascending:false}).limit(1);
-    if(data&&data.length){
-      const t=new Date(data[0].created_at).getTime();
-      const fromOther=(data[0].author_email||'').toLowerCase()!==(currentUser?.email||'').toLowerCase();
-      if((force||t>caveLastSeen)&&fromOther&&!caveOpen){
-        dot.style.display='';btn.classList.add('has-new');
-      }
-    }
-  }catch(_){}
-}
-
-function markCaveSeen(){
-  caveLastSeen=Date.now();
-  try{ localStorage.setItem('caveLastSeen',String(caveLastSeen)); }catch(_){}
-  const btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
-  if(dot)dot.style.display='none';
-  if(btn)btn.classList.remove('has-new');
-}
-
-async function openCave(){
-  caveOpen=true;
-  document.getElementById('cavePanel').style.display='flex';
-  markCaveSeen();
-  await loadCave();
-  subscribeCave();
-}
-function closeCave(){
-  caveOpen=false;
-  document.getElementById('cavePanel').style.display='none';
-}
-
-function caveBubble(m){
-  const myEmail=(currentUser?.email||'').toLowerCase();
-  const mine=(m.author_email||'').toLowerCase()===myEmail;
-  const who=(m.author_email||'').toLowerCase()==='hestelae@gmail.com'?'Hestelae':'TMQ';
-  const when=new Date(m.created_at).toLocaleString();
-  const bubble=document.createElement('div');
-  bubble.dataset.id=m.id;
-  bubble.style.cssText=`max-width:80%;align-self:${mine?'flex-end':'flex-start'};background:${mine?'linear-gradient(180deg,#c98a5a,#a06840)':'#2e2016'};color:${mine?'#fff':'#ffe8d0'};padding:9px 13px;border-radius:14px;position:relative;`;
-  const del=mine?`<button onclick="deleteCaveMsg('${m.id}')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.75rem;cursor:pointer;padding:0;margin-top:4px;">🗑️ delete</button>`:'';
-  bubble.innerHTML=`<div style="font-size:.9rem;line-height:1.4;white-space:pre-wrap;">${(m.body||'').replace(/</g,'&lt;')}</div><div style="font-size:.62rem;opacity:.7;margin-top:4px;">${who} · ${when}</div>${del}`;
-  return bubble;
-}
-function appendCaveMessage(m){
-  const box=document.getElementById('caveMessages');
-  if(!box)return;
-  const ph=box.querySelector('[data-empty]'); if(ph)ph.remove();
-  box.appendChild(caveBubble(m));
-  box.scrollTop=box.scrollHeight;
-}
-
-async function loadCave(){
-  const box=document.getElementById('caveMessages');
-  box.innerHTML='<div style="text-align:center;color:#8a6a4a;font-size:.82rem;padding:20px;">…</div>';
-  try{
-    const{data,error}=await sb.from('cave_messages').select('*').order('created_at',{ascending:true});
-    if(error)throw error;
-    if(!data||!data.length){
-      box.innerHTML='<div data-empty style="text-align:center;color:#8a6a4a;font-size:.85rem;padding:24px;line-height:1.5;">Nobody\'s written yet 🍪<br>Leave the first message.</div>';
-      return;
-    }
-    box.innerHTML='';
-    data.forEach(m=>box.appendChild(caveBubble(m)));
-    box.scrollTop=box.scrollHeight;
-  }catch(e){
-    box.innerHTML='<div style="text-align:center;color:#c88;font-size:.82rem;padding:20px;">Couldn\'t load the cave. '+(e.message||'')+'</div>';
-  }
-}
-
-async function sendCave(){
-  const input=document.getElementById('caveInput');
-  const body=input.value.trim();
-  if(!body)return;
-  input.value='';
-  const email=(currentUser?.email||'').toLowerCase();
-  const{error}=await sb.from('cave_messages').insert({author_email:email,author_name:email==='hestelae@gmail.com'?'Hestelae':'TMQ',body});
-  if(error){input.value=body;alert('Could not send: '+error.message);return;}
-  markCaveSeen();
-  // Realtime will append it; but load once in case realtime is off
-  if(!caveChannel)await loadCave();
-}
-
-async function deleteCaveMsg(id){
-  if(!confirm('Delete this message?'))return;
-  const{error}=await sb.from('cave_messages').delete().eq('id',id);
-  if(error){alert('Could not delete: '+error.message);return;}
-  const box=document.getElementById('caveMessages');
-  const el=box&&box.querySelector(`[data-id="${id}"]`);
-  if(el)el.remove();
-}
-
-// Try to show the cave button on initial load too (if already logged in)
-setTimeout(maybeShowCave,1500);
-
 
 // ── GLOBAL FAILSAFE: never stay stuck on the loading spinner ──
 setTimeout(()=>{
@@ -1458,23 +1035,6 @@ setTimeout(()=>{
 },6000);
 
 init().catch(e=>{console.error('Init crashed:',e);show('empty');applyLang();});
-</script>
-<script>
-/* PHX nav: make bottom-nav links carry the current state so navigating
-   between pages no longer bounces back to 3139. Runs after botnav exists. */
-(function(){
-  try{
-    var s=(typeof getState==='function')?getState():'3139';
-    if(!s||s==='3139')return;
-    var links=document.querySelectorAll('.botnav a');
-    for(var i=0;i<links.length;i++){
-      var href=links[i].getAttribute('href');
-      if(!href||href.indexOf('phoenix-')===-1)continue;
-      if(/[?&]s=/.test(href))continue;
-      links[i].setAttribute('href', href+(href.indexOf('?')>-1?'&':'?')+'s='+s);
-    }
-  }catch(e){}
-})();
 </script>
 </body>
 </html>
