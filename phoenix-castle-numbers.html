@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
@@ -37,8 +37,10 @@
   .stepper .val{min-width:22px;text-align:center;font-weight:700;}
 
   /* board */
-  .board-outer{width:100%;overflow-x:auto;display:flex;justify-content:center;padding:10px 0;}
-  .board{display:grid;transform:rotate(45deg);gap:2px;}
+  .board-outer{width:100%;overflow-x:auto;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:18px 0;}
+  .board-stage{position:relative;display:flex;justify-content:center;align-items:center;}
+  .board{display:grid;gap:2px;position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%) rotate(45deg);transform-origin:center;}
   .cell{width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:3px;position:relative;}
   .cell-inner{transform:rotate(-45deg);font-weight:700;text-align:center;line-height:1;color:#08131f;pointer-events:none;}
   .cell.castle{background:radial-gradient(circle at 35% 30%,#ff7a68,var(--castle));box-shadow:0 0 10px rgba(214,69,80,.7);}
@@ -89,60 +91,60 @@
 <body>
 <div class="wrap">
 
-  <div class="tag-note">🧪 Prueba del modo "Por números" — escribe el código de alianza junto a cada número y el mapa se colorea solo.</div>
+  <div class="tag-note">🧪 Test of "By Numbers" mode — type each alliance code next to its number and the map colours itself.</div>
 
   <header>
     <div class="eyebrow">Phoenix · Castle Map</div>
-    <h1>🏰 Por números</h1>
-    <p class="sub">Asigna cada casilla numerada a una alianza</p>
+    <h1>🏰 By Numbers</h1>
+    <p class="sub">Assign each numbered cell to an alliance</p>
   </header>
 
   <!-- MAP -->
   <div class="panel" style="display:flex;flex-direction:column;align-items:center;">
-    <div class="board-outer"><div class="board" id="board"></div></div>
+    <div class="board-outer"><div class="board-stage" id="boardStage"><div class="board" id="board"></div></div></div>
   </div>
 
   <!-- SIZE -->
   <div class="panel">
-    <div class="panel-title">Tamaño del mapa</div>
+    <div class="panel-title">Map size</div>
     <div class="stepper-row">
-      <div class="stepper-label">Profundidad hasta el margen<br><small>ajusta hasta que el nº total coincida con tu mapa</small></div>
+      <div class="stepper-label">Margin depth<br><small>adjust until the total count matches your map</small></div>
       <div class="stepper">
         <button id="rMinus">−</button>
         <div class="val" id="rVal">4</div>
         <button id="rPlus">+</button>
       </div>
     </div>
-    <div class="range-hint">Total de casillas numeradas: <b id="totalCells">—</b></div>
+    <div class="range-hint">Total numbered cells: <b id="totalCells">—</b></div>
   </div>
 
   <!-- QUICK RANGE -->
   <div class="panel">
-    <div class="panel-title">Rango rápido</div>
+    <div class="panel-title">Quick range</div>
     <div class="range-row">
       <input class="code" id="rangeCode" maxlength="3" placeholder="PXR">
-      <span style="color:var(--text-dim);font-size:.8rem;">del</span>
+      <span style="color:var(--text-dim);font-size:.8rem;">from</span>
       <input class="num" id="rangeFrom" inputmode="numeric" placeholder="1">
-      <span style="color:var(--text-dim);font-size:.8rem;">al</span>
+      <span style="color:var(--text-dim);font-size:.8rem;">to</span>
       <input class="num" id="rangeTo" inputmode="numeric" placeholder="22">
-      <button id="applyRange">Aplicar</button>
+      <button id="applyRange">Apply</button>
     </div>
-    <div class="range-hint">Rellena de golpe todos los números de ese rango con el código escrito.</div>
+    <div class="range-hint">Fills every number in that range with the code you typed.</div>
   </div>
 
   <!-- NUMBER GRID -->
   <div class="panel">
-    <div class="panel-title">Asignación por número</div>
+    <div class="panel-title">Assignment by number</div>
     <div class="numgrid" id="numGrid"></div>
   </div>
 
   <!-- LEGEND -->
   <div class="panel">
-    <div class="panel-title">Alianzas</div>
-    <div id="legendList"><div class="legend-empty">Aún no has asignado ninguna casilla</div></div>
+    <div class="panel-title">Alliances</div>
+    <div id="legendList"><div class="legend-empty">No cells assigned yet</div></div>
     <div class="footer-actions">
-      <div class="btn-ghost" id="clearAllBtn">🧹 Borrar todo</div>
-      <div class="btn-ghost" id="downloadBtn">🖼️ Descargar</div>
+      <div class="btn-ghost" id="clearAllBtn">🧹 Clear all</div>
+      <div class="btn-ghost" id="downloadBtn">🖼️ Download</div>
     </div>
   </div>
 
@@ -252,12 +254,20 @@ let NUMBERING = computeCellNumbers();
 function renderBoard(){
   const { numbers, totalSide, noTeleportShell } = NUMBERING;
   boardEl.innerHTML = '';
-  const outer = boardEl.parentElement;
+  const outer = boardEl.parentElement.parentElement; // .board-outer
   const availableWidth = (outer.clientWidth || 340) - 16;
-  const cellPx = Math.max(8, Math.min(30, Math.floor(availableWidth / (totalSide * Math.SQRT2))));
+  // The 45°-rotated diamond spans (totalSide * cellPx * √2) in each direction,
+  // so size the cell to fit that diagonal within the available width.
+  const cellPx = Math.max(8, Math.min(26, Math.floor(availableWidth / (totalSide * Math.SQRT2))));
   boardEl.style.gridTemplateColumns = `repeat(${totalSide}, ${cellPx}px)`;
   boardEl.style.gridTemplateRows = `repeat(${totalSide}, ${cellPx}px)`;
   const fs = Math.max(6, Math.round(cellPx*0.42));
+
+  // Reserve the correct square footprint for the rotated diamond so its
+  // top/bottom tips are never clipped.
+  const diag = Math.ceil(totalSide * cellPx * Math.SQRT2) + 8;
+  const stage = document.getElementById('boardStage');
+  if(stage){ stage.style.width = diag+'px'; stage.style.height = diag+'px'; }
 
   for(let j=0;j<totalSide;j++){
     for(let i=0;i<totalSide;i++){
@@ -325,13 +335,13 @@ function renderLegend(){
   Object.values(assignments).forEach(c=>{counts[c]=(counts[c]||0)+1;});
   const codes=Object.keys(counts).sort();
   const list=document.getElementById('legendList');
-  if(codes.length===0){ list.innerHTML='<div class="legend-empty">Aún no has asignado ninguna casilla</div>'; return; }
+  if(codes.length===0){ list.innerHTML='<div class="legend-empty">No cells assigned yet</div>'; return; }
   list.innerHTML='';
   codes.forEach(code=>{
     const row=document.createElement('div'); row.className='legend-item';
     row.innerHTML=`<span class="legend-swatch" style="background:${colorForCode(code)}"></span>
       <span style="font-weight:700">${code}</span>
-      <span class="legend-count">${counts[code]} casilla${counts[code]>1?'s':''}</span>`;
+      <span class="legend-count">${counts[code]} cell${counts[code]>1?'s':''}</span>`;
     list.appendChild(row);
   });
 }
@@ -354,8 +364,8 @@ document.getElementById('applyRange').addEventListener('click', ()=>{
   const code = document.getElementById('rangeCode').value.trim().toUpperCase();
   const from = parseInt(document.getElementById('rangeFrom').value,10);
   const to = parseInt(document.getElementById('rangeTo').value,10);
-  if(!code){ toast('Escribe un código'); return; }
-  if(isNaN(from)||isNaN(to)){ toast('Escribe desde y hasta'); return; }
+  if(!code){ toast('Type a code'); return; }
+  if(isNaN(from)||isNaN(to)){ toast('Enter from and to'); return; }
   const lo=Math.min(from,to), hi=Math.max(from,to);
   for(let n=lo;n<=hi && n<=NUMBERING.total;n++){ assignments[n]=code; }
   renderBoard(); renderNumGrid(); renderLegend();
