@@ -485,8 +485,8 @@ body{padding-bottom:72px !important;}
 <div class="toast" id="toast"></div>
 
 <nav class="botnav">
-  <a href="./phoenix-state.html"><span class="ic">🗺️</span>3139</a>
-  <a href="./phoenix-alliance.html">PXR</a>
+  <a href="./phoenix-state.html" id="navState"><span class="ic">🗺️</span><span id="navStateLabel">···</span></a>
+  <a href="./phoenix-alliance.html" id="navAlliance">PXR</a>
   <a href="./phoenix-profile.html"><span class="ic">👤</span>Profile</a>
   <a href="./phoenix-admin.html" class="active"><span class="ic">🔐</span>Admin</a>
 </nav>
@@ -1678,6 +1678,10 @@ async function checkAccess(user){
   if(!isAdmin){show('scDenied');return;}
 
   currentPlayer=player;
+  // Fill the bottom-nav with this admin's real state, not a hard-coded number
+  const st=player.state_id||'';
+  const nsl=document.getElementById('navStateLabel');if(nsl)nsl.textContent=st||'State';
+  const ns=document.getElementById('navState');if(ns&&st)ns.href='./phoenix-state.html?s='+st;
   isStateAdmin=(player.role==='admin'); // only full admins (you + TMQ) edit the state ranking
   if(isStateAdmin){
     const ag=document.getElementById('adminGroup');if(ag)ag.style.display='';
@@ -1685,12 +1689,15 @@ async function checkAccess(user){
     const at=document.getElementById('accessTab');if(at)at.style.display='none';
   }
 
-  // Load alliances this player can manage (same alliance they belong to, or all if super-admin)
+  // Load alliances this player can manage.
+  // Full admins see every alliance IN THEIR OWN STATE (not all states mixed);
+  // R4/R5 see only their own alliance.
   let q=sb.from('alliances').select('*');
   if(player.role!=='admin'){
-    // R4/R5 can only edit their own alliance
     if(player.alliance_id) q=q.eq('id',player.alliance_id);
     else{show('scDenied');return;}
+  }else if(player.state_id){
+    q=q.eq('state_id',player.state_id);
   }
   const{data:als,error:aerr}=await Promise.race([q,timeout(8000)]);
   if(aerr)throw aerr;

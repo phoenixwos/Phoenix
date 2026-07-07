@@ -507,7 +507,7 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 <div class="toast" id="toast"></div>
 
 <nav class="botnav">
-  <a href="./phoenix-state.html"><span class="nav-ic">🌍</span>3139</a>
+  <a href="./phoenix-state.html" id="navState"><span class="nav-ic">🌍</span><span id="navStateLabel">···</span></a>
   <a href="./phoenix-alliance.html" id="navAllianceBtn"><span class="nav-ic" id="navAllianceIc">🏰</span><span id="navAllianceTag">Alliance</span></a>
   <a href="./phoenix-profile.html" class="active"><span class="nav-ic">🚪</span>Entrar</a>
 </nav>
@@ -676,10 +676,10 @@ $('#authSubmit').addEventListener('click',async()=>{
 
 // ── LOAD PROFILE (FIX: maybeSingle + timeout) ─────────────────
 async function loadProfile(){
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+  const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),15000));
   try{
-    // Use limit(1) + array instead of maybeSingle() to survive duplicate rows
-    const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false}).limit(1);
+    // Load ALL of this user's characters (they may have one per state).
+    const query=sb.from('players').select('*').eq('owner',currentUser.id).order('created_at',{ascending:false});
     const{data:rows,error}=await Promise.race([query,timeout]);
     if(error){throw error;}
     const data=rows&&rows.length?rows[0]:null;
@@ -694,8 +694,9 @@ async function loadProfile(){
     }else{populateAlliances();show('edit');}
   }catch(e){
     console.error('Profile load error:',e);
-    // Only show error if we have no profile to display
-    if(!currentProfile){toast('Connection error. Check Supabase settings.',true);show('empty');}
+    // Only show the red error if the screen is genuinely empty — never cover
+    // a profile that did manage to render.
+    if(!currentProfile){show('empty');toast('Connection slow — pull to refresh if this stays.',true);}
   }
   applyLang();
 }
@@ -764,7 +765,11 @@ $('#saveBtn').addEventListener('click',async()=>{
   const photoUrl=$('#fPhotoUrl').value.trim();
   const ini=($('#fAvatar').value.trim()||name.slice(0,2)).toUpperCase();
   const avatarVal=photoUrl||ini;
-  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:'3139',bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
+  // Derive the state from the chosen alliance; fall back to whatever the
+  // profile already had, then to 3139 only as a last resort.
+  const chosenAlliance=alliances.find(a=>a.id===$('#fAlliance').value);
+  const stateId=chosenAlliance?.state_id||currentProfile?.state_id||'3139';
+  const pd={owner:currentUser.id,governor_id:gid,name,avatar:avatarVal,languages:$('#fLang').value.trim(),country:$('#fCountry').value.trim(),alliance_id:$('#fAlliance').value||null,state_id:stateId,bio:$('#fBio').value.trim(),help_with:$('#fHelp').value.trim(),alliance_confirmed:currentProfile?.alliance_confirmed||false,banner_url:$('#fBannerUrl').value.trim()||null,gallery:[$('#fGal1').value.trim(),$('#fGal2').value.trim(),$('#fGal3').value.trim()].filter(Boolean),nickname_suggested:$('#fNickSuggest').value.trim()||null};
   const btn=$('#saveBtn');btn.textContent='...';btn.disabled=true;
   let error;
   if(currentProfile){
@@ -833,6 +838,11 @@ function renderView(p){
       vGrid.innerHTML=gal.map(url=>`<img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--panel-edge);" onerror="this.style.display='none'">`).join('');
     }else vGal.style.display='none';
   }
+  // Update nav state label with the active character's real state
+  const st=p.state_id||'';
+  const nsl=$('#navStateLabel');if(nsl)nsl.textContent=st||'State';
+  const ns=$('#navState');if(ns&&st)ns.href='./phoenix-state.html?s='+st;
+
   // Update nav alliance button with player's actual alliance
   if(myAlliance){
     const navBtn=$('#navAllianceBtn');
@@ -973,7 +983,7 @@ async function init(){
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000));
     const[ar,br]=await Promise.race([
       Promise.all([
-        sb.from('alliances').select('id,tag,name').eq('state_id','3139'),
+        sb.from('alliances').select('id,tag,name,state_id'),
         sb.from('badges').select('*').order('created_at')
       ]),
       timeout
