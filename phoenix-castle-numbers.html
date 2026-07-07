@@ -35,6 +35,10 @@
   .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
     color:var(--ice);font-size:1.1rem;font-weight:700;cursor:pointer;line-height:1;}
   .stepper .val{min-width:22px;text-align:center;font-weight:700;}
+  .toggle-group{display:flex;gap:4px;}
+  .tgl{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.78rem;font-weight:600;cursor:pointer;}
+  .tgl.active{border-color:var(--ice);color:var(--ice);background:rgba(127,217,238,.08);}
 
   /* board */
   .board-outer{width:100%;overflow-x:auto;overflow-y:hidden;display:flex;justify-content:center;align-items:center;padding:18px 0;}
@@ -101,6 +105,10 @@
 
   <!-- MAP -->
   <div class="panel" style="display:flex;flex-direction:column;align-items:center;">
+    <div class="toggle-group" style="margin-bottom:6px;">
+      <button class="tgl active" id="tglNumbers">🔢 Numbers</button>
+      <button class="tgl" id="tglNames">🏷️ Alliance</button>
+    </div>
     <div class="board-outer"><div class="board-stage" id="boardStage"><div class="board" id="board"></div></div></div>
   </div>
 
@@ -132,13 +140,7 @@
     <div class="range-hint">Fills every number in that range with the code you typed.</div>
   </div>
 
-  <!-- NUMBER GRID -->
-  <div class="panel">
-    <div class="panel-title">Assignment by number</div>
-    <div class="numgrid" id="numGrid"></div>
-  </div>
-
-  <!-- LEGEND -->
+  <!-- LEGEND + ACTIONS -->
   <div class="panel">
     <div class="panel-title">Alliances</div>
     <div id="legendList"><div class="legend-empty">No cells assigned yet</div></div>
@@ -146,6 +148,13 @@
       <div class="btn-ghost" id="clearAllBtn">🧹 Clear all</div>
       <div class="btn-ghost" id="downloadBtn">🖼️ Download</div>
     </div>
+  </div>
+
+  <!-- NUMBER GRID (fine-tuning, at the bottom) -->
+  <div class="panel">
+    <div class="panel-title">Assign cell by cell</div>
+    <p style="font-size:.76rem;color:var(--text-dim);margin:-4px 0 10px;">For individual tweaks. Use Quick range above to fill many at once.</p>
+    <div class="numgrid" id="numGrid"></div>
   </div>
 
 </div>
@@ -232,6 +241,7 @@ function computeCellNumbers(){
 
 /* ---------- state ---------- */
 let assignments = {}; // number(int) -> code(string)
+let cellDisplay = 'numbers'; // 'numbers' or 'names'
 const PALETTE = ['#5ec4ff','#ff6b6b','#ffd166','#a78bfa','#4ade80','#fb923c','#f472b6','#38bdf8',
   '#facc15','#c084fc','#34d399','#fca5a5','#60a5fa','#fdba74','#f9a8d4','#2dd4bf','#818cf8','#a3e635'];
 function colorForCode(code){
@@ -287,7 +297,8 @@ function renderBoard(){
         if(code){
           div.style.backgroundColor = colorForCode(code);
           classes.push('assigned');
-          inner.textContent = num;
+          inner.textContent = cellDisplay==='names' ? code : num;
+          if(cellDisplay==='names') inner.style.fontSize = Math.max(6, Math.round(cellPx*0.34))+'px';
         } else {
           inner.textContent = num!=null ? num : '';
           inner.style.color = '#4a6076';
@@ -360,6 +371,19 @@ document.getElementById('rPlus').addEventListener('click', ()=>{
   assignments = {}; rerenderAll();
 });
 
+document.getElementById('tglNumbers').addEventListener('click', ()=>{
+  cellDisplay='numbers';
+  document.getElementById('tglNumbers').classList.add('active');
+  document.getElementById('tglNames').classList.remove('active');
+  renderBoard();
+});
+document.getElementById('tglNames').addEventListener('click', ()=>{
+  cellDisplay='names';
+  document.getElementById('tglNames').classList.add('active');
+  document.getElementById('tglNumbers').classList.remove('active');
+  renderBoard();
+});
+
 document.getElementById('applyRange').addEventListener('click', ()=>{
   const code = document.getElementById('rangeCode').value.trim().toUpperCase();
   const from = parseInt(document.getElementById('rangeFrom').value,10);
@@ -378,34 +402,71 @@ document.getElementById('clearAllBtn').addEventListener('click', ()=>{
 
 document.getElementById('downloadBtn').addEventListener('click', ()=>{
   const { numbers, totalSide, noTeleportShell } = NUMBERING;
-  const cellPx=30, size=totalSide*cellPx*1.5;
-  const canvas=document.createElement('canvas'); canvas.width=size; canvas.height=size;
+  const cellPx=32;
+  const mapSize = Math.ceil(totalSide*cellPx*Math.SQRT2)+20;
+  const codes=[...new Set(Object.values(assignments))].sort();
+  const legendRows = codes.length;
+  const titleH = 70;
+  const legendH = legendRows ? (legendRows*34 + 30) : 20;
+  const W = Math.max(mapSize, 420);
+  const H = titleH + mapSize + legendH;
+
+  const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
   const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#0a1420'; ctx.fillRect(0,0,size,size);
-  ctx.translate(size/2,size/2); ctx.rotate(Math.PI/4);
+  ctx.fillStyle='#0a1420'; ctx.fillRect(0,0,W,H);
+
+  // Title
+  ctx.fillStyle='#eaf3f9'; ctx.font='bold 26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🏰 Castle Map', W/2, 34);
+
+  // Map (rotated), centred
+  ctx.save();
+  ctx.translate(W/2, titleH + mapSize/2);
+  ctx.rotate(Math.PI/4);
   const C = totalSide/2 - 0.5;
   for(let j=0;j<totalSide;j++){
     for(let i=0;i<totalSide;i++){
       const type=cellType(i,j,totalSide,noTeleportShell);
       const x=(i-C)*cellPx, y=(j-C)*cellPx;
-      let fill='#1a2c42', label='', lc='#08131f';
+      let fill='#1a2c42', label='', lc='#08131f', fsz=12;
       if(type==='castle'){ fill='#d64550'; }
       else if(type==='tower'){ fill='#f0784f'; }
       else {
         const num=numbers[i+','+j];
         const code=num!=null?assignments[num]:null;
-        if(code){ fill=colorForCode(code); label=String(num); }
-        else { fill = type==='city-hatch'?'#2a3a4d':'#1a2c42'; label=num!=null?String(num):''; lc='#4a6076'; }
+        if(code){
+          fill=colorForCode(code);
+          if(cellDisplay==='names'){ label=code; fsz=9; } else { label=String(num); }
+        } else { fill = type==='city-hatch'?'#2a3a4d':'#1a2c42'; label=num!=null?String(num):''; lc='#4a6076'; }
       }
       ctx.fillStyle=fill; ctx.fillRect(x,y,cellPx-1,cellPx-1);
       if(label){
         ctx.save(); ctx.translate(x+cellPx/2,y+cellPx/2); ctx.rotate(-Math.PI/4);
-        ctx.fillStyle=lc; ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillStyle=lc; ctx.font=`bold ${fsz}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(label,0,0); ctx.restore();
       }
     }
   }
-  const link=document.createElement('a'); link.download='castle-map-numbers.png';
+  ctx.restore();
+
+  // Legend
+  if(legendRows){
+    const counts={}; Object.values(assignments).forEach(c=>{counts[c]=(counts[c]||0)+1;});
+    let ly = titleH + mapSize + 10;
+    ctx.textAlign='left';
+    codes.forEach(code=>{
+      const cx = W/2 - 130;
+      ctx.fillStyle=colorForCode(code);
+      ctx.fillRect(cx, ly, 22, 22);
+      ctx.fillStyle='#eaf3f9'; ctx.font='bold 18px sans-serif'; ctx.textBaseline='middle';
+      ctx.fillText(code, cx+32, ly+11);
+      ctx.fillStyle='#86a0b7'; ctx.font='15px sans-serif';
+      ctx.fillText(`${counts[code]} cell${counts[code]>1?'s':''}`, cx+100, ly+11);
+      ly += 34;
+    });
+  }
+
+  const link=document.createElement('a'); link.download='castle-map.png';
   link.href=canvas.toDataURL('image/png'); link.click();
 });
 
