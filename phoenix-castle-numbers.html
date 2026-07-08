@@ -91,8 +91,15 @@
     z-index:999;border:1px solid var(--line);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
+  <div style="max-width:340px;">
+    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
+    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Comprobando acceso…</div>
+  </div>
+</div>
 <div class="wrap">
 
   <div class="tag-note">🧪 Test of "By Numbers" mode — type each alliance code next to its number and the map colours itself.</div>
@@ -475,6 +482,28 @@ window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=s
 
 document.getElementById('rVal').textContent = marginDepth;
 rerenderAll();
+</script>
+<script>
+/* Candado: esta herramienta es solo para admin/R4/R5 (misma sesión que el resto de Phoenix). */
+(function(){
+  var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+  function msg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
+  function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);}
+  try{
+    if(!(window.supabase&&window.supabase.createClient)){msg('No se pudo cargar. Recarga la p\u00e1gina.');return;}
+    var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    sb.auth.getSession().then(function(r){
+      var s=r&&r.data&&r.data.session;
+      if(!s){msg('\ud83d\udd12 Inicia sesi\u00f3n en Phoenix primero.<br><br>Esta herramienta es solo para R4/R5/admin.');return;}
+      sb.from('players').select('role').eq('owner',s.user.id).then(function(res){
+        var rows=res.data||[];
+        var staff=rows.some(function(p){return p.role==='admin'||p.role==='r4'||p.role==='r5';});
+        if(staff){unlock();}else{msg('\ud83d\udd12 Esta herramienta es solo para R4/R5/admin.');}
+      }).catch(function(){msg('Error comprobando permisos.');});
+    }).catch(function(){msg('Error de sesi\u00f3n.');});
+  }catch(e){msg('Error de acceso.');}
+})();
 </script>
 </body>
 </html>
