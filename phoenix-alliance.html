@@ -25,6 +25,14 @@
 -->
 
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   DONACIÓN DE PLATAFORMA (global, un solo enlace para todas las alianzas)
+   Pega tu enlace entre las comillas para activarlo. Vacío = oculto.
+   Ejemplos: "https://ko-fi.com/tunombre"  o  "https://paypal.me/tunombre"
+   ═══════════════════════════════════════════════════════════════ */
+const DONATION_URL  = "https://ko-fi.com/phoenixwos";
+const DONATION_TEXT = "☕ Dona para ayudar a seguir construyendo herramientas útiles para el crecimiento del estado";
+
 const CONFIG = {
 
   /* ---- ALLIANCE IDENTITY ---- */
@@ -1052,8 +1060,13 @@ function applyConfig(){
   if(legEl) legEl.style.display = (c.tag==='PXR' && PAGE_STATE==='3139') ? '' : 'none';
   // join button → player profile (or Discord if a link is set)
   $('#joinBtn').href = stateUrl(`phoenix-profile.html?invite=${c.tag||'PXR'}`);
-  // resell
+  // resell (per-alliance)
   if(c.resell && c.resell.show){ $('#resellBox').style.display=''; const a=$('#resellLink'); a.textContent=c.resell.text+' →'; if(c.resell.link) a.href=c.resell.link; }
+  // Global platform donation — shows on every alliance page when DONATION_URL is set.
+  if(typeof DONATION_URL!=='undefined' && DONATION_URL){
+    const box=$('#resellBox'), a=$('#resellLink');
+    if(box&&a){ box.style.display=''; a.textContent=DONATION_TEXT+' →'; a.href=DONATION_URL; a.target='_blank'; a.rel='noopener'; }
+  }
   renderDynamic();
 }
 
