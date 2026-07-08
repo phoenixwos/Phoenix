@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Ratio Calculator · Phoenix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--fire:#ff7a3c;--fire-deep:#e85a18;--gold:#f0b93d;
+    --green:#4ade80;--green-deep:#22c55e;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:40px;}
+  h1,h2,.num{font-family:'Rajdhani',sans-serif;}
+  .wrap{max-width:480px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
+  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  .lead{font-size:.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
+
+  .totalbox{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:16px;margin-bottom:16px;}
+  .totalbox label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ice-dim);margin-bottom:7px;font-weight:600;}
+  .totalbox input{width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font-family:'Rajdhani';font-weight:700;font-size:1.4rem;padding:12px 14px;outline:none;text-align:center;}
+  .totalbox input:focus{border-color:var(--ice);}
+  .hint{text-align:center;font-size:.7rem;color:var(--text-dim);margin-top:6px;}
+
+  .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+  .preset{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px;
+    text-align:center;cursor:pointer;}
+  .preset.active{border-color:var(--fire);background:linear-gradient(180deg,#2a1a10,#1c1108);}
+  .preset .pname{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px;}
+  .preset .pratio{font-family:'Rajdhani';font-weight:700;font-size:.95rem;color:var(--gold);}
+  .preset.active .pratio{color:var(--fire);}
+
+  .custom-box{display:none;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;
+    padding:14px;margin-bottom:16px;}
+  .custom-box.show{display:block;}
+  .custom-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+  .custom-row input{flex:1;min-width:0;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-family:'Rajdhani';font-weight:700;font-size:1rem;padding:9px;text-align:center;outline:none;}
+  .custom-row input:focus{border-color:var(--ice);}
+  .custom-row span{color:var(--text-dim);font-size:.85rem;}
+
+  .results{display:flex;flex-direction:column;gap:10px;}
+  .res-row{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .res-dot{width:14px;height:14px;border-radius:50%;flex:none;}
+  .res-info{flex:1;min-width:0;}
+  .res-name{font-size:.82rem;color:var(--text-dim);}
+  .res-pct{font-size:.72rem;color:var(--text-dim);}
+  .res-amount{font-family:'Rajdhani';font-weight:700;font-size:1.35rem;color:var(--text);}
+
+  .total-check{text-align:center;font-size:.76rem;color:var(--text-dim);margin-top:10px;}
+  .total-check b{color:var(--green);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  </div>
+  <h1 style="margin-bottom:6px;">⚖️ Troop Ratio Calculator</h1>
+  <p class="lead">Enter your total troops, pick a ratio, and see exactly how many of each type to bring.</p>
+
+  <div class="totalbox">
+    <label>Total troops</label>
+    <input type="text" id="totalInput" placeholder="e.g. 100k or 100000" inputmode="numeric">
+    <div class="hint">You can type "100k" for 100,000 — it's read automatically.</div>
+  </div>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="custom-box" id="customBox">
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ice-dim);font-weight:600;">Custom ratio</div>
+    <div class="custom-row">
+      <input type="number" id="c1" min="0" placeholder="0">
+      <span>:</span>
+      <input type="number" id="c2" min="0" placeholder="0">
+      <span>:</span>
+      <input type="number" id="c3" min="0" placeholder="0">
+    </div>
+  </div>
+
+  <div class="results" id="results"></div>
+  <div class="total-check" id="totalCheck"></div>
+</div>
+
+<script>
+/* ── State-aware back link (no login required for this tool) ─── */
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+const TYPES=['Infantry','Lancer','Marksman'];
+const COLORS=['#ff7a3c','#7fd9ee','#f0b93d'];
+
+const PRESETS=[
+  { name:'Bear Trap',  ratio:[10,10,80] },
+  { name:'Defense',    ratio:[60,40,0]  },
+  { name:'Basic',      ratio:[50,20,30] },
+  { name:'Custom',     ratio:null       }
+];
+
+let activeIndex=0;
+
+function renderPresets(){
+  const box=document.getElementById('presets');
+  box.innerHTML=PRESETS.map((p,i)=>`
+    <div class="preset${i===activeIndex?' active':''}" data-i="${i}">
+      <div class="pname">${p.name}</div>
+      <div class="pratio">${p.ratio?p.ratio.join(':'):'⚙️ set your own'}</div>
+    </div>`).join('');
+  box.querySelectorAll('.preset').forEach(el=>{
+    el.onclick=()=>{ activeIndex=parseInt(el.dataset.i,10); renderPresets(); toggleCustom(); calc(); };
+  });
+}
+function toggleCustom(){
+  document.getElementById('customBox').classList.toggle('show', PRESETS[activeIndex].ratio===null);
+}
+
+function parseTotal(raw){
+  raw=(raw||'').trim().toLowerCase().replace(/,/g,'');
+  if(!raw) return 0;
+  const m=raw.match(/^([\d.]+)\s*(k|m)?$/);
+  if(!m) return 0;
+  let n=parseFloat(m[1]);
+  if(m[2]==='k') n*=1000;
+  if(m[2]==='m') n*=1000000;
+  return Math.max(0,Math.round(n));
+}
+function fmtNum(n){ return n.toLocaleString('en-US'); }
+
+function getRatio(){
+  if(PRESETS[activeIndex].ratio) return PRESETS[activeIndex].ratio;
+  const c1=parseFloat(document.getElementById('c1').value)||0;
+  const c2=parseFloat(document.getElementById('c2').value)||0;
+  const c3=parseFloat(document.getElementById('c3').value)||0;
+  return [c1,c2,c3];
+}
+
+function calc(){
+  const total=parseTotal(document.getElementById('totalInput').value);
+  const ratio=getRatio();
+  const sum=ratio.reduce((a,b)=>a+b,0);
+  const resBox=document.getElementById('results');
+  const checkBox=document.getElementById('totalCheck');
+
+  if(total<=0 || sum<=0){
+    resBox.innerHTML='';
+    checkBox.textContent='';
+    return;
+  }
+
+  // Compute proportional amounts, then fix rounding so they sum exactly to total
+  // (largest remainder method — the biggest fractional part gets the extra unit).
+  const raw=ratio.map(r=>total*r/sum);
+  const floors=raw.map(Math.floor);
+  let remainder=total-floors.reduce((a,b)=>a+b,0);
+  const order=raw.map((v,i)=>({i,frac:v-floors[i]})).sort((a,b)=>b.frac-a.frac);
+  const amounts=floors.slice();
+  for(let k=0;k<remainder;k++){ amounts[order[k%order.length].i]++; }
+
+  resBox.innerHTML=TYPES.map((t,i)=>`
+    <div class="res-row">
+      <div class="res-dot" style="background:${COLORS[i]};"></div>
+      <div class="res-info">
+        <div class="res-name">${t}</div>
+        <div class="res-pct">${sum?Math.round(ratio[i]/sum*100):0}%</div>
+      </div>
+      <div class="res-amount">${fmtNum(amounts[i])}</div>
+    </div>`).join('');
+
+  const checkSum=amounts.reduce((a,b)=>a+b,0);
+  checkBox.innerHTML='Total: <b>'+fmtNum(checkSum)+'</b> troops';
+}
+
+document.getElementById('totalInput').addEventListener('input',calc);
+['c1','c2','c3'].forEach(id=>document.getElementById(id).addEventListener('input',calc));
+
+renderPresets();
+toggleCustom();
+</script>
+</body>
+</html>

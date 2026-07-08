@@ -54,13 +54,6 @@
 </style>
 </head>
 <body>
-<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,var(--sky),var(--sky2));color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
-  <div style="max-width:340px;">
-    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
-    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:var(--ink-soft);">Comprobando acceso…</div>
-    <a href="phoenix-state.html" style="display:inline-block;margin-top:18px;color:var(--fire-deep);font-family:'Fredoka';font-weight:600;font-size:.85rem;">◂ Volver al estado</a>
-  </div>
-</div>
 <div class="top"><div class="in">
   <a class="back" id="backLink" href="phoenix-state.html">◂ <span id="backNum">Volver</span></a>
   <h1>🛠️ Herramientas</h1>
@@ -69,7 +62,7 @@
 <div class="wrap">
   <p class="lead">Utilidades del estado para líderes y jugadores. <b>Dona</b> para ayudar a seguir construyendo herramientas útiles para el crecimiento del estado.</p>
 
-  <a class="card" id="cardMap">
+  <a class="card" id="cardMap" style="display:none;">
     <div class="emoji">🏰</div>
     <div class="body">
       <h3>Mapa del Castillo</h3>
@@ -79,7 +72,7 @@
     <div class="arr">›</div>
   </a>
 
-  <a class="card blue" id="cardNumbers">
+  <a class="card blue" id="cardNumbers" style="display:none;">
     <div class="emoji">🔢</div>
     <div class="body">
       <h3>Mapa por Números</h3>
@@ -89,11 +82,31 @@
     <div class="arr">›</div>
   </a>
 
-  <a class="card gold" id="cardRedeem">
+  <a class="card gold" id="cardRedeem" style="display:none;">
     <div class="emoji">🎁</div>
     <div class="body">
       <h3>Canjeo de Códigos</h3>
       <p>Canjea códigos de regalo para toda la alianza desde el roster de IDs.</p>
+      <span class="tag leaders">R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card" id="cardRatio">
+    <div class="emoji">⚖️</div>
+    <div class="body">
+      <h3>Calculadora de Ratios</h3>
+      <p>Mete tu total de tropas y el ratio (Bear Trap, Defensa, Básico o el tuyo) y calcula cuántas de cada tipo llevar.</p>
+      <span class="tag everyone">Para todos</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card blue" id="cardRally" style="display:none;">
+    <div class="emoji">⏱️</div>
+    <div class="body">
+      <h3>Sincronizador de Rally</h3>
+      <p>Calcula cuándo debe mandar cada líder para golpear todos a la vez.</p>
       <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
@@ -126,7 +139,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html'};
+  var dest={cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardRatio:'phoenix-ratio-calc.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -141,25 +154,30 @@
 })();
 </script>
 <script>
-/* Candado del hub: solo admin/R4/R5 (misma sesión que el resto de Phoenix). */
+/* Everyone can open this hub — the Ratio Calculator is public.
+   Leader-only tools (map, numbers, redeem, rally sync) only reveal
+   their cards for admin/R4/R5; each tool page also re-checks on its own. */
 (function(){
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  function msg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
-  function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);}
+  function reveal(){
+    ['cardMap','cardNumbers','cardRedeem','cardRally'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='';
+    });
+  }
   try{
-    if(!(window.supabase&&window.supabase.createClient)){msg('No se pudo cargar. Recarga la página.');return;}
+    if(!(window.supabase&&window.supabase.createClient)) return;
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
-      if(!s){msg('🔒 Inicia sesión en Phoenix primero.<br><br>Las herramientas son solo para R4/R5/admin.');return;}
+      if(!s) return; // not signed in → only the public Ratio Calculator card shows
       sb.from('players').select('role').eq('owner',s.user.id).then(function(res){
         var rows=res.data||[];
         var staff=rows.some(function(p){return p.role==='admin'||p.role==='r4'||p.role==='r5';});
-        if(staff){unlock();}else{msg('🔒 Las herramientas son solo para R4/R5/admin.');}
-      }).catch(function(){msg('Error comprobando permisos.');});
-    }).catch(function(){msg('Error de sesión.');});
-  }catch(e){msg('Error de acceso.');}
+        if(staff) reveal();
+      }).catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
 })();
 </script>
 </body>
