@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Castle Map · By Numbers</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -91,15 +92,8 @@
     z-index:999;border:1px solid var(--line);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
-  <div style="max-width:340px;">
-    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
-    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Comprobando acceso…</div>
-  </div>
-</div>
 <div class="wrap">
 
   <div class="tag-note">🧪 Test of "By Numbers" mode — type each alliance code next to its number and the map colours itself.</div>
@@ -162,6 +156,16 @@
     <div class="panel-title">Assign cell by cell</div>
     <p style="font-size:.76rem;color:var(--text-dim);margin:-4px 0 10px;">For individual tweaks. Use Quick range above to fill many at once.</p>
     <div class="numgrid" id="numGrid"></div>
+  </div>
+
+  <!-- SAVED MAPS -->
+  <div class="panel" id="savedPanel">
+    <div class="panel-title">💾 My saved maps</div>
+    <div class="range-row" style="margin-bottom:10px;">
+      <input id="mapName" maxlength="30" placeholder="Map name (e.g. SvS July 12)" style="flex:1;background:var(--bg-deep);border:1px solid var(--line);border-radius:8px;padding:9px 8px;color:var(--text);font-size:.85rem;">
+      <button id="saveMapBtn">Save as new</button>
+    </div>
+    <div id="savedList"><div class="legend-empty" id="savedEmpty">Sign in to save maps.</div></div>
   </div>
 
 </div>
@@ -482,28 +486,116 @@ window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=s
 
 document.getElementById('rVal').textContent = marginDepth;
 rerenderAll();
-</script>
-<script>
-/* Candado: esta herramienta es solo para admin/R4/R5 (misma sesión que el resto de Phoenix). */
-(function(){
-  var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
-  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  function msg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
-  function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);}
-  try{
-    if(!(window.supabase&&window.supabase.createClient)){msg('No se pudo cargar. Recarga la p\u00e1gina.');return;}
-    var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-    sb.auth.getSession().then(function(r){
-      var s=r&&r.data&&r.data.session;
-      if(!s){msg('\ud83d\udd12 Inicia sesi\u00f3n en Phoenix primero.<br><br>Esta herramienta es solo para R4/R5/admin.');return;}
-      sb.from('players').select('role').eq('owner',s.user.id).then(function(res){
-        var rows=res.data||[];
-        var staff=rows.some(function(p){return p.role==='admin'||p.role==='r4'||p.role==='r5';});
-        if(staff){unlock();}else{msg('\ud83d\udd12 Esta herramienta es solo para R4/R5/admin.');}
-      }).catch(function(){msg('Error comprobando permisos.');});
-    }).catch(function(){msg('Error de sesi\u00f3n.');});
-  }catch(e){msg('Error de acceso.');}
-})();
+
+/* ---------- Saved maps (Supabase) ---------- */
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+let mapUser=null;
+let currentMapId=null; // if editing a loaded map
+
+async function initSaved(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){ document.getElementById('savedEmpty').textContent='Sign in to Phoenix first to save maps.'; return; }
+  mapUser=session.user;
+  loadSavedList();
+}
+
+async function loadSavedList(){
+  if(!mapUser)return;
+  const{data,error}=await sb.from('castle_maps').select('id,name,updated_at').eq('owner',mapUser.id).order('updated_at',{ascending:false});
+  const list=document.getElementById('savedList');
+  if(error){ list.innerHTML='<div class="legend-empty">Could not load saved maps.</div>'; return; }
+  if(!data||data.length===0){ list.innerHTML='<div class="legend-empty">No saved maps yet.</div>'; return; }
+  list.innerHTML='';
+  data.forEach(m=>{
+    const row=document.createElement('div');
+    row.className='legend-item';
+    row.style.gap='6px';
+    row.innerHTML=`<span style="flex:1;font-weight:600;${m.id===currentMapId?'color:var(--ice)':''}">${m.name}</span>`;
+    const btnLoad=document.createElement('button'); btnLoad.className='btn-ghost'; btnLoad.style.cssText='flex:none;padding:5px 10px;font-size:.72rem;'; btnLoad.textContent='Open';
+    btnLoad.onclick=()=>loadMap(m.id);
+    const btnRen=document.createElement('button'); btnRen.className='btn-ghost'; btnRen.style.cssText='flex:none;padding:5px 8px;font-size:.72rem;'; btnRen.textContent='✏️';
+    btnRen.onclick=()=>renameMap(m.id,m.name);
+    const btnDel=document.createElement('button'); btnDel.className='btn-ghost'; btnDel.style.cssText='flex:none;padding:5px 8px;font-size:.72rem;'; btnDel.textContent='🗑️';
+    btnDel.onclick=()=>deleteMap(m.id,m.name);
+    row.appendChild(btnLoad); row.appendChild(btnRen); row.appendChild(btnDel);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('saveMapBtn').addEventListener('click', async ()=>{
+  if(!mapUser){ toast('Sign in first'); return; }
+  const name=document.getElementById('mapName').value.trim();
+  if(!name){ toast('Type a map name'); return; }
+  const payload={ owner:mapUser.id, name, margin_depth:marginDepth, cell_display:cellDisplay, assignments, updated_at:new Date().toISOString() };
+  const{data,error}=await sb.from('castle_maps').insert(payload).select('id').single();
+  if(error){ toast('⚠️ '+error.message); return; }
+  currentMapId=data.id;
+  document.getElementById('mapName').value='';
+  toast('Saved ✓');
+  loadSavedList();
+});
+
+async function loadMap(id){
+  const{data,error}=await sb.from('castle_maps').select('*').eq('id',id).single();
+  if(error){ toast('⚠️ '+error.message); return; }
+  marginDepth=data.margin_depth||4;
+  cellDisplay=data.cell_display||'numbers';
+  assignments=data.assignments||{};
+  currentMapId=id;
+  document.getElementById('rVal').textContent=marginDepth;
+  document.getElementById('tglNumbers').classList.toggle('active',cellDisplay==='numbers');
+  document.getElementById('tglNames').classList.toggle('active',cellDisplay==='names');
+  rerenderAll();
+  // Add an "update this map" button contextually
+  showUpdateButton(data.name);
+  loadSavedList();
+  toast('Opened: '+data.name);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showUpdateButton(name){
+  let bar=document.getElementById('updateBar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='updateBar';
+    bar.className='panel';
+    bar.style.cssText='position:sticky;top:8px;z-index:20;display:flex;align-items:center;gap:8px;';
+    document.querySelector('.wrap').insertBefore(bar, document.querySelector('.wrap').children[2]);
+  }
+  bar.innerHTML=`<span style="flex:1;font-size:.82rem;">Editing: <b>${name}</b></span>`;
+  const upd=document.createElement('button'); upd.className='btn-ghost'; upd.style.cssText='flex:none;padding:8px 12px;font-size:.8rem;'; upd.textContent='💾 Update';
+  upd.onclick=updateCurrentMap;
+  const nw=document.createElement('button'); nw.className='btn-ghost'; nw.style.cssText='flex:none;padding:8px 12px;font-size:.8rem;'; nw.textContent='✖ New';
+  nw.onclick=()=>{ currentMapId=null; bar.remove(); toast('Started a fresh map'); };
+  bar.appendChild(upd); bar.appendChild(nw);
+}
+
+async function updateCurrentMap(){
+  if(!currentMapId){ toast('No map loaded'); return; }
+  const{error}=await sb.from('castle_maps').update({ margin_depth:marginDepth, cell_display:cellDisplay, assignments, updated_at:new Date().toISOString() }).eq('id',currentMapId);
+  if(error){ toast('⚠️ '+error.message); return; }
+  toast('Updated ✓'); loadSavedList();
+}
+
+async function renameMap(id,oldName){
+  const name=prompt('New name:',oldName);
+  if(!name||!name.trim())return;
+  const{error}=await sb.from('castle_maps').update({name:name.trim()}).eq('id',id);
+  if(error){ toast('⚠️ '+error.message); return; }
+  toast('Renamed ✓'); loadSavedList();
+}
+
+async function deleteMap(id,name){
+  if(!confirm('Delete "'+name+'"? This cannot be undone.'))return;
+  const{error}=await sb.from('castle_maps').delete().eq('id',id);
+  if(error){ toast('⚠️ '+error.message); return; }
+  if(currentMapId===id){ currentMapId=null; const b=document.getElementById('updateBar'); if(b)b.remove(); }
+  toast('Deleted'); loadSavedList();
+}
+
+initSaved();
 </script>
 </body>
 </html>
