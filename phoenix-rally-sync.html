@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Sincronizador de Rally · Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--fire:#ff7a3c;--fire-deep:#e85a18;--gold:#f0b93d;
+    --green:#4ade80;--green-deep:#22c55e;--danger:#ff5a5a;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:40px;}
+  h1,h2,.num{font-family:'Rajdhani',sans-serif;}
+  .wrap{max-width:520px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
+  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  .lead{font-size:.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
+
+  .rally-card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px 14px 16px;margin-bottom:12px;position:relative;}
+  .rally-card .rnum{position:absolute;top:-10px;left:14px;background:var(--fire);color:#1a0800;
+    font-family:'Rajdhani';font-weight:700;font-size:.78rem;padding:2px 10px;border-radius:8px;}
+  .rally-card.locked{opacity:.4;pointer-events:none;}
+  .field{margin-top:14px;}
+  .field label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ice-dim);margin-bottom:5px;font-weight:600;}
+  .field input{width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;
+    color:var(--text);font-family:'Inter';font-size:.92rem;padding:9px 11px;outline:none;}
+  .field input:focus{border-color:var(--ice);}
+  .march-row{display:flex;gap:8px;align-items:center;}
+  .march-row input{width:64px;text-align:center;font-family:'Rajdhani';font-size:1.1rem;font-weight:700;}
+  .march-row span{color:var(--text-dim);font-size:.8rem;}
+  .remove-btn{position:absolute;top:-10px;right:14px;background:var(--bg-deep);border:1px solid var(--line);
+    color:var(--text-dim);font-size:.7rem;border-radius:8px;padding:2px 8px;cursor:pointer;}
+
+  .addbtn{width:100%;border:1.5px dashed var(--line);background:transparent;color:var(--ice-dim);
+    border-radius:12px;padding:10px;font-family:'Inter';font-weight:600;font-size:.85rem;margin-bottom:16px;cursor:pointer;}
+
+  .calcbtn{width:100%;background:linear-gradient(180deg,var(--fire),var(--fire-deep));border:none;
+    border-radius:14px;color:#1a0800;font-family:'Rajdhani';font-weight:700;font-size:1.05rem;
+    padding:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,122,60,.35);}
+  .calcbtn:active{transform:scale(.98);}
+
+  .results{margin-top:22px;display:none;}
+  .impact{text-align:center;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--ice-dim);border-radius:16px;padding:18px;margin-bottom:14px;}
+  .impact .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ice-dim);margin-bottom:4px;}
+  .impact .clock{font-size:2.1rem;font-weight:700;color:var(--ice);letter-spacing:.02em;}
+  .impact .clock.hit{color:var(--green);}
+
+  .timeline{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+  .tl-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;}
+  .tl-row.go{border-color:var(--green-deep);background:linear-gradient(180deg,#123420,#0e2718);}
+  .tl-badge{width:34px;height:34px;flex:none;border-radius:9px;background:var(--fire);color:#1a0800;
+    display:grid;place-items:center;font-family:'Rajdhani';font-weight:700;font-size:1.05rem;}
+  .tl-row.go .tl-badge{background:var(--green);}
+  .tl-info{flex:1;min-width:0;}
+  .tl-info .who{font-size:.88rem;font-weight:700;color:var(--text);}
+  .tl-info .ratio{font-size:.72rem;color:var(--text-dim);}
+  .tl-time{text-align:right;font-family:'Rajdhani';font-weight:700;font-size:1.15rem;color:var(--gold);}
+  .tl-time.go{color:var(--green);font-size:1rem;}
+
+  .msgbox{background:var(--bg-deep);border:1px solid var(--line);border-radius:12px;padding:14px;
+    font-size:.82rem;line-height:1.6;color:var(--text);white-space:pre-wrap;margin-bottom:10px;}
+  .copybtn{width:100%;background:var(--panel-2);border:1px solid var(--ice-dim);color:var(--ice);
+    border-radius:10px;padding:10px;font-family:'Inter';font-weight:600;font-size:.85rem;cursor:pointer;}
+  .copybtn.copied{background:var(--green-deep);color:#062;border-color:var(--green-deep);}
+
+  .resetbtn{width:100%;background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    border-radius:10px;padding:9px;font-size:.78rem;margin-top:16px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
+  <div style="max-width:340px;">
+    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
+    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Comprobando acceso…</div>
+    <a href="phoenix-tools.html" style="display:inline-block;margin-top:18px;color:#7fd9ee;font-family:'Rajdhani';font-weight:700;font-size:.85rem;text-decoration:none;">◂ Volver a Herramientas</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html">◂ Herramientas</a>
+  </div>
+  <h1 style="margin-bottom:6px;">⏱️ Sincronizador de Rally</h1>
+  <p class="lead">Cada líder da su tiempo de marcha al objetivo. La herramienta calcula cuándo debe mandar cada uno para que todos golpeen a la vez — con prioridad de orden 1️⃣ 2️⃣ 3️⃣.</p>
+
+  <div id="ralliesBox"></div>
+
+  <button class="addbtn" id="addBtn" style="display:none;">+ Añadir Rally 3 (triple rally)</button>
+
+  <button class="calcbtn" id="calcBtn">🎯 Calcular sincronización</button>
+
+  <div class="results" id="results">
+    <div class="impact">
+      <div class="lbl">🎯 Impacto conjunto en</div>
+      <div class="clock" id="impactClock">00:00</div>
+    </div>
+
+    <div class="timeline" id="timeline"></div>
+
+    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ice-dim);margin-bottom:8px;font-weight:600;">
+      📢 Mensaje para la alianza
+    </div>
+    <div class="msgbox" id="msgBox"></div>
+    <button class="copybtn" id="copyBtn">📋 Copiar mensaje</button>
+
+    <div class="share-box" id="shareBox" style="display:none;margin-top:16px;padding:14px;background:linear-gradient(180deg,#123420,#0e2718);border:1px solid var(--green-deep);border-radius:12px;">
+      <div style="font-size:.78rem;font-weight:700;color:var(--green);margin-bottom:6px;">📺 Pantalla de cuenta atrás en vivo</div>
+      <div style="font-size:.76rem;color:var(--text-dim);line-height:1.5;margin-bottom:10px;">Comparte este enlace en Discord — cualquiera puede verlo, con sonido, sin necesitar acceso a esta herramienta.</div>
+      <button class="copybtn" id="shareBtn" style="background:var(--green-deep);color:#062;border-color:var(--green-deep);">🔗 Copiar enlace de cuenta atrás</button>
+    </div>
+
+    <button class="resetbtn" id="resetBtn">↺ Empezar de nuevo</button>
+  </div>
+</div>
+
+<script>
+/* ── ACCESS GATE: admin (Hestelae/TMQ) en cualquier estado,
+   o R4/R5 pero SOLO si su alianza es PXR (la tuya) ─────────────── */
+(function(){
+  var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+  function msg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
+  function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);}
+  function getState(){
+    var q=new URLSearchParams(location.search).get('s');
+    if(q) return q;
+    try{var ls=localStorage.getItem('phx_state'); if(ls) return ls;}catch(e){}
+    return '3139';
+  }
+  try{
+    if(!(window.supabase&&window.supabase.createClient)){msg('No se pudo cargar. Recarga la página.');return;}
+    var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    window.__raSb=sb; // reused later to save/share the sync
+    sb.auth.getSession().then(function(r){
+      var s=r&&r.data&&r.data.session;
+      if(!s){msg('🔒 Inicia sesión en Phoenix primero.<br><br>Esta herramienta es solo para líderes de PXR.');return;}
+      window.__raUid=s.user.id;
+      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
+        var rows=res.data||[];
+        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        if(isAdmin){unlock();return;}
+        var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
+        if(!leaderRow){msg('🔒 Esta herramienta es solo para líderes (R4/R5) de PXR.');return;}
+        sb.from('alliances').select('tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
+          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
+          if(tag.indexOf('PXR')===0){unlock();}
+          else{msg('🔒 Esta herramienta es solo para líderes de PXR.');}
+        }).catch(function(){msg('Error comprobando tu alianza.');});
+      }).catch(function(){msg('Error comprobando permisos.');});
+    }).catch(function(){msg('Error de sesión.');});
+  }catch(e){msg('Error de acceso.');}
+})();
+
+/* ── State-aware back link ───────────────────────────────────── */
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+/* ── RALLY SYNC LOGIC ─────────────────────────────────────────── */
+const MAX_RALLIES=3;
+let rallyCount=2;
+let countdownTimer=null;
+let rallyData=[]; // computed after calc
+
+function rallyCardHTML(n){
+  return `<div class="rally-card" id="rally${n}" data-n="${n}">
+    <div class="rnum">RALLY ${n}</div>
+    ${n>2?`<button class="remove-btn" data-remove="${n}">✕ quitar</button>`:''}
+    <div class="field">
+      <label>Líder</label>
+      <input type="text" id="leader${n}" placeholder="Nombre del líder">
+    </div>
+    <div class="field">
+      <label>Ratio (opcional)</label>
+      <input type="text" id="ratio${n}" placeholder="ej. 2:1:1">
+    </div>
+    <div class="field">
+      <label>Tiempo de marcha al objetivo</label>
+      <div class="march-row">
+        <input type="number" id="min${n}" min="0" max="59" placeholder="0" inputmode="numeric"> <span>min</span>
+        <input type="number" id="sec${n}" min="0" max="59" placeholder="00" inputmode="numeric"> <span>seg</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRallyCards(){
+  const box=document.getElementById('ralliesBox');
+  let html='';
+  for(let i=1;i<=rallyCount;i++) html+=rallyCardHTML(i);
+  box.innerHTML=html;
+  box.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.onclick=()=>{ rallyCount--; renderRallyCards(); updateAddBtn(); };
+  });
+  updateAddBtn();
+}
+function updateAddBtn(){
+  const addBtn=document.getElementById('addBtn');
+  if(rallyCount<MAX_RALLIES){
+    addBtn.style.display='';
+    addBtn.textContent = rallyCount===2 ? '+ Añadir Rally 3 (triple rally)' : '+ Añadir rally';
+  } else {
+    addBtn.style.display='none';
+  }
+}
+document.getElementById('addBtn').onclick=()=>{
+  if(rallyCount<MAX_RALLIES){ rallyCount++; renderRallyCards(); }
+};
+
+function fmt(totalSec){
+  totalSec=Math.max(0,Math.round(totalSec));
+  const m=Math.floor(totalSec/60), s=totalSec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function calc(){
+  const rows=[];
+  for(let i=1;i<=rallyCount;i++){
+    const leader=(document.getElementById('leader'+i).value||'Rally '+i).trim();
+    const ratio=(document.getElementById('ratio'+i).value||'').trim();
+    const min=parseInt(document.getElementById('min'+i).value||'0',10)||0;
+    const sec=parseInt(document.getElementById('sec'+i).value||'0',10)||0;
+    const marchSec=min*60+sec;
+    if(marchSec<=0){ alert('Ponle un tiempo de marcha a la Rally '+i+' (mínimo 1 segundo).'); return null; }
+    rows.push({n:i,leader,ratio,marchSec});
+  }
+  const maxMarch=Math.max(...rows.map(r=>r.marchSec));
+  rows.forEach(r=>{ r.delay=maxMarch-r.marchSec; }); // seconds to WAIT before sending this rally
+  return {rows,maxMarch};
+}
+
+function startCountdowns(rows,maxMarch){
+  if(countdownTimer) clearInterval(countdownTimer);
+  const t0=Date.now();
+  function tick(){
+    const elapsed=(Date.now()-t0)/1000;
+    const impactLeft=maxMarch-elapsed;
+    const clockEl=document.getElementById('impactClock');
+    clockEl.textContent = impactLeft<=0 ? '💥 ¡IMPACTO!' : fmt(impactLeft);
+    clockEl.classList.toggle('hit', impactLeft<=0);
+
+    rows.forEach(r=>{
+      const left=r.delay-elapsed;
+      const row=document.getElementById('tlrow'+r.n);
+      const timeEl=document.getElementById('tltime'+r.n);
+      if(!row||!timeEl) return;
+      if(left<=0){
+        row.classList.add('go');
+        timeEl.classList.add('go');
+        timeEl.textContent='🚀 ¡MANDA YA!';
+      } else {
+        row.classList.remove('go');
+        timeEl.classList.remove('go');
+        timeEl.textContent='en '+fmt(left);
+      }
+    });
+    if(impactLeft<=-2 && rows.every(r=>(r.delay-elapsed)<=0)){
+      // keep running a bit after impact, then stop refreshing to save battery
+      clearInterval(countdownTimer);
+    }
+  }
+  tick();
+  countdownTimer=setInterval(tick,250);
+}
+
+function renderTimeline(rows){
+  const tl=document.getElementById('timeline');
+  tl.innerHTML=rows.map(r=>`
+    <div class="tl-row" id="tlrow${r.n}">
+      <div class="tl-badge">${r.n}</div>
+      <div class="tl-info">
+        <div class="who">${escapeHtml(r.leader)}</div>
+        <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}Marcha ${fmt(r.marchSec)}</div>
+      </div>
+      <div class="tl-time" id="tltime${r.n}">—</div>
+    </div>`).join('');
+}
+
+function buildMessage(rows,maxMarch){
+  let msg='📢 ORDEN DE RALLY — ÚNETE EN ESTE ORDEN\n\n';
+  rows.forEach(r=>{
+    msg += `${r.n}️⃣ Rally ${r.n} — Líder: ${r.leader}`;
+    if(r.ratio) msg += ` (ratio ${r.ratio})`;
+    msg += '\n';
+  });
+  msg += '\n🚀 Horario de lanzamiento (desde ahora):\n';
+  rows.forEach(r=>{
+    msg += `Rally ${r.n} (${r.leader}): ${r.delay<=0.5?'manda YA':'manda en '+fmt(r.delay)}\n`;
+  });
+  msg += `\n🎯 Todos impactan juntos en: ${fmt(maxMarch)}`;
+  return msg;
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+document.getElementById('calcBtn').onclick=()=>{
+  const out=calc();
+  if(!out) return;
+  const {rows,maxMarch}=out;
+  rallyData=rows;
+  renderTimeline(rows);
+  document.getElementById('msgBox').textContent=buildMessage(rows,maxMarch);
+  document.getElementById('results').style.display='block';
+  document.getElementById('shareBox').style.display='none';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  startCountdowns(rows,maxMarch);
+  saveAndShare(rows,maxMarch);
+};
+
+async function saveAndShare(rows,maxMarch){
+  const sb=window.__raSb;
+  if(!sb) return; // gate failed to init — local countdown still works, just no share link
+  const targetImpactAt=new Date(Date.now()+maxMarch*1000).toISOString();
+  const stateParam=new URLSearchParams(location.search).get('s')||(function(){try{return localStorage.getItem('phx_state')||'3139';}catch(e){return '3139';}})();
+  try{
+    const{data,error}=await sb.from('rally_syncs').insert({
+      state_id:String(stateParam),
+      created_by:window.__raUid||null,
+      rows:rows.map(r=>({n:r.n,leader:r.leader,ratio:r.ratio,marchSec:r.marchSec,delay:r.delay})),
+      max_march_sec:Math.round(maxMarch),
+      target_impact_at:targetImpactAt
+    }).select('id').single();
+    if(error||!data){ console.warn('No se pudo guardar para compartir:',error); return; }
+    const shareUrl=location.origin+location.pathname.replace('phoenix-rally-sync.html','phoenix-rally-view.html')+'?id='+data.id+'&s='+stateParam;
+    const shareBox=document.getElementById('shareBox');
+    const shareBtn=document.getElementById('shareBtn');
+    shareBox.style.display='block';
+    shareBtn.onclick=()=>{
+      navigator.clipboard.writeText(shareUrl).then(()=>{
+        shareBtn.textContent='✓ ¡Enlace copiado!';
+        setTimeout(()=>{ shareBtn.textContent='🔗 Copiar enlace de cuenta atrás'; },1800);
+      }).catch(()=>{ prompt('Copia el enlace:',shareUrl); });
+    };
+  }catch(e){ console.warn('Error guardando para compartir:',e); }
+}
+
+document.getElementById('copyBtn').onclick=()=>{
+  const text=document.getElementById('msgBox').textContent;
+  const btn=document.getElementById('copyBtn');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✓ ¡Copiado!'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='📋 Copiar mensaje'; btn.classList.remove('copied'); },1800);
+  }).catch(()=>{ alert('No se pudo copiar. Manténlo pulsado para copiar manualmente.'); });
+};
+
+document.getElementById('resetBtn').onclick=()=>{
+  if(countdownTimer) clearInterval(countdownTimer);
+  document.getElementById('results').style.display='none';
+  document.getElementById('shareBox').style.display='none';
+  rallyCount=2;
+  renderRallyCards();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+renderRallyCards();
+</script>
+</body>
+</html>
