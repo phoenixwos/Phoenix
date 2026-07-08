@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>Sincronizador de Rally · Phoenix</title>
+<title>Rally Sync · Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -84,45 +84,45 @@
 <div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
   <div style="max-width:340px;">
     <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
-    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Comprobando acceso…</div>
-    <a href="phoenix-tools.html" style="display:inline-block;margin-top:18px;color:#7fd9ee;font-family:'Rajdhani';font-weight:700;font-size:.85rem;text-decoration:none;">◂ Volver a Herramientas</a>
+    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Checking access…</div>
+    <a href="phoenix-tools.html" style="display:inline-block;margin-top:18px;color:#7fd9ee;font-family:'Rajdhani';font-weight:700;font-size:.85rem;text-decoration:none;">◂ Back to Tools</a>
   </div>
 </div>
 
 <div class="wrap">
   <div class="topbar">
-    <a class="back" id="backLink" href="phoenix-tools.html">◂ Herramientas</a>
+    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
   </div>
-  <h1 style="margin-bottom:6px;">⏱️ Sincronizador de Rally</h1>
-  <p class="lead">Cada líder da su tiempo de marcha al objetivo. La herramienta calcula cuándo debe mandar cada uno para que todos golpeen a la vez — con prioridad de orden 1️⃣ 2️⃣ 3️⃣.</p>
+  <h1 style="margin-bottom:6px;">⏱️ Rally Sync</h1>
+  <p class="lead">Each leader gives their march time to target. The tool calculates when each one needs to send so everyone hits at the same time — always keeping the 1️⃣ 2️⃣ 3️⃣ order.</p>
 
   <div id="ralliesBox"></div>
 
-  <button class="addbtn" id="addBtn" style="display:none;">+ Añadir Rally 3 (triple rally)</button>
+  <button class="addbtn" id="addBtn" style="display:none;">+ Add Rally 3 (triple rally)</button>
 
-  <button class="calcbtn" id="calcBtn">🎯 Calcular sincronización</button>
+  <button class="calcbtn" id="calcBtn">🎯 Calculate sync</button>
 
   <div class="results" id="results">
     <div class="impact">
-      <div class="lbl">🎯 Impacto conjunto en</div>
+      <div class="lbl">🎯 Combined impact in</div>
       <div class="clock" id="impactClock">00:00</div>
     </div>
 
     <div class="timeline" id="timeline"></div>
 
     <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ice-dim);margin-bottom:8px;font-weight:600;">
-      📢 Mensaje para la alianza
+      📢 Message for the alliance
     </div>
     <div class="msgbox" id="msgBox"></div>
-    <button class="copybtn" id="copyBtn">📋 Copiar mensaje</button>
+    <button class="copybtn" id="copyBtn">📋 Copy message</button>
 
     <div class="share-box" id="shareBox" style="display:none;margin-top:16px;padding:14px;background:linear-gradient(180deg,#123420,#0e2718);border:1px solid var(--green-deep);border-radius:12px;">
-      <div style="font-size:.78rem;font-weight:700;color:var(--green);margin-bottom:6px;">📺 Pantalla de cuenta atrás en vivo</div>
-      <div style="font-size:.76rem;color:var(--text-dim);line-height:1.5;margin-bottom:10px;">Comparte este enlace en Discord — cualquiera puede verlo, con sonido, sin necesitar acceso a esta herramienta.</div>
-      <button class="copybtn" id="shareBtn" style="background:var(--green-deep);color:#062;border-color:var(--green-deep);">🔗 Copiar enlace de cuenta atrás</button>
+      <div style="font-size:.78rem;font-weight:700;color:var(--green);margin-bottom:6px;">📺 Live countdown screen</div>
+      <div style="font-size:.76rem;color:var(--text-dim);line-height:1.5;margin-bottom:10px;">Share this link in Discord — anyone can view it, with sound, without needing access to this tool.</div>
+      <button class="copybtn" id="shareBtn" style="background:var(--green-deep);color:#062;border-color:var(--green-deep);">🔗 Copy countdown link</button>
     </div>
 
-    <button class="resetbtn" id="resetBtn">↺ Empezar de nuevo</button>
+    <button class="resetbtn" id="resetBtn">↺ Start over</button>
   </div>
 </div>
 
@@ -141,27 +141,27 @@
     return '3139';
   }
   try{
-    if(!(window.supabase&&window.supabase.createClient)){msg('No se pudo cargar. Recarga la página.');return;}
+    if(!(window.supabase&&window.supabase.createClient)){msg('Could not load. Reload the page.');return;}
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     window.__raSb=sb; // reused later to save/share the sync
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
-      if(!s){msg('🔒 Inicia sesión en Phoenix primero.<br><br>Esta herramienta es solo para líderes de PXR.');return;}
+      if(!s){msg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
       window.__raUid=s.user.id;
       sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
         var rows=res.data||[];
         var isAdmin=rows.some(function(p){return p.role==='admin';});
         if(isAdmin){unlock();return;}
         var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
-        if(!leaderRow){msg('🔒 Esta herramienta es solo para líderes (R4/R5) de PXR.');return;}
+        if(!leaderRow){msg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
         sb.from('alliances').select('tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
           var tag=(ar.data&&ar.data.tag||'').toUpperCase();
           if(tag.indexOf('PXR')===0){unlock();}
-          else{msg('🔒 Esta herramienta es solo para líderes de PXR.');}
-        }).catch(function(){msg('Error comprobando tu alianza.');});
-      }).catch(function(){msg('Error comprobando permisos.');});
-    }).catch(function(){msg('Error de sesión.');});
-  }catch(e){msg('Error de acceso.');}
+          else{msg('🔒 This tool is only for PXR leaders.');}
+        }).catch(function(){msg('Error checking your alliance.');});
+      }).catch(function(){msg('Error checking permissions.');});
+    }).catch(function(){msg('Session error.');});
+  }catch(e){msg('Access error.');}
 })();
 
 /* ── State-aware back link ───────────────────────────────────── */
@@ -183,15 +183,15 @@ function rallyCardHTML(n){
     <div class="rnum">RALLY ${n}</div>
     ${n>2?`<button class="remove-btn" data-remove="${n}">✕ quitar</button>`:''}
     <div class="field">
-      <label>Líder</label>
-      <input type="text" id="leader${n}" placeholder="Nombre del líder">
+      <label>Leader</label>
+      <input type="text" id="leader${n}" placeholder="Leader name">
     </div>
     <div class="field">
-      <label>Ratio (opcional)</label>
-      <input type="text" id="ratio${n}" placeholder="ej. 2:1:1">
+      <label>Ratio (optional)</label>
+      <input type="text" id="ratio${n}" placeholder="e.g. 2:1:1">
     </div>
     <div class="field">
-      <label>Tiempo de marcha al objetivo</label>
+      <label>March time to target</label>
       <div class="march-row">
         <input type="number" id="min${n}" min="0" max="59" placeholder="0" inputmode="numeric"> <span>min</span>
         <input type="number" id="sec${n}" min="0" max="59" placeholder="00" inputmode="numeric"> <span>seg</span>
@@ -214,7 +214,7 @@ function updateAddBtn(){
   const addBtn=document.getElementById('addBtn');
   if(rallyCount<MAX_RALLIES){
     addBtn.style.display='';
-    addBtn.textContent = rallyCount===2 ? '+ Añadir Rally 3 (triple rally)' : '+ Añadir rally';
+    addBtn.textContent = rallyCount===2 ? '+ Add Rally 3 (triple rally)' : '+ Añadir rally';
   } else {
     addBtn.style.display='none';
   }
@@ -237,7 +237,7 @@ function calc(){
     const min=parseInt(document.getElementById('min'+i).value||'0',10)||0;
     const sec=parseInt(document.getElementById('sec'+i).value||'0',10)||0;
     const marchSec=min*60+sec;
-    if(marchSec<=0){ alert('Ponle un tiempo de marcha a la Rally '+i+' (mínimo 1 segundo).'); return null; }
+    if(marchSec<=0){ alert('Set a march time for Rally '+i+' (minimum 1 second).'); return null; }
     rows.push({n:i,leader,ratio,marchSec});
   }
   const maxMarch=Math.max(...rows.map(r=>r.marchSec));
@@ -263,11 +263,11 @@ function startCountdowns(rows,maxMarch){
       if(left<=0){
         row.classList.add('go');
         timeEl.classList.add('go');
-        timeEl.textContent='🚀 ¡MANDA YA!';
+        timeEl.textContent='🚀 SEND NOW!';
       } else {
         row.classList.remove('go');
         timeEl.classList.remove('go');
-        timeEl.textContent='en '+fmt(left);
+        timeEl.textContent='in '+fmt(left);
       }
     });
     if(impactLeft<=-2 && rows.every(r=>(r.delay-elapsed)<=0)){
@@ -286,24 +286,24 @@ function renderTimeline(rows){
       <div class="tl-badge">${r.n}</div>
       <div class="tl-info">
         <div class="who">${escapeHtml(r.leader)}</div>
-        <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}Marcha ${fmt(r.marchSec)}</div>
+        <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}March ${fmt(r.marchSec)}</div>
       </div>
       <div class="tl-time" id="tltime${r.n}">—</div>
     </div>`).join('');
 }
 
 function buildMessage(rows,maxMarch){
-  let msg='📢 ORDEN DE RALLY — ÚNETE EN ESTE ORDEN\n\n';
+  let msg='📢 RALLY ORDER — JOIN IN THIS ORDER\n\n';
   rows.forEach(r=>{
-    msg += `${r.n}️⃣ Rally ${r.n} — Líder: ${r.leader}`;
+    msg += `${r.n}️⃣ Rally ${r.n} — Leader: ${r.leader}`;
     if(r.ratio) msg += ` (ratio ${r.ratio})`;
     msg += '\n';
   });
-  msg += '\n🚀 Horario de lanzamiento (desde ahora):\n';
+  msg += '\n🚀 Send schedule (from now):\n';
   rows.forEach(r=>{
-    msg += `Rally ${r.n} (${r.leader}): ${r.delay<=0.5?'manda YA':'manda en '+fmt(r.delay)}\n`;
+    msg += `Rally ${r.n} (${r.leader}): ${r.delay<=0.5?'send NOW':'send in '+fmt(r.delay)}\n`;
   });
-  msg += `\n🎯 Todos impactan juntos en: ${fmt(maxMarch)}`;
+  msg += `\n🎯 Everyone impacts together in: ${fmt(maxMarch)}`;
   return msg;
 }
 
@@ -343,9 +343,9 @@ async function saveAndShare(rows,maxMarch){
     shareBox.style.display='block';
     shareBtn.onclick=()=>{
       navigator.clipboard.writeText(shareUrl).then(()=>{
-        shareBtn.textContent='✓ ¡Enlace copiado!';
-        setTimeout(()=>{ shareBtn.textContent='🔗 Copiar enlace de cuenta atrás'; },1800);
-      }).catch(()=>{ prompt('Copia el enlace:',shareUrl); });
+        shareBtn.textContent='✓ Link copied!';
+        setTimeout(()=>{ shareBtn.textContent='🔗 Copy countdown link'; },1800);
+      }).catch(()=>{ prompt('Copy the link:',shareUrl); });
     };
   }catch(e){ console.warn('Error guardando para compartir:',e); }
 }
@@ -354,9 +354,9 @@ document.getElementById('copyBtn').onclick=()=>{
   const text=document.getElementById('msgBox').textContent;
   const btn=document.getElementById('copyBtn');
   navigator.clipboard.writeText(text).then(()=>{
-    btn.textContent='✓ ¡Copiado!'; btn.classList.add('copied');
-    setTimeout(()=>{ btn.textContent='📋 Copiar mensaje'; btn.classList.remove('copied'); },1800);
-  }).catch(()=>{ alert('No se pudo copiar. Manténlo pulsado para copiar manualmente.'); });
+    btn.textContent='✓ Copied!'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='📋 Copy message'; btn.classList.remove('copied'); },1800);
+  }).catch(()=>{ alert('Could not copy. Press and hold to copy manually.'); });
 };
 
 document.getElementById('resetBtn').onclick=()=>{

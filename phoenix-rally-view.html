@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>🎯 Cuenta atrás de Rally · Phoenix</title>
+<title>🎯 Rally Countdown · Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -58,15 +58,15 @@
 </head>
 <body>
 <div class="wrap">
-  <h1 id="topLabel">⏱️ Cuenta atrás de Rally</h1>
+  <h1 id="topLabel">⏱️ Rally Countdown</h1>
   <div id="content"></div>
 </div>
 
 <div class="soundgate" id="soundGate">
   <div class="box">
     <div class="ic">🔊</div>
-    <p>Toca para activar el sonido de aviso.<br>El navegador lo requiere antes de poder sonar solo.</p>
-    <button id="enableSoundBtn">🔔 Activar sonido</button>
+    <p>Tap to enable the alert sound.<br>Your browser requires this before it can play sound on its own.</p>
+    <button id="enableSoundBtn">🔔 Enable sound</button>
   </div>
 </div>
 
@@ -114,24 +114,24 @@ const id=new URLSearchParams(location.search).get('id');
 const content=document.getElementById('content');
 
 if(!id){
-  content.innerHTML='<div class="state-msg">Falta el enlace de la cuenta atrás.<br>Pide a tu líder que te comparta el enlace correcto.</div>';
+  content.innerHTML='<div class="state-msg">Missing countdown link.<br>Ask your leader to share the correct link.</div>';
   document.getElementById('soundGate').style.display='none';
 }else{
   load();
 }
 
 async function load(){
-  content.innerHTML='<div class="state-msg">Cargando cuenta atrás…</div>';
+  content.innerHTML='<div class="state-msg">Loading countdown…</div>';
   try{
     const{data,error}=await sb.from('rally_syncs').select('*').eq('id',id).maybeSingle();
     if(error||!data){
-      content.innerHTML='<div class="state-msg">No se encontró esta cuenta atrás.<br>Puede que el líder haya calculado una nueva — pide el enlace actualizado.</div>';
+      content.innerHTML='<div class="state-msg">This countdown wasn\'t found.<br>The leader may have calculated a new one — ask for the updated link.</div>';
       document.getElementById('soundGate').style.display='none';
       return;
     }
     render(data);
   }catch(e){
-    content.innerHTML='<div class="state-msg">Error de conexión. Recarga la página.</div>';
+    content.innerHTML='<div class="state-msg">Connection error. Reload the page.</div>';
     document.getElementById('soundGate').style.display='none';
   }
 }
@@ -142,7 +142,7 @@ function render(sync){
 
   content.innerHTML=`
     <div class="impact">
-      <div class="lbl">🎯 Impacto conjunto en</div>
+      <div class="lbl">🎯 Combined impact in</div>
       <div class="clock" id="impactClock">--:--</div>
     </div>
     <div class="timeline" id="timeline">
@@ -151,7 +151,7 @@ function render(sync){
           <div class="tl-badge">${r.n}</div>
           <div class="tl-info">
             <div class="who">${escapeHtml(r.leader)}</div>
-            <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}Marcha ${fmt(r.marchSec)}</div>
+            <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}March ${fmt(r.marchSec)}</div>
           </div>
           <div class="tl-time" id="tltime${r.n}">—</div>
         </div>`).join('')}
@@ -163,7 +163,7 @@ function render(sync){
     const impactLeft=(targetImpact-now)/1000;
     const clockEl=document.getElementById('impactClock');
     if(clockEl){
-      clockEl.textContent = impactLeft<=0 ? '💥 ¡IMPACTO!' : fmt(impactLeft);
+      clockEl.textContent = impactLeft<=0 ? '💥 IMPACT!' : fmt(impactLeft);
       clockEl.classList.toggle('hit', impactLeft<=0);
     }
     if(impactLeft<=0 && !fired.impact){ fired.impact=true; playImpactAlarm(); }
@@ -176,11 +176,11 @@ function render(sync){
       if(!row||!timeEl) return;
       if(left<=0){
         row.classList.add('go'); timeEl.classList.add('go');
-        timeEl.textContent='🚀 ¡MANDA YA!';
+        timeEl.textContent='🚀 SEND NOW!';
         if(!fired['send'+r.n]){ fired['send'+r.n]=true; playSendAlarm(); }
       } else {
         row.classList.remove('go'); timeEl.classList.remove('go');
-        timeEl.textContent='en '+fmt(left);
+        timeEl.textContent='in '+fmt(left);
       }
     });
   }
