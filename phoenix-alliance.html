@@ -113,7 +113,7 @@ const CONFIG = {
 // Otherwise fall back to the CONFIG block above (PXR default).
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-const _sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+const _sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 
 // Detect which state folder this page lives in (for nav labels & links)
 // State from URL (?s=4501). No parameter → "3139". One file, every state.

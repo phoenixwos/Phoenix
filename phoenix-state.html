@@ -962,7 +962,7 @@ else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
 (async()=>{
   const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+  const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 
   // Guard: if the requested state isn't registered yet, show a clear
   // message instead of silently rendering an empty shell.

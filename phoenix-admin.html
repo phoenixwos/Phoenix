@@ -656,7 +656,7 @@ TEK"></textarea>
 // ── SUPABASE ──────────────────────────────────────────────────
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 // Detect state folder for nav labels
 // State from URL (?s=4501). No parameter → "3139".
 function getState(){var q=new URLSearchParams(location.search).get('s');if(q&&/^\d{3,5}$/.test(q)){try{localStorage.setItem('phx_state',q);}catch(e){}return q;}try{var ls=localStorage.getItem('phx_state');if(ls&&/^\d{3,5}$/.test(ls))return ls;}catch(e){}return '3139';}
@@ -1079,6 +1079,17 @@ function loadEditor(al){
   // bottom-nav label and preview links reflect the right state (fixes admin
   // showing 3139 while editing a 4501 alliance).
   if(al&&al.state_id){ try{localStorage.setItem('phx_state',String(al.state_id));}catch(e){} window.__ADMIN_STATE=String(al.state_id); if(typeof syncAdminNav==='function') syncAdminNav(); }
+  // Keep the nav's Alliance button pointed at whatever alliance is actually
+  // loaded here — not a hardcoded PXR, and not just "alphabetically first in
+  // this state" (that picked the wrong alliance, e.g. ARL instead of PXR).
+  if(al&&al.tag){
+    const navBtn=document.querySelector('.botnav a[href*="phoenix-alliance.html"]');
+    if(navBtn){
+      navBtn.textContent=al.tag;
+      const base=(typeof stateUrl==='function')?stateUrl('phoenix-alliance.html'):'phoenix-alliance.html';
+      navBtn.href=base+(base.includes('?')?'&':'?')+'tag='+al.tag;
+    }
+  }
   const cfg=al.config||{};
   $('#edTitle').textContent=`[${al.tag}] ${al.name}`;
   $('#edSub').textContent='State '+al.state_id;
@@ -2319,14 +2330,6 @@ async function checkAccess(user){
   // Sort alliances alphabetically by tag for easy switching
   als.sort((a,b)=>(a.tag||'').localeCompare(b.tag||''));
   adminAlliances=als;
-
-  // Point the nav's Alliance button at this admin's own alliance
-  // (not a hardcoded PXR, which was wrong for anyone managing a different state).
-  const navAl=als.find(a=>String(a.state_id)===String(getState()))||als[0];
-  if(navAl){
-    const navBtn=document.querySelector('.botnav a[href*="phoenix-alliance.html"]');
-    if(navBtn){ navBtn.textContent=navAl.tag; navBtn.href=stateUrl('phoenix-alliance.html')+(stateUrl('phoenix-alliance.html').includes('?')?'&':'?')+'tag='+navAl.tag; }
-  }
 
   if(als.length===1){
     loadEditor(als[0]);

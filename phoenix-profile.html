@@ -609,7 +609,7 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 <script>
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 
 const I18N={
   en:{name:"English",dir:"ltr",t:{"empty.title":"Your page is waiting","empty.l1":"A leader from your alliance invited you to create your Phoenix page.","empty.l2":"You decide what to show. It's yours.","empty.cta":"Create my page","signin.link":"Already have a page? Sign in","dir.browse":"Browse player pages","dir.title":"PXR Players","back":"Back","nav.profile":"Profile","form.title":"My page","form.sub":"Fill in what you want. Anything left blank won't be shown.","f.photo":"Profile photo","f.photo.hint":"Or leave blank — we'll use your initials.","f.gid":"Governor ID","f.gid.hint":"Required. Leaders use this to verify you're in the alliance.","f.name":"In-game name","f.avatar":"Initials","f.lang":"Language(s)","f.country":"Country / TZ","f.alliance":"Alliance","f.alliance.hint":"Pending until a leader confirms.","f.bio":"About me","help.label":"Available to help with","sec.power":"Power (optional)","sec.about":"About me","sec.badges":"Badges","power.t":"Show my power","power.s":"Hidden by default.","save":"Save my page","cancel":"Cancel","edit":"Edit","edit.long":"Edit my page","show":"Show","hide":"Hide","badges.note":"Special badges are awarded by leaders (R5 + R4) — they recognize who you are, not your numbers.","pending":"pending confirmation","pick.title":"Your characters","pick.sub":"Pick a character to manage, or create a new one.","pick.new":"Create new character","pick.signout":"Sign out","pick.server":"Server","pick.switch":"My characters","f.state":"State / Server","f.state.hint":"Which state is this character in?","nav.states":"States","nav.me":"My characters"}},
@@ -1280,7 +1280,7 @@ async function init(){
   }
 
   try{
-    const{data:{session}}=await sb.auth.getSession();
+    const session=await getSessionWithRetry();
     if(session?.user){currentUser=session.user;await loadProfile();maybeShowCave();}
     else{
       // If arriving via invite link, customize the welcome message
@@ -1294,6 +1294,24 @@ async function init(){
       show('empty');
     }
   }catch(e){console.error('Session error:',e);show('empty');}
+}
+
+// A network hiccup while refreshing the token should NOT force the person to log
+// in again — their session is still safely stored on this device. Retry once
+// (with a short pause) before concluding they're really signed out.
+async function getSessionWithRetry(){
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session) return session;
+  }catch(e){ console.warn('getSession failed, will retry once:',e.message); }
+  await new Promise(r=>setTimeout(r,1200));
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    return session||null;
+  }catch(e){
+    console.warn('getSession retry also failed — showing sign-in as a last resort:',e.message);
+    return null;
+  }
 }
 
 sb.auth.onAuthStateChange(async(event,session)=>{
