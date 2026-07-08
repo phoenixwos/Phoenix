@@ -109,11 +109,9 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .al-pick .arr{color:var(--muted);font-size:1.1rem;}
 
 /* TABS for editor sections */
-.egroupbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px;}
-.egroupbar::-webkit-scrollbar{display:none;}
-.egroup{flex:none;font-family:'Fredoka';font-weight:700;font-size:.82rem;padding:9px 16px;border-radius:12px;border:2px solid var(--panel-edge);background:#eef6ff;color:var(--ink-soft);white-space:nowrap;}
-.egroup.active{background:var(--fire);color:#fff;border-color:var(--fire-deep);box-shadow:0 3px 0 var(--fire-deep);}
-.etabbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin-bottom:4px;}
+.etabbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;margin-bottom:4px;align-items:center;}
+.etab-group{flex:none;font-family:'Fredoka',sans-serif;font-weight:700;font-size:.64rem;letter-spacing:.08em;color:var(--acc-d,#c2470f);background:var(--panel,#fff2e6);border:1.5px dashed var(--acc,#ff9a5a);border-radius:8px;padding:5px 9px;white-space:nowrap;margin-left:4px;}
+.etab-group:first-child{margin-left:0;}
 .etabbar::-webkit-scrollbar{display:none;}
 .etab{flex:none;font-family:'Fredoka';font-weight:600;font-size:.78rem;padding:8px 14px;border-radius:11px;border:2px solid var(--panel-edge);background:#fff;color:var(--ink-soft);white-space:nowrap;box-shadow:0 2px 0 var(--panel-edge);}
 .etab.active{background:linear-gradient(180deg,#ff9248,var(--fire-deep));color:#fff;border-color:var(--fire-deep);box-shadow:0 2px 0 #c2470f;}
@@ -151,7 +149,7 @@ body{padding-bottom:72px !important;}
     <div class="denied-icon">🔒</div>
     <h2 style="margin-bottom:8px;">Access restricted</h2>
     <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:24px;">This panel is for verified R4/R5 officers only. If you should have access, contact Hestelae or TMQ.</p>
-    <a href="./phoenix-state.html" class="btn btn-ghost" style="text-decoration:none;display:inline-flex;width:auto;">← Back to State 3139</a>
+    <a href="./phoenix-state.html" class="btn btn-ghost" style="text-decoration:none;display:inline-flex;width:auto;">← Back to State <span id="backStateNum">3139</span></a>
   </div>
 
   <!-- NOT LOGGED IN -->
@@ -189,31 +187,25 @@ body{padding-bottom:72px !important;}
       <select id="switchAllianceSel" style="width:100%;padding:11px 14px;border:2px solid var(--panel-edge);border-radius:12px;background:#fff;color:var(--ink);font-size:.9rem;font-family:'Fredoka';font-weight:600;outline:none;"></select>
     </div>
 
-    <!-- EDITOR TABS: two levels — groups on top, their sub-tabs below -->
-    <div class="egroupbar">
-      <button class="egroup active" data-group="identity">🏷️ Identity</button>
-      <button class="egroup" data-group="people">👥 People</button>
-      <button class="egroup" data-group="content">📢 Content</button>
-      <button class="egroup" data-group="fixed">📌 Fixed</button>
-      <button class="egroup" data-group="admin" id="adminGroup" style="display:none">🔑 Admin</button>
-    </div>
+    <!-- EDITOR TABS -->
     <div class="etabbar">
-      <!-- Identity group -->
-      <button class="etab active" data-sec="identity" data-g="identity">🏷️ Identity</button>
-      <button class="etab" data-sec="style" data-g="identity">🎨 Style</button>
-      <!-- People group -->
-      <button class="etab" data-sec="members" data-g="people" style="display:none">📋 Members &amp; IDs</button>
-      <button class="etab" data-sec="leaders" data-g="people" style="display:none">👥 Leaders</button>
-      <!-- Content group -->
-      <button class="etab" data-sec="news" data-g="content" style="display:none">📢 News</button>
-      <button class="etab" data-sec="events" data-g="content" style="display:none">📅 Events</button>
-      <button class="etab" data-sec="gallery" data-g="content" style="display:none">📸 Gallery</button>
-      <button class="etab" data-sec="memberzone" data-g="content" style="display:none">🔒 Members Zone</button>
-      <!-- Fixed group -->
-      <button class="etab" data-sec="rules" data-g="fixed" style="display:none">📜 Rules</button>
-      <!-- Admin group -->
-      <button class="etab" data-sec="ranking" data-g="admin" id="rankingTab" style="display:none">🏆 State Ranking</button>
-      <button class="etab" data-sec="access" data-g="admin" id="accessTab" style="display:none">🔑 Access</button>
+      <span class="etab-group" id="grpAlliance">🏰 ALLIANCE</span>
+      <button class="etab active" data-sec="identity">🏷️ Identity</button>
+      <button class="etab" data-sec="style">🎨 Style</button>
+      <button class="etab" data-sec="leaders">👥 Leaders</button>
+      <button class="etab" data-sec="members">📋 Members</button>
+      <button class="etab" data-sec="events">📅 Events</button>
+      <button class="etab" data-sec="rules">📜 Rules</button>
+      <button class="etab" data-sec="news">📢 News</button>
+      <button class="etab" data-sec="gallery">📸 Gallery</button>
+      <button class="etab" data-sec="memberzone">🔒 Members Zone</button>
+      <span class="etab-group" id="grpState" style="display:none">🌍 STATE</span>
+      <button class="etab" data-sec="ranking" id="rankingTab" style="display:none">🏆 State Ranking</button>
+      <button class="etab" data-sec="nap" id="napTab" style="display:none">🤝 NAP</button>
+      <span class="etab-group" id="grpSystem" style="display:none">⚙️ SYSTEM</span>
+      <button class="etab" data-sec="search" id="searchTab" style="display:none">🔍 Search</button>
+      <button class="etab" data-sec="access" id="accessTab" style="display:none">🔑 Access</button>
+      <button class="etab" data-sec="frames" id="framesTab" style="display:none">🖼️ Marcos</button>
     </div>
 
     <!-- IDENTITY -->
@@ -304,7 +296,33 @@ body{padding-bottom:72px !important;}
           <button type="button" class="btn btn-ghost theme-opt" data-theme="neutral" id="themeNeutral">⚪ Neutral</button>
           <button type="button" class="btn btn-ghost theme-opt" data-theme="wosblue" id="themeWosblue">🔵 WOS Blue</button>
           <button type="button" class="btn btn-ghost theme-opt" data-theme="battle" id="themeBattle">⚔️ Battle</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="ice" id="themeIce">🧊 Ice</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="night" id="themeNight">🌙 Night</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="blood" id="themeBlood">🩸 Blood</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="emerald" id="themeEmerald">💚 Emerald</button>
+          <button type="button" class="btn btn-ghost theme-opt" data-theme="storm" id="themeStorm">⚡ Storm</button>
         </div>
+        <div class="slabel" style="margin-top:18px;">🌐 Default language</div>
+        <p style="font-size:.78rem;color:var(--ink-soft);margin-bottom:8px;">Language visitors see first when they open this alliance's page.</p>
+        <select id="fDefaultLang" style="width:100%;padding:10px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.9rem;color:var(--ink);">
+          <option value="">🌍 Auto (browser language)</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="pt">🇧🇷 Português</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="tr">🇹🇷 Türkçe</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="ar">🇸🇦 العربية</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="id">🇮🇩 Indonesia</option>
+          <option value="vi">🇻🇳 Tiếng Việt</option>
+          <option value="th">🇹🇭 ไทย</option>
+          <option value="pl">🇵🇱 Polski</option>
+        </select>
       </div>
       <div class="card">
         <div class="slabel" style="margin-top:0;">🖼️ Alliance Logo</div>
@@ -395,30 +413,25 @@ body{padding-bottom:72px !important;}
 
     <!-- MEMBERS -->
     <div class="esec" id="sec-members">
-      <div class="card" style="background:#eef6ff;border:2px solid #bcdcff;">
-        <p style="font-size:.8rem;color:#1c5a8a;margin:0;">ℹ️ <b>This is your internal alliance roster</b> — a working list of Governor IDs for R4/R5 use (rosters, tools like gift-code redemption, etc.). It's separate from each player's own public Phoenix page, which they create themselves. Confirming someone here doesn't create their page for them, and their page doesn't automatically update this list.</p>
-      </div>
       <div class="card">
-        <div class="slabel" style="margin-top:0;">📥 Bulk import / export</div>
-        <p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:12px;">Import a list of members from CSV or Excel. Columns: Name, Governor ID, Rank. Existing members (matched by Governor ID) are updated; new ones are added as <b>pending</b>; anyone missing from the file is removed — you'll see a preview before anything is applied.</p>
+        <div class="slabel" style="margin-top:0;">📥 Roster (names)</div>
+        <p style="font-size:.8rem;color:var(--ink-soft);margin-bottom:12px;">Upload a simple list of member names (one per line, or a "Name" column). New names are added; names already here are left untouched — no duplicates. A "Rank" column is optional (R1–R5).</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <button type="button" class="btn btn-ghost" id="downloadTemplateBtn" style="font-size:.82rem;">📄 Download template</button>
-          <button type="button" class="btn btn-ghost" id="importBtn" style="font-size:.82rem;">📥 Import CSV / Excel</button>
+          <button type="button" class="btn btn-ghost" id="downloadTemplateBtn" style="font-size:.82rem;">📄 Download names template</button>
+          <button type="button" class="btn btn-ghost" id="importBtn" style="font-size:.82rem;">📥 Upload names list</button>
           <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none;">
-          <button type="button" class="btn btn-ghost" id="exportBtn" style="font-size:.82rem;">📤 Export current list (Excel)</button>
+          <button type="button" class="btn btn-ghost" id="exportBtn" style="font-size:.82rem;">📤 Export current roster</button>
+          <button type="button" class="btn btn-ghost" id="dedupeBtn" style="font-size:.82rem;color:#b06a00;border-color:#ffc266;">🧹 Clean duplicates</button>
         </div>
         <div class="errmsg" id="importErr" style="margin-top:10px;"></div>
-        <div id="importPreview" style="display:none;margin-top:10px;padding:12px 14px;background:#fff8ea;border:2px solid #f0d68a;border-radius:10px;font-size:.82rem;color:#7a5c00;font-family:'Fredoka';"></div>
         <div id="importStatus" style="display:none;margin-top:10px;padding:10px 14px;background:#eafaf0;border:2px solid #b8e8cc;border-radius:10px;font-size:.82rem;color:#2d8a5a;font-family:'Fredoka';font-weight:600;"></div>
       </div>
       <div class="card">
-        <div class="slabel" style="margin-top:0;">🔔 Discord alerts (optional)</div>
-        <p style="font-size:.78rem;color:var(--ink-soft);margin-bottom:8px;">Paste a Discord channel webhook URL to get pinged there whenever someone needs confirming.</p>
-        <input type="text" id="fDiscordWebhook" placeholder="https://discord.com/api/webhooks/..." style="width:100%;box-sizing:border-box;">
-        <button type="button" class="btn btn-ghost" id="saveWebhookBtn" style="font-size:.8rem;margin-top:8px;">💾 Save webhook</button>
-      </div>
-      <div id="pendingBanner" style="display:none;margin-bottom:12px;padding:12px 14px;background:#fff4e0;border:2px solid #f0c060;border-radius:12px;font-family:'Fredoka';font-weight:600;color:#8a5c00;font-size:.85rem;"></div>
-      <div class="card">
+        <div id="pendingBanner" style="display:none;background:linear-gradient(180deg,#fff4d6,#ffe9b8);border:2px solid #ffcc4d;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-family:'Fredoka';font-weight:700;color:#a06a00;font-size:.9rem;margin-bottom:4px;">⏳ <span id="pendingCount">0</span> waiting for your approval</div>
+          <div style="font-size:.78rem;color:#8a6a2a;margin-bottom:8px;">These players created their own page in your alliance. Confirm they really belong here.</div>
+          <div id="pendingList"></div>
+        </div>
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Manage your roster. Registered players appear automatically; you can also add members manually.</p>
         <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
         <div id="memberRows" class="dlist"></div>
@@ -431,11 +444,93 @@ body{padding-bottom:72px !important;}
     <!-- STATE RANKING (admins only) -->
     <div class="esec" id="sec-ranking">
       <div class="card">
-        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Top 20 alliances in your state. Use ▲▼ to reorder — moving one up shifts the other down. 🛡️ marks NAP-protected alliances.</p>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Drag-free ranking editor. Set each alliance's position number in the state. Lower = higher rank.</p>
         <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">⚡ This is the global state list — only you and TMQ can edit it.</p>
+        <!-- State picker + create new state -->
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+          <label style="font-family:'Fredoka';font-weight:600;font-size:.82rem;color:var(--ink-soft);">State:</label>
+          <select id="rankStateSel" style="flex:1;min-width:120px;padding:9px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;"></select>
+          <button class="btn btn-ghost" id="newStateBtn" style="width:auto;white-space:nowrap;">➕ New state</button>
+        </div>
+        <div id="newStateForm" style="display:none;background:var(--ice-soft,#eef6fc);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:8px;">Enter the new state's number (e.g. 4502). It will be created instantly — no code needed.</p>
+          <div style="display:flex;gap:8px;">
+            <input id="newStateNum" placeholder="State number" inputmode="numeric" maxlength="5" style="flex:1;padding:10px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';">
+            <button class="btn btn-fire" id="createStateBtn" style="width:auto;white-space:nowrap;">Create</button>
+          </div>
+          <div class="errmsg" id="newStateErr" style="margin-top:8px;"></div>
+        </div>
         <div id="rankRows" class="dlist"></div>
         <div class="errmsg" id="rankErr" style="margin-top:10px;"></div>
         <button class="btn btn-fire" id="saveRankBtn" style="margin-top:12px;">💾 Save state ranking</button>
+
+        <!-- Excel bulk tools for the ranking -->
+        <div style="margin-top:18px;padding-top:16px;border-top:1.5px dashed var(--panel-edge);">
+          <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px;font-family:'Fredoka';font-weight:600;">📊 Bulk edit by Excel</p>
+          <p style="font-size:.74rem;color:var(--muted);margin-bottom:10px;">Download the current list, edit tag / name / rank in Excel, then upload it back. Alliances not in your file just leave the ranking — their pages and data are never deleted.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-ghost" id="rankDownloadBtn" style="width:auto;">⬇️ Download current ranking</button>
+            <button class="btn btn-fire" id="rankUploadBtn" style="width:auto;">⬆️ Upload ranking Excel</button>
+            <input type="file" id="rankXlsxInput" accept=".xlsx,.xls,.csv" style="display:none">
+          </div>
+          <div class="errmsg" id="rankBulkMsg" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAP EDITOR (admins only) -->
+    <div class="esec" id="sec-nap">
+      <div class="card">
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px;">Set up the Non-Aggression Pact for <b id="napStateLabel">this state</b>. It appears as a public NAP tab on the state page. Leave everything empty and turn it off to hide the tab.</p>
+
+        <div class="field" style="margin-bottom:14px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="napActive" style="width:auto;">
+            <span>NAP active (show the public tab)</span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label>Rules — one per line (start with an emoji if you like)</label>
+          <textarea id="napRules" rows="6" placeholder="⚔️ DO NOT attack NAP alliances or their academy
+🏕️ DO NOT attack occupied tiles or encampments
+🏰 DO NOT alliance jump for Facilities/Fortresses
+💬 DO NOT provoke in World Chat"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Rules footer (optional)</label>
+          <input id="napRulesFooter" placeholder="❓ Not sure? Ask leadership first!">
+        </div>
+
+        <div class="field">
+          <label>Protected alliances — one tag per line</label>
+          <textarea id="napAlliances" rows="6" placeholder="LCW
+PXR
+PBB
+TEK"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Alliances footer (optional)</label>
+          <input id="napAlliancesFooter" placeholder="⚠️ Includes their academies too!">
+        </div>
+
+        <div class="errmsg" id="napErr" style="margin-top:6px;"></div>
+        <button class="btn btn-fire" id="saveNapBtn" style="margin-top:12px;">💾 Save NAP</button>
+      </div>
+    </div>
+
+    <!-- SEARCH / MANAGE (admins only) -->
+    <div class="esec" id="sec-search">
+      <div class="card">
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:10px;">Quickly find a player or an alliance by name to edit it — change a rank, fix a name, move a player, etc.</p>
+        <input id="mgmtSearch" placeholder="🔍 Type a player or alliance name…" style="width:100%;padding:11px;border:2px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.9rem;margin-bottom:12px;">
+        <div id="mgmtResults"></div>
+      </div>
+      <!-- Inline editor panel (shown when you pick a result) -->
+      <div class="card" id="mgmtEditCard" style="display:none;">
+        <div id="mgmtEditBody"></div>
       </div>
     </div>
 
@@ -454,17 +549,83 @@ body{padding-bottom:72px !important;}
       </div>
     </div>
 
-    <!-- CONFIG TEMPLATE (export / import) -->
-    <div style="margin-top:20px;padding:16px;background:linear-gradient(180deg,#fff7e6,#fff0d8);border:2px solid #ffd9a0;border-radius:14px;">
-      <div style="font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#c2470f;margin-bottom:4px;">📋 Config template</div>
-      <div style="font-size:.78rem;color:#7a5a3a;line-height:1.4;margin-bottom:12px;">Export this alliance's settings to an Excel file that leaders can fill in. Import it back to load everything at once. Then press <b>Save changes</b>.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="exportCfgBtn" style="flex:1;min-width:140px;">⬇️ Export template</button>
-        <button class="btn btn-ghost" id="importCfgBtn" style="flex:1;min-width:140px;">⬆️ Import template</button>
-        <input type="file" id="importCfgFile" accept=".xlsx,.xls" style="display:none;">
+    <!-- FRAMES MANAGEMENT (admins + r5 only) -->
+    <div class="esec" id="sec-frames">
+      <div class="card">
+        <div class="slabel" style="margin-top:0;">🖼️ Marcos de perfil</div>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Otorga o retira marcos a cualquier jugador. El jugador elige cuál mostrar desde su perfil.</p>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">Los marcos de rango (Hielo, Dorado, Llama) se asignan automáticamente con el rango. Los de logro los otorgas tú manualmente.</p>
+        <div class="field">
+          <label>Buscar jugador por nombre o Governor ID</label>
+          <input id="framesSearch" placeholder="Escribe un nombre o ID…">
+        </div>
+        <div id="framesResults" class="dlist" style="margin-top:10px;"></div>
+        <div class="errmsg" id="framesErr" style="margin-top:10px;"></div>
+        <div id="framesMsg" style="margin-top:8px;font-size:.82rem;color:#1a7a3a;"></div>
       </div>
+      <div class="card" style="background:linear-gradient(135deg,rgba(200,168,75,.06),rgba(200,168,75,.02));border-color:rgba(200,168,75,.2);">
+        <div class="slabel" style="margin-top:0;color:#c8a84b;">📖 Guía de marcos</div>
+        <div style="font-size:.78rem;color:var(--ink-soft);line-height:1.6;">
+          <b style="color:var(--ink);">❄️ Hielo</b> — Miembro confirmado (automático)<br>
+          <b style="color:var(--ink);">🥇 Dorado</b> — R4 (automático con rango)<br>
+          <b style="color:var(--ink);">🔥 Llama</b> — R5 (automático con rango)<br>
+          <b style="color:var(--ink);">🐻 Cazador</b> — 10 Bear Traps con asistencia<br>
+          <b style="color:var(--ink);">⚔️ SvS MVP</b> — Top 3 daño en SvS<br>
+          <b style="color:var(--ink);">⭐ Perfecto</b> — 100% asistencia 30 días<br>
+          <b style="color:var(--ink);">☄️ Meteoro</b> — Campeón de meteoro del estado<br>
+          <b style="color:var(--ink);">👑 Leyenda</b> — Globo del estado (muy exclusivo)
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG TEMPLATES (global + per-section) -->
+    <div style="margin-top:20px;padding:16px;background:linear-gradient(180deg,#fff7e6,#fff0d8);border:2px solid #ffd9a0;border-radius:14px;">
+      <div style="font-family:'Baloo 2';font-weight:800;font-size:1rem;color:#c2470f;margin-bottom:4px;">📋 Config templates</div>
+      <div style="font-size:.78rem;color:#7a5a3a;line-height:1.4;margin-bottom:14px;">Fill in Excel and import back, then press <b>Save changes</b>. Files come pre-filled with the current data.</div>
+
+      <!-- GLOBAL -->
+      <div style="background:#fff;border:2px solid #ffc266;border-radius:11px;padding:12px;margin-bottom:12px;">
+        <div style="font-family:'Fredoka';font-weight:700;font-size:.9rem;color:#c2470f;margin-bottom:6px;">🌐 WHOLE ALLIANCE <span style="font-weight:500;font-size:.72rem;color:#a06a3a;">— everything in one file</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="exportCfgBtn" style="flex:1;min-width:130px;">⬇️ Download all</button>
+          <button class="btn btn-ghost" id="importCfgBtn" style="flex:1;min-width:130px;">⬆️ Upload all</button>
+          <input type="file" id="importCfgFile" accept=".xlsx,.xls" style="display:none;">
+        </div>
+      </div>
+
+      <!-- PER-SECTION -->
+      <div style="font-family:'Fredoka';font-weight:700;font-size:.82rem;color:#7a5a3a;margin:4px 0 8px;">📑 SINGLE SECTIONS <span style="font-weight:500;font-size:.72rem;">— one file each</span></div>
+      <div id="sectionTemplateGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="sect-tpl" data-sect="leaders">
+          <span>👥 Leaders</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="events">
+          <span>📅 Events</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="rules">
+          <span>📜 Rules</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+        <div class="sect-tpl" data-sect="news">
+          <span>📢 News</span>
+          <button class="btn btn-ghost stpl-dl">⬇️</button>
+          <button class="btn btn-ghost stpl-up">⬆️</button>
+        </div>
+      </div>
+      <input type="file" id="sectImportFile" accept=".xlsx,.xls" style="display:none;">
       <div class="errmsg" id="cfgImportMsg" style="margin-top:8px;"></div>
     </div>
+    <style>
+      #sectionTemplateGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+      .sect-tpl{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #ffd9a0;border-radius:10px;padding:8px 10px;min-width:0;}
+      .sect-tpl span{flex:1;min-width:0;font-family:'Fredoka';font-weight:600;font-size:.8rem;color:#8a5a2a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .sect-tpl .btn{padding:0;font-size:.9rem;min-width:32px;width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:8px;box-shadow:none;}
+    </style>
 
     <!-- SAVE BAR -->
     <div style="margin-top:20px;" id="mainSaveBar">
@@ -485,8 +646,8 @@ body{padding-bottom:72px !important;}
 <div class="toast" id="toast"></div>
 
 <nav class="botnav">
-  <a href="./phoenix-state.html" id="navState"><span class="ic">🗺️</span><span id="navStateLabel">···</span></a>
-  <a href="./phoenix-alliance.html" id="navAlliance">PXR</a>
+  <a href="./phoenix-state.html"><span class="ic">🗺️</span><span id="navStateNum">3139</span></a>
+  <a href="./phoenix-alliance.html?tag=PXR">PXR</a>
   <a href="./phoenix-profile.html"><span class="ic">👤</span>Profile</a>
   <a href="./phoenix-admin.html" class="active"><span class="ic">🔐</span>Admin</a>
 </nav>
@@ -496,6 +657,37 @@ body{padding-bottom:72px !important;}
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+// Detect state folder for nav labels
+// State from URL (?s=4501). No parameter → "3139".
+function getState(){var q=new URLSearchParams(location.search).get('s');if(q&&/^\d{3,5}$/.test(q)){try{localStorage.setItem('phx_state',q);}catch(e){}return q;}try{var ls=localStorage.getItem('phx_state');if(ls&&/^\d{3,5}$/.test(ls))return ls;}catch(e){}return '3139';}
+function stateUrl(page){const s=getState();return s==='3139'?page:page+(page.includes('?')?'&':'?')+'s='+s;}
+const PAGE_STATE=getState();
+// Keep the admin bottom-nav in sync with the state currently being managed.
+function syncAdminNav(){
+  const S=(window.__ADMIN_STATE)||getState();
+  const numEl=document.getElementById('navStateNum'); if(numEl) numEl.textContent=S;
+  const backEl=document.getElementById('backStateNum'); if(backEl) backEl.textContent=S;
+  const nav=document.querySelector('.botnav'); if(!nav) return;
+  nav.querySelectorAll('a').forEach(a=>{
+    const href=a.getAttribute('href'); if(!href||href.indexOf('phoenix-')===-1) return;
+    // strip any existing ?s= / &s= then re-add the right one (except for 3139 → clean URL)
+    let base=href.replace(/([?&])s=\d+/,'$1').replace(/[?&]$/,'');
+    if(String(S)!=='3139'){ base=base+(base.indexOf('?')>-1?'&':'?')+'s='+S; }
+    a.setAttribute('href',base);
+  });
+}
+(function(){function setLabels(){
+  const b=document.getElementById('backStateNum');if(b)b.textContent=PAGE_STATE;
+  const n=document.getElementById('navStateNum');if(n)n.textContent=PAGE_STATE;
+  // carry state in internal links
+  document.querySelectorAll('a[href]').forEach(a=>{
+    const href=a.getAttribute('href'); if(!href) return;
+    if(/phoenix-(state|alliance|admin|profile)\.html/.test(href)){
+      let clean=href.replace(/^\/Phoenix\//,'').replace(/^\.\//,'');
+      a.setAttribute('href', stateUrl(clean));
+    }
+  });
+}if(document.readyState!=='loading')setLabels();else document.addEventListener('DOMContentLoaded',setLabels);})();
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser=null, currentPlayer=null, adminAlliances=[], editingAlliance=null;
@@ -574,8 +766,23 @@ $('#addValueBtn').onclick=()=>{
 
 // Theme selector
 let selectedTheme='light';
-const THEME_IDS=['light','dark','snow','rainbow','skull','neutral','wosblue','battle'];
-const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral',wosblue:'themeWosblue',battle:'themeBattle'};
+const THEME_IDS=['light','dark','snow','rainbow','skull','neutral','wosblue','battle','ice','night','blood','emerald','storm'];
+const THEME_BTN={light:'themeLight',dark:'themeDark',snow:'themeSnow',rainbow:'themeRainbow',skull:'themeSkull',neutral:'themeNeutral',wosblue:'themeWosblue',battle:'themeBattle',ice:'themeIce',night:'themeNight',blood:'themeBlood',emerald:'themeEmerald',storm:'themeStorm'};
+const THEME_PV={
+  light:'linear-gradient(180deg,#eaf4ff,#cfe6fb)',
+  dark:'linear-gradient(180deg,#1a2740,#0d1526)',
+  snow:'linear-gradient(180deg,#dcefff,#a9d8f0)',
+  rainbow:'linear-gradient(120deg,#ff6b6b,#feca57,#48dbfb,#a55eea)',
+  skull:'linear-gradient(180deg,#2a2a2a,#0d0d0d)',
+  neutral:'linear-gradient(180deg,#e8e8e8,#c8c8c8)',
+  wosblue:'linear-gradient(180deg,#2e6db5,#1a4a82)',
+  battle:'linear-gradient(180deg,#3a1010,#1a0606)',
+  ice:'linear-gradient(180deg,#dcefff,#7fbce0)',
+  night:'radial-gradient(ellipse at 50% 0%,#16263f,#0a1422)',
+  blood:'radial-gradient(ellipse at 50% 0%,#3a0d0d,#1a0606)',
+  emerald:'linear-gradient(180deg,#1a3a2a,#081810)',
+  storm:'linear-gradient(180deg,#2a3038,#10141a)'
+};
 function setThemeUI(t){
   if(!THEME_IDS.includes(t))t='light';
   selectedTheme=t;
@@ -585,6 +792,9 @@ function setThemeUI(t){
     btn.classList.toggle('btn-fire',id===t);
     btn.classList.toggle('btn-ghost',id!==t);
   });
+  // Live preview: apply the theme's background so the leader sees the look
+  const pv=$('#stylePreview');
+  if(pv && THEME_PV[t]) pv.style.background=THEME_PV[t];
 }
 THEME_IDS.forEach(id=>{
   const btn=$('#'+THEME_BTN[id]);
@@ -624,31 +834,21 @@ $('#fTag').addEventListener('input',updateSwatches);
 $('#fName').addEventListener('input',updateSwatches);
 
 // ── EDITOR TABS ───────────────────────────────────────────────
-function openSection(sec){
-  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x.dataset.sec===sec));
+document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x===t));
+  const sec=t.dataset.sec;
   document.querySelectorAll('.esec').forEach(s=>s.classList.toggle('active',s.id==='sec-'+sec));
+  // Members, Ranking and Access have their own controls — hide the main save button
   const mainBar=document.getElementById('mainSaveBar');
-  if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access')?'none':'';
+  if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access'||sec==='nap')?'none':'';
+  // Lazy-load data for these tabs
   if(sec==='members')loadMembersEditor();
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
-}
-function openGroup(group){
-  document.querySelectorAll('.egroup').forEach(g=>g.classList.toggle('active',g.dataset.group===group));
-  // Show only sub-tabs of this group
-  let firstSec=null;
-  document.querySelectorAll('.etab').forEach(t=>{
-    const inGroup=t.dataset.g===group;
-    // keep admin-only tabs hidden unless they were enabled
-    const adminOnly=(t.id==='rankingTab'||t.id==='accessTab');
-    const show=inGroup && (!adminOnly || isStateAdmin);
-    t.style.display=show?'':'none';
-    if(show && !firstSec)firstSec=t.dataset.sec;
-  });
-  if(firstSec)openSection(firstSec);
-}
-document.querySelectorAll('.egroup').forEach(g=>g.onclick=()=>openGroup(g.dataset.group));
-document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>openSection(t.dataset.sec));
+  if(sec==='nap')loadNapEditor();
+  if(sec==='search')initMgmtSearch();
+  if(sec==='frames'){document.getElementById('framesSearch').value='';document.getElementById('framesResults').innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Escribe al menos 2 caracteres…</p>';document.getElementById('framesMsg').textContent='';}
+});
 
 // ── DYNAMIC LIST HELPERS ──────────────────────────────────────
 function leaderHTML(i,l={}){
@@ -664,6 +864,17 @@ function leaderHTML(i,l={}){
 function eventHTML(i,e={}){
   return `<div class="ditem" data-i="${i}">
     <div class="ditem-header"><span class="dtag">Event ${i+1}</span><button class="del-btn" onclick="delItem('eventList',${i})">✕</button></div>
+    <select class="e-preset" onchange="applyEventPreset(this)" style="width:100%;padding:9px;margin-bottom:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
+      <option value="">⭐ Quick pick an event (auto-fills name + banner)…</option>
+      <option value="🐻|Cacería del Oso">🐻 Cacería del Oso</option>
+      <option value="⚒️|Batalla de la Fundición">⚒️ Batalla de la Fundición</option>
+      <option value="🚚|Ruta Comercial Tundra">🚚 Ruta Comercial Tundra</option>
+      <option value="🏰|Batallas de Fuerte">🏰 Batallas de Fuerte</option>
+      <option value="⚔️|Prestigio de Mercenario">⚔️ Prestigio de Mercenario</option>
+      <option value="🏆|Campeonato de Alianza">🏆 Campeonato de Alianza</option>
+      <option value="🌍|SvS">🌍 SvS</option>
+      <option value="🏯|Castle Battle">🏯 Castle Battle</option>
+    </select>
     <div class="row2">
       <input placeholder="Icon (emoji)" class="e-icon" value="${e.icon||''}">
       <input placeholder="Name" class="e-name" value="${e.name||''}">
@@ -675,6 +886,19 @@ function eventHTML(i,e={}){
     <input placeholder="Time 2 UTC (optional)" class="e-t2" value="${e.t2||''}">
     <input placeholder="Note for players" class="e-note" value="${e.note||''}">
   </div>`;}
+
+// Auto-fill icon + name from the preset dropdown
+function applyEventPreset(sel){
+  if(!sel.value) return;
+  const [icon,name]=sel.value.split('|');
+  const row=sel.closest('.ditem');
+  if(row){
+    const ic=row.querySelector('.e-icon'); const nm=row.querySelector('.e-name');
+    if(ic)ic.value=icon;
+    if(nm)nm.value=name;
+  }
+  sel.value=''; // reset so they can pick again
+}
 
 function ruleHTML(i,r={}){
   return `<div class="ditem" data-i="${i}">
@@ -851,20 +1075,32 @@ function readNews(){
 // ── LOAD ALLIANCE INTO EDITOR ─────────────────────────────────
 function loadEditor(al){
   editingAlliance=al;
+  // Keep the shared state in sync with the alliance being edited, so the
+  // bottom-nav label and preview links reflect the right state (fixes admin
+  // showing 3139 while editing a 4501 alliance).
+  if(al&&al.state_id){ try{localStorage.setItem('phx_state',String(al.state_id));}catch(e){} window.__ADMIN_STATE=String(al.state_id); if(typeof syncAdminNav==='function') syncAdminNav(); }
   const cfg=al.config||{};
   $('#edTitle').textContent=`[${al.tag}] ${al.name}`;
   $('#edSub').textContent='State '+al.state_id;
 
-  // Alliance switcher — show if managing more than one
+  // Alliance switcher — grouped by state, scales to many states
   const sw=$('#allianceSwitcher');
   if(adminAlliances.length>1){
     sw.style.display='';
     const sel=$('#switchAllianceSel');
     sel.innerHTML='';
-    adminAlliances.forEach(a=>{
-      const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name} · State ${a.state_id}`;
-      if(a.id===al.id)o.selected=true;
-      sel.appendChild(o);
+    // group alliances by state
+    const byState={};
+    adminAlliances.forEach(a=>{(byState[a.state_id]=byState[a.state_id]||[]).push(a);});
+    Object.keys(byState).sort().forEach(st=>{
+      const og=document.createElement('optgroup');
+      og.label=`State ${st}`;
+      byState[st].forEach(a=>{
+        const o=document.createElement('option');o.value=a.id;o.textContent=`[${a.tag}] ${a.name}`;
+        if(a.id===al.id)o.selected=true;
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
     });
     sel.onchange=()=>{const picked=adminAlliances.find(x=>x.id===sel.value);if(picked)loadEditor(picked);};
   }else{sw.style.display='none';}
@@ -884,12 +1120,12 @@ function loadEditor(al){
   $('#fQuote').value=cfg.quote?.text||'';
   $('#fQuoteBy').value=cfg.quote?.by||'TMQ';
   $('#fQuoteShow').checked=cfg.quote?.show!==false;
-  $('#fDiscordWebhook').value=cfg.discordWebhookUrl||'';
 
   // Style
   $('#fAccent').value=al.accent||'#ff7a2e';
   updateSwatches();
   setThemeUI(cfg.theme||'light');
+  const dlEl=document.getElementById('fDefaultLang');if(dlEl)dlEl.value=cfg.defaultLang||'';
   $('#fLogoUrl').value=cfg.logoUrl||'';
   $('#fLogoUrl').dispatchEvent(new Event('input'));
 
@@ -923,8 +1159,10 @@ function loadEditor(al){
     if(name)name.value=rn[r]?.name||'';
   });
 
-  // Preview link
-  $('#previewLink').href=`phoenix-alliance.html?tag=${al.tag}`;
+  // Preview link — use this alliance's own state, not the admin page's current ?s=
+  $('#previewLink').href = String(al.state_id)==='3139'
+    ? `phoenix-alliance.html?tag=${al.tag}`
+    : `phoenix-alliance.html?tag=${al.tag}&s=${al.state_id}`;
 
   // Invite link
   // Invite link — build from origin only, strip any filename from the path
@@ -938,8 +1176,8 @@ function loadEditor(al){
     });
   };
 
-  // Open the first group (Identity), which shows its sub-tabs and opens the first
-  openGroup('identity');
+  // Activate first tab
+  document.querySelectorAll('.etab')[0].click();
   show('scEditor');}
 
 // ── SAVE ──────────────────────────────────────────────────────
@@ -963,6 +1201,7 @@ $('#saveBtn').onclick=async()=>{
     accentDark:dark,
     accentShadow:shadow,
     theme:selectedTheme,
+    defaultLang:$('#fDefaultLang').value||'',
     logoUrl:$('#fLogoUrl').value.trim(),
     memberZone:{
       discord:$('#fDiscord').value.trim(),
@@ -1000,7 +1239,7 @@ $('#saveBtn').onclick=async()=>{
 $('#backBtn').onclick=()=>{
   // Non-admins with a picker go back to it; everyone else returns to the state hub
   if(!isStateAdmin && adminAlliances.length>1){show('scPick');}
-  else{window.location.href='phoenix-state.html';}
+  else{window.location.href=stateUrl('phoenix-state.html');}
 };
 
 // ── LOGIN ─────────────────────────────────────────────────────
@@ -1030,6 +1269,14 @@ function memberRowHTML(i,m={}){
       <input placeholder="Governor ID" class="m-gid" value="${m.governor_id||''}">
       <select class="m-conf"><option value="false" ${!conf?'selected':''}>⏳ Pending</option><option value="true" ${conf?'selected':''}>✓ Confirmed</option></select>
     </div>
+    <div class="row2" style="margin-top:6px;">
+      <select class="m-rank" style="flex:1;padding:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
+        <option value="" ${!m.game_rank?'selected':''}>— No rank —</option>
+        <option value="R3" ${m.game_rank==='R3'?'selected':''}>R3</option>
+        <option value="R4" ${m.game_rank==='R4'?'selected':''}>R4 🥇</option>
+        <option value="R5" ${m.game_rank==='R5'?'selected':''}>R5 🔥</option>
+      </select>
+    </div>
     <div style="position:relative;">
       <input placeholder="✨ Nickname (e.g. La Jefa)" class="m-nick" value="${(m.nickname||'').replace(/"/g,'&quot;')}" style="padding-right:${m.nickname_suggested&&!m.nickname?'90px':'12px'};">
       ${m.nickname_suggested&&!m.nickname?`<button type="button" onclick="acceptNick(this,'${(m.nickname_suggested||'').replace(/'/g,"\\'")}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:.7rem;background:#eafaf0;border:1.5px solid #3da76e;border-radius:8px;color:#2d7a4e;font-family:'Fredoka';cursor:pointer;">Use: ${m.nickname_suggested}</button>`:''}
@@ -1040,41 +1287,46 @@ async function loadMembersEditor(){
   if(!editingAlliance)return;
   const wrap=$('#memberRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested').eq('alliance_id',editingAlliance.id).order('created_at',{ascending:true});
-  memberCache=data||[];
+  const{data}=await sb.from('players').select('id,owner,name,governor_id,alliance_confirmed,nickname,nickname_suggested,game_rank').eq('alliance_id',editingAlliance.id);
+  // Sort by rank (R5 → R4 → R3 → R2 → R1 → none), then alphabetically by name
+  const rankOrder={R5:0,R4:1,R3:2,R2:3,R1:4};
+  const sorted=(data||[]).slice().sort((a,b)=>{
+    const ra=rankOrder[a.game_rank]??9, rb=rankOrder[b.game_rank]??9;
+    if(ra!==rb)return ra-rb;
+    return (a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
+  });
+  memberCache=sorted;
   wrap.innerHTML='';
   memberCache.forEach((m,i)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(i,m);wrap.appendChild(d.firstElementChild);});
   if(memberCache.length===0)wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
-  updatePendingBanner();
-}
-function updatePendingBanner(){
+
+  // ── PENDING BANNER: players who created their own page but aren't confirmed yet ──
+  const pending=(data||[]).filter(m=>m.owner && !m.alliance_confirmed);
   const banner=$('#pendingBanner');
-  const pending=memberCache.filter(m=>!m.alliance_confirmed);
-  if(pending.length===0){banner.style.display='none';return;}
-  banner.style.display='';
-  banner.textContent=`⏳ ${pending.length} member${pending.length>1?'s':''} waiting for your confirmation: ${pending.map(m=>m.name||m.governor_id||'—').join(', ')}`;
+  if(banner){
+    if(pending.length){
+      $('#pendingCount').textContent=pending.length;
+      const pl=$('#pendingList');pl.innerHTML='';
+      pending.forEach(m=>{
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #ffd980;border-radius:9px;padding:8px 10px;margin-bottom:6px;';
+        row.innerHTML=`<span style="flex:1;font-family:Fredoka;font-weight:600;color:#8a5a1a;font-size:.86rem;">${(m.name||'—').replace(/</g,'&lt;')} ${m.game_rank?'· '+m.game_rank:''}</span>
+          <button class="btn btn-fire" style="padding:6px 12px;font-size:.78rem;" onclick="approveMember('${m.id}')">✓ Approve</button>`;
+        pl.appendChild(row);
+      });
+      banner.style.display='';
+    }else{
+      banner.style.display='none';
+    }
+  }
 }
-async function notifyDiscordPending(names){
-  const url=editingAlliance?.config?.discordWebhookUrl;
-  if(!url||!names.length)return;
-  try{
-    await fetch(url,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({content:`⏳ **${names.length} new member${names.length>1?'s':''}** waiting for confirmation in Phoenix: ${names.join(', ')}`})
-    });
-  }catch(e){ console.error('Discord webhook failed:',e); }
+
+async function approveMember(id){
+  const{error}=await sb.from('players').update({alliance_confirmed:true}).eq('id',id);
+  if(error){toast('Error: '+error.message);return;}
+  toast('Approved ✓');
+  loadMembersEditor();
 }
-$('#saveWebhookBtn').onclick=async()=>{
-  if(!editingAlliance)return;
-  const btn=$('#saveWebhookBtn');btn.textContent='...';btn.disabled=true;
-  const cfg=editingAlliance.config||{};
-  cfg.discordWebhookUrl=$('#fDiscordWebhook').value.trim();
-  const{error}=await sb.from('alliances').update({config:cfg}).eq('id',editingAlliance.id);
-  editingAlliance.config=cfg;
-  btn.textContent='💾 Save webhook';btn.disabled=false;
-  if(error)toast('⚠️ '+error.message);else toast('Webhook saved ✓');
-};
 function delMember(i){
   const row=$('#memberRows').children[i];
   if(!row)return;
@@ -1107,10 +1359,11 @@ $('#saveMembersBtn').onclick=async()=>{
     const gid=row.querySelector('.m-gid')?.value.trim();
     const conf=row.querySelector('.m-conf')?.value==='true';
     const nick=row.querySelector('.m-nick')?.value.trim()||null;
+    const grank=row.querySelector('.m-rank')?.value||null;
     if(del&&id){const{error}=await sb.from('players').delete().eq('id',id);if(error)errors.push(error.message);continue;}
     if(!name)continue;
     if(id){
-      const{error}=await sb.from('players').update({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,nickname_suggested:null}).eq('id',id);
+      const{error}=await sb.from('players').update({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,nickname_suggested:null,game_rank:grank||null}).eq('id',id);
       if(error)errors.push(error.message);
     }else{
       const{error}=await sb.from('players').insert({name,governor_id:gid,alliance_confirmed:conf,nickname:nick,alliance_id:editingAlliance.id,state_id:editingAlliance.state_id||'3139',avatar:name.slice(0,2).toUpperCase()});
@@ -1123,147 +1376,178 @@ $('#saveMembersBtn').onclick=async()=>{
 };
 
 // ── IMPORT / EXPORT MEMBERS ───────────────────────────────────
-const TEMPLATE_HEADERS=['Name','Governor ID','Rank'];
-const EXPORT_HEADERS=['Name','Governor ID','Confirmed','Rank'];
-
-function normGid(v){
-  let s=String(v||'').trim().replace(/\s+/g,'');
-  if(/^\d+\.0$/.test(s))s=s.slice(0,-2); // Excel sometimes turns IDs into floats
-  s=s.replace(/^0+(?=\d)/,''); // ignore leading zeros so "007" == "7"
-  return s;
-}
+const MEMBER_HEADERS=['Name','Governor ID','Confirmed','Rank'];
 
 $('#downloadTemplateBtn').onclick=()=>{
-  const rows=[TEMPLATE_HEADERS,['ExamplePlayer','123456789','R3'],['AnotherPlayer','987654321','R4']];
+  const rows=[['Name','Rank'],['ExamplePlayer','R3'],['AnotherPlayer','R4'],['ThirdPlayer','']];
   const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:8}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Members');
-  XLSX.writeFile(wb,'phoenix-members-template.xlsx');
+  XLSX.writeFile(wb,'phoenix-names-template.xlsx');
 };
 
 $('#exportBtn').onclick=async()=>{
   if(!editingAlliance)return;
-  const{data}=await sb.from('players').select('name,governor_id,alliance_confirmed').eq('alliance_id',editingAlliance.id).order('created_at');
-  const rows=[EXPORT_HEADERS];
-  (data||[]).forEach(m=>rows.push([m.name||'',m.governor_id||'',m.alliance_confirmed?'yes':'no','']));
+  const{data}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).order('created_at');
+  const rows=[['Name','Rank']];
+  (data||[]).forEach(m=>rows.push([m.name||'',m.game_rank||'']));
   const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:8}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Members');
-  XLSX.writeFile(wb,`${editingAlliance.tag}-members.xlsx`);
+  XLSX.writeFile(wb,`${editingAlliance.tag}-roster.xlsx`);
 };
 
-let pendingImportDiff=null;
+// ── CLEAN DUPLICATES (same name in this alliance) ─────────────
+// Keeps the "best" row (one with an owner/page, or with a rank), deletes the rest.
+$('#dedupeBtn').onclick=async()=>{
+  if(!editingAlliance)return;
+  hideErr('#importErr');
+  if(!confirm('Scan this alliance for duplicate names and remove the extra copies? The version with a real page (owner) is always kept.'))return;
+  const btn=$('#dedupeBtn');btn.textContent='Scanning…';btn.disabled=true;
+  try{
+    const{data:all}=await sb.from('players').select('id,name,owner,game_rank,governor_id,avatar').eq('alliance_id',editingAlliance.id);
+    const groups={};
+    (all||[]).forEach(m=>{
+      const key=(m.name||'').trim().toLowerCase();
+      if(!key)return;
+      (groups[key]=groups[key]||[]).push(m);
+    });
+    // Score: owner > has avatar url > has gov id > has rank
+    const score=m=>(m.owner?8:0)+((m.avatar&&/^https?:/.test(m.avatar))?4:0)+(m.governor_id?2:0)+(m.game_rank?1:0);
+    let removed=0,errs=0;
+    for(const key in groups){
+      const list=groups[key];
+      if(list.length<2)continue;
+      list.sort((a,b)=>score(b)-score(a)); // best first
+      const keep=list[0];
+      for(let i=1;i<list.length;i++){
+        const{error}=await sb.from('players').delete().eq('id',list[i].id);
+        if(error)errs++;else removed++;
+      }
+    }
+    btn.textContent='🧹 Clean duplicates';btn.disabled=false;
+    const status=$('#importStatus');status.style.display='';
+    status.textContent=removed?`✓ Removed ${removed} duplicate${removed>1?'s':''}${errs?`, ${errs} errors`:''}.`:'✓ No duplicates found.';
+    loadMembersEditor();
+  }catch(err){console.error(err);btn.textContent='🧹 Clean duplicates';btn.disabled=false;showErr('#importErr','Cleanup failed: '+err.message);}
+};
 
 $('#importBtn').onclick=()=>$('#importFile').click();
 $('#importFile').addEventListener('change',async(e)=>{
   const file=e.target.files[0];
   if(!file||!editingAlliance)return;
   hideErr('#importErr');
-  $('#importStatus').style.display='none';
-  $('#importPreview').style.display='none';
+  const status=$('#importStatus');status.style.display='none';
   try{
     const buf=await file.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    if(rows.length<2){showErr('#importErr','File has no data rows.');return;}
+    if(rows.length<1){showErr('#importErr','File is empty.');return;}
+
+    // Flexible header: find a "name" column; if none, use the first column.
     const header=rows[0].map(h=>String(h).trim().toLowerCase());
-    const ci={
-      name:header.findIndex(h=>h.includes('name')),
-      gid:header.findIndex(h=>h.includes('governor')||h.includes('gov')||h.includes('id')),
-      rank:header.findIndex(h=>h.includes('rank'))
-    };
-    if(ci.name<0||ci.gid<0){showErr('#importErr','Could not find Name and Governor ID columns.');return;}
+    let nameCol=header.findIndex(h=>h.includes('name')||h.includes('nombre'));
+    let rankCol=header.findIndex(h=>h.includes('rank')||h.includes('rango'));
+    let startRow=1;
+    if(nameCol<0){ nameCol=0; startRow=0; } // no header → treat every row as a name
 
-    const{data:existing}=await sb.from('players').select('id,name,owner,governor_id').eq('alliance_id',editingAlliance.id);
-    const byGid={};(existing||[]).forEach(m=>{if(m.governor_id)byGid[normGid(m.governor_id)]=m;});
-
-    const toInsert=[],toUpdate=[];
-    const matchedIds=new Set();
-    for(let i=1;i<rows.length;i++){
+    // Collect unique names from the file (dedupe within the file too)
+    const seen=new Set();
+    const wanted=[];
+    for(let i=startRow;i<rows.length;i++){
       const r=rows[i];
-      const name=String(r[ci.name]||'').trim();
-      const gidRaw=String(r[ci.gid]||'').trim();
-      if(!name&&!gidRaw)continue;
-      const gid=normGid(gidRaw);
-      let grank=ci.rank>=0?String(r[ci.rank]||'').trim().toUpperCase():'';
-      if(grank&&!/^R[345]$/.test(grank))grank='';
-      const match=gid&&byGid[gid];
-      if(match){
-        matchedIds.add(match.id);
-        toUpdate.push({id:match.id,name,gid:gidRaw,grank});
+      const name=String(r[nameCol]||'').trim();
+      if(!name)continue;
+      const key=name.toLowerCase();
+      if(seen.has(key))continue;        // duplicate inside the file → skip
+      seen.add(key);
+      let grank=rankCol>=0?String(r[rankCol]||'').trim().toUpperCase():'';
+      if(grank&&!/^R[12345]$/.test(grank))grank='';
+      wanted.push({name,grank});
+    }
+    if(!wanted.length){showErr('#importErr','No names found in the file.');return;}
+
+    // Existing members of THIS alliance (match by name, case-insensitive)
+    const{data:existing}=await sb.from('players').select('id,name,game_rank').eq('alliance_id',editingAlliance.id);
+    const byName={};
+    (existing||[]).forEach(m=>{ if(m.name)byName[String(m.name).trim().toLowerCase()]=m; });
+
+    let added=0, kept=0, rankUpdated=0, errs=0;
+    for(const w of wanted){
+      const ex=byName[w.name.toLowerCase()];
+      if(ex){
+        // Already here → DON'T touch it, unless the file gives a rank and it's different
+        kept++;
+        if(w.grank && w.grank!==ex.game_rank){
+          const{error}=await sb.from('players').update({game_rank:w.grank}).eq('id',ex.id);
+          if(!error)rankUpdated++;
+        }
       }else{
-        toInsert.push({name,gid:gidRaw,grank});
+        // New name → add it (names-only roster, no gov id / no confirm needed)
+        const{error}=await sb.from('players').insert({
+          name:w.name,
+          game_rank:w.grank||null,
+          alliance_id:editingAlliance.id,
+          state_id:editingAlliance.state_id||'3139',
+          avatar:w.name.slice(0,2).toUpperCase()
+        });
+        if(error)errs++;else added++;
       }
     }
-    const missing=(existing||[]).filter(m=>!matchedIds.has(m.id));
-    const toRemove=missing.filter(m=>!m.owner);       // safe to auto-remove: manual entries only
-    const toReviewManually=missing.filter(m=>m.owner); // registered accounts: never auto-deleted
 
-    pendingImportDiff={toInsert,toUpdate,toRemove,toReviewManually};
+    // ── SMART REPLACE: handle members who are NO LONGER in the uploaded list ──
+    // Re-fetch with owner so we can protect real pages.
+    const{data:current}=await sb.from('players').select('id,name,owner').eq('alliance_id',editingAlliance.id);
+    const wantedSet=new Set(wanted.map(w=>w.name.toLowerCase()));
+    const toRemove=(current||[]).filter(m=>m.name && !wantedSet.has(m.name.trim().toLowerCase()));
 
-    const prev=$('#importPreview');
-    prev.style.display='';
-    prev.innerHTML=`
-      <div style="margin-bottom:8px;">
-        <b>${toInsert.length}</b> new (added as ⏳ pending) · <b>${toUpdate.length}</b> updated
-        ${toRemove.length?` · <b>${toRemove.length}</b> to remove`:''}
-      </div>
-      ${toRemove.length?`<div style="margin-bottom:8px;">Will remove: ${toRemove.map(m=>m.name||m.governor_id).join(', ')}</div>`:''}
-      ${toReviewManually.length?`<div style="margin-bottom:8px;color:#a35b00;">⚠️ Not in file but have a registered account (not auto-removed, review manually): ${toReviewManually.map(m=>m.name).join(', ')}</div>`:''}
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button type="button" class="btn btn-ghost" id="importCancelBtn" style="font-size:.8rem;">Cancel</button>
-        <button type="button" class="btn" id="importConfirmBtn" style="font-size:.8rem;background:#3da76e;color:#fff;">✓ Confirm import</button>
-      </div>`;
-    $('#importCancelBtn').onclick=()=>{ prev.style.display='none'; pendingImportDiff=null; e.target.value=''; };
-    $('#importConfirmBtn').onclick=()=>applyImportDiff();
+    let removed=0, unlinked=0;
+    if(toRemove.length){
+      const names=toRemove.map(m=>m.name).join(', ');
+      const ok=confirm(`These ${toRemove.length} member(s) are NOT in your uploaded list and will leave the roster:\n\n${names}\n\n• Plain roster names will be removed.\n• Members with their own page will be kept but unlinked from this alliance (their page is never deleted).\n\nContinue?`);
+      if(ok){
+        for(const m of toRemove){
+          if(m.owner){
+            // Has a real page → don't delete, just unlink from this alliance
+            const{error}=await sb.from('players').update({alliance_id:null}).eq('id',m.id);
+            if(!error)unlinked++;
+          }else{
+            // Plain roster entry → remove
+            const{error}=await sb.from('players').delete().eq('id',m.id);
+            if(!error)removed++;
+          }
+        }
+      }
+    }
+
+    // Rebuild leadership in config from R4/R5 members
+    const{data:leaders}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).in('game_rank',['R5','R4']);
+    if(leaders&&leaders.length){
+      const order={R5:0,R4:1};
+      leaders.sort((a,b)=>(order[a.game_rank]??9)-(order[b.game_rank]??9));
+      const ldrConfig=leaders.map(l=>({name:l.name,rank:l.game_rank,role:l.game_rank==='R5'?'Leader':'Officer'}));
+      const cfg=editingAlliance.config||{};
+      cfg.leaders=ldrConfig;
+      await sb.from('alliances').update({config:cfg}).eq('id',editingAlliance.id);
+      editingAlliance.config=cfg;
+      $('#leaderList').innerHTML='';
+      ldrConfig.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=leaderHTML(i,l);$('#leaderList').appendChild(d.firstElementChild);});
+    }
+
+    status.style.display='';
+    let msg=`✓ ${added} new · ${kept} kept · ${rankUpdated} ranks updated`;
+    if(removed)msg+=` · ${removed} removed`;
+    if(unlinked)msg+=` · ${unlinked} unlinked (page kept)`;
+    if(errs)msg+=` · ${errs} errors`;
+    msg+='. No duplicates.';
+    status.textContent=msg;
+    loadMembersEditor();
   }catch(err){console.error('Import failed:',err);showErr('#importErr','Import failed: '+err.message);}
+  e.target.value=''; // reset so same file can be re-imported
 });
-
-async function applyImportDiff(){
-  if(!pendingImportDiff||!editingAlliance)return;
-  const{toInsert,toUpdate,toRemove}=pendingImportDiff;
-  const btn=$('#importConfirmBtn');btn.textContent='...';btn.disabled=true;
-  let added=0,updated=0,removed=0,errs=0;
-  const newlyPending=[];
-
-  for(const m of toUpdate){
-    const{error}=await sb.from('players').update({name:m.name,game_rank:m.grank||null}).eq('id',m.id);
-    if(error)errs++;else updated++;
-  }
-  for(const m of toInsert){
-    const{error}=await sb.from('players').insert({name:m.name,governor_id:m.gid,alliance_confirmed:false,game_rank:m.grank||null,alliance_id:editingAlliance.id,state_id:editingAlliance.state_id||'3139',avatar:m.name.slice(0,2).toUpperCase()});
-    if(error)errs++;else{added++;newlyPending.push(m.name);}
-  }
-  for(const m of toRemove){
-    const{error}=await sb.from('players').delete().eq('id',m.id);
-    if(error)errs++;else removed++;
-  }
-
-  // Auto-rebuild leadership in config from current R4/R5 members
-  const{data:leaders}=await sb.from('players').select('name,game_rank').eq('alliance_id',editingAlliance.id).in('game_rank',['R5','R4']);
-  if(leaders&&leaders.length){
-    const order={R5:0,R4:1};
-    leaders.sort((a,b)=>(order[a.game_rank]??9)-(order[b.game_rank]??9));
-    const ldrConfig=leaders.map(l=>({name:l.name,rank:l.game_rank,role:l.game_rank==='R5'?'Leader':'Officer'}));
-    const cfg=editingAlliance.config||{};
-    cfg.leaders=ldrConfig;
-    await sb.from('alliances').update({config:cfg}).eq('id',editingAlliance.id);
-    editingAlliance.config=cfg;
-    $('#leaderList').innerHTML='';
-    ldrConfig.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=leaderHTML(i,l);$('#leaderList').appendChild(d.firstElementChild);});
-  }
-
-  if(newlyPending.length)notifyDiscordPending(newlyPending);
-
-  $('#importPreview').style.display='none';
-  pendingImportDiff=null;
-  $('#importFile').value='';
-  const status=$('#importStatus');
-  status.style.display='';
-  status.textContent=`✓ Import done — ${added} added (pending), ${updated} updated, ${removed} removed${errs?`, ${errs} errors`:''}.`;
-  loadMembersEditor();
-}
 
 // ── CONFIG TEMPLATE EXPORT / IMPORT ───────────────────────────
 function aoaSheet(rows){ return XLSX.utils.aoa_to_sheet(rows); }
@@ -1329,7 +1613,67 @@ $('#exportCfgBtn').onclick=()=>{
   readNews().forEach(n=>nwRows.push([n.date||'',n.msg||'']));
   XLSX.utils.book_append_sheet(wb, aoaSheet(nwRows), '6. News');
 
-  XLSX.writeFile(wb, `${tag}-config-template.xlsx`);
+  XLSX.writeFile(wb, `${tag}-config-ALL.xlsx`);
+};
+
+// ── PER-SECTION TEMPLATES (download / upload one section) ─────
+const SECT_DEF={
+  leaders:{sheet:'Leaders',header:['Name','Rank','Role'],read:()=>readLeaders().map(l=>[l.name||'',l.rank||'',l.role||''])},
+  events: {sheet:'Events', header:['Icon','Event name','Frequency','Time 1','Time 2','Note'],read:()=>readEvents().map(e=>[e.icon||'',e.name||'',e.freq||'',e.t1||'',e.t2||'',e.note||''])},
+  rules:  {sheet:'Rules',  header:['Title','Text'],read:()=>readRules().map(r=>[r.title||'',r.text||''])},
+  news:   {sheet:'News',   header:['Date label','Text'],read:()=>readNews().map(n=>[n.date||'',n.msg||''])}
+};
+let _pendingSect=null;
+
+document.querySelectorAll('.sect-tpl').forEach(box=>{
+  const sect=box.dataset.sect;
+  box.querySelector('.stpl-dl').onclick=()=>{
+    const def=SECT_DEF[sect];
+    const tag=($('#fTag').value.trim()||'alliance');
+    const rows=[def.header,...def.read()];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,def.sheet);
+    XLSX.writeFile(wb,`${tag}-${sect}.xlsx`);
+    toast(def.sheet+' downloaded ✓');
+  };
+  box.querySelector('.stpl-up').onclick=()=>{
+    _pendingSect=sect;
+    $('#sectImportFile').click();
+  };
+});
+
+$('#sectImportFile').onchange=async(e)=>{
+  const file=e.target.files?.[0];
+  if(!file||!_pendingSect){return;}
+  hideErr('#cfgImportMsg');
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()));
+    if(rows.length<2){showErr('#cfgImportMsg','That file has no data rows.');return;}
+    const data=rows.slice(1); // drop header
+    const sect=_pendingSect;
+    const fill=(listId,htmlFn,items)=>{
+      const list=$('#'+listId);list.innerHTML='';
+      items.forEach((it,i)=>{const d=document.createElement('div');d.innerHTML=htmlFn(i,it);list.appendChild(d.firstElementChild);});
+    };
+    if(sect==='leaders'){
+      fill('leaderList',leaderHTML,data.map(r=>({name:String(r[0]||'').trim(),rank:String(r[1]||'').trim(),role:String(r[2]||'').trim()})).filter(l=>l.name));
+    }else if(sect==='events'){
+      fill('eventList',eventHTML,data.map(r=>({icon:String(r[0]||'').trim(),name:String(r[1]||'').trim(),freq:String(r[2]||'').trim(),t1:String(r[3]||'').trim(),t2:String(r[4]||'').trim(),note:String(r[5]||'').trim()})).filter(ev=>ev.name));
+    }else if(sect==='rules'){
+      fill('ruleList',ruleHTML,data.map(r=>({title:String(r[0]||'').trim(),text:String(r[1]||'').trim()})).filter(x=>x.title||x.text));
+    }else if(sect==='news'){
+      fill('newsList',newsHTML,data.map(r=>({date:String(r[0]||'').trim(),msg:String(r[1]||'').trim()})).filter(x=>x.date||x.msg));
+    }
+    $('#cfgImportMsg').style.color='var(--ink-soft)';
+    $('#cfgImportMsg').textContent=`✓ ${sect} loaded from file — press Save changes to keep it.`;
+    $('#cfgImportMsg').style.display='';
+    toast(sect+' loaded ✓');
+  }catch(err){console.error(err);showErr('#cfgImportMsg','Import failed: '+err.message);}
+  finally{_pendingSect=null;e.target.value='';}
 };
 
 $('#importCfgBtn').onclick=()=>{
@@ -1484,66 +1828,225 @@ $('#importCfgFile').addEventListener('change', async(e)=>{
 
 // ── STATE RANKING EDITOR (admins only) ────────────────────────
 let rankCache=[];
-function rankRowHTML(i,a={},total){
+let rankState=PAGE_STATE; // which state's ranking we're editing
+function rankRowHTML(i,a={}){
   return `<div class="ditem" data-i="${i}" data-id="${a.id||''}">
-    <div class="ditem-header">
-      <span class="dtag">#${i+1} · [${a.tag}] ${a.name}</span>
-      <div style="display:flex;gap:4px;">
-        <button type="button" class="rk-up" ${i===0?'disabled':''} style="padding:4px 9px;">▲</button>
-        <button type="button" class="rk-down" ${i===total-1?'disabled':''} style="padding:4px 9px;">▼</button>
-      </div>
-    </div>
+    <div class="ditem-header"><span class="dtag">[${a.tag}] ${a.name}</span></div>
     <div class="row2">
+      <input placeholder="Rank (#)" class="rk-pos" value="${(a.state_rank||'').replace('#','')}" inputmode="numeric">
       <input placeholder="Members" class="rk-mem" value="${a.members||''}" inputmode="numeric">
-      <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;white-space:nowrap;">
-        <input type="checkbox" class="rk-nap" ${a.nap_protected?'checked':''}> 🛡️ NAP
-      </label>
     </div>
   </div>`;
 }
-function renderRankRows(){
-  const wrap=$('#rankRows');
-  wrap.innerHTML='';
-  rankCache.forEach((a,i)=>{
-    const d=document.createElement('div');
-    d.innerHTML=rankRowHTML(i,a,rankCache.length);
-    const el=d.firstElementChild;
-    el.querySelector('.rk-up').onclick=()=>moveRank(i,-1);
-    el.querySelector('.rk-down').onclick=()=>moveRank(i,1);
-    wrap.appendChild(el);
-  });
-}
-function moveRank(i,dir){
-  const j=i+dir;
-  if(j<0||j>=rankCache.length)return;
-  [rankCache[i],rankCache[j]]=[rankCache[j],rankCache[i]];
-  renderRankRows();
+async function populateRankStatePicker(){
+  const sel=$('#rankStateSel'); if(!sel)return;
+  // list all states from the states table
+  const{data}=await sb.from('states').select('id').order('id');
+  const states=(data||[]).map(s=>String(s.id));
+  if(!states.includes(rankState))rankState=states[0]||'3139';
+  sel.innerHTML='';
+  states.forEach(st=>{const o=document.createElement('option');o.value=st;o.textContent='State '+st;if(st===rankState)o.selected=true;sel.appendChild(o);});
+  sel.onchange=()=>{rankState=sel.value;loadRankingEditor();};
 }
 async function loadRankingEditor(){
+  await populateRankStatePicker();
   const wrap=$('#rankRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const stateId=currentPlayer?.state_id||'3139';
-  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members,nap_protected').eq('state_id',stateId).order('state_rank',{ascending:true,nullsFirst:false}).limit(20);
+  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members').eq('state_id',rankState).order('state_rank');
   rankCache=data||[];
-  renderRankRows();
+  wrap.innerHTML='';
+  if(!rankCache.length){wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No alliances in this state yet.</p>';return;}
+  rankCache.forEach((a,i)=>{const d=document.createElement('div');d.innerHTML=rankRowHTML(i,a);wrap.appendChild(d.firstElementChild);});
 };
 $('#saveRankBtn').onclick=async()=>{
   hideErr('#rankErr');
   const btn=$('#saveRankBtn');btn.textContent='Saving…';btn.disabled=true;
   const rows=Array.from($('#rankRows').children).filter(r=>r.classList&&r.classList.contains('ditem'));
   let errors=[];
-  for(let i=0;i<rows.length;i++){
-    const row=rows[i];
-    const id=rankCache[i]?.id;if(!id)continue;
+  for(const row of rows){
+    const id=row.dataset.id;if(!id)continue;
+    const pos=row.querySelector('.rk-pos')?.value.trim();
     const mem=row.querySelector('.rk-mem')?.value.trim();
-    const nap=row.querySelector('.rk-nap')?.checked||false;
-    const{error}=await sb.from('alliances').update({state_rank:'#'+(i+1),members:mem||null,nap_protected:nap}).eq('id',id);
+    const{error}=await sb.from('alliances').update({state_rank:pos?'#'+pos.replace('#',''):null,members:mem||null}).eq('id',id);
     if(error)errors.push(error.message);
   }
   btn.textContent='💾 Save state ranking';btn.disabled=false;
   if(errors.length){showErr('#rankErr','Some saves failed: '+errors[0]);}
   else{toast('Ranking saved ✓');loadRankingEditor();}
 };
+
+// ── RANKING: DOWNLOAD current list as Excel (pre-filled) ──────
+$('#rankDownloadBtn').onclick=async()=>{
+  hideErr('#rankBulkMsg');
+  const{data}=await sb.from('alliances').select('tag,name,state_rank').eq('state_id',rankState).order('state_rank');
+  const rows=[['Rank','Tag','Alliance name']];
+  (data||[]).forEach(a=>{
+    const r=(a.state_rank||'').replace('#','');
+    rows.push([r,a.tag||'',a.name||'']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:6},{wch:10},{wch:26}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'State '+rankState);
+  XLSX.writeFile(wb,'state-'+rankState+'-ranking.xlsx');
+  toast('Downloaded ✓');
+};
+
+// ── RANKING: UPLOAD Excel → safe replace ─────────────────────
+$('#rankUploadBtn').onclick=()=>$('#rankXlsxInput').click();
+$('#rankXlsxInput').onchange=(evt)=>{
+  const file=evt.target.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    hideErr('#rankBulkMsg');
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+      if(rows.length<2){showErr('#rankBulkMsg','The file has no data rows.');return;}
+      // Map header columns
+      const header=rows[0].map(h=>String(h||'').trim().toLowerCase());
+      const ci={rank:header.indexOf('rank'),tag:header.indexOf('tag'),name:header.indexOf('alliance name')};
+      if(ci.name<0)ci.name=header.indexOf('name');
+      if(ci.tag<0||ci.name<0){showErr('#rankBulkMsg','Missing Tag or Alliance name column.');return;}
+
+      // Parse uploaded rows
+      const uploaded=[];
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        const tag=String(r[ci.tag]||'').trim();
+        if(!tag)continue;
+        const name=String(r[ci.name]||'').trim();
+        let rank=ci.rank>=0?String(r[ci.rank]||'').trim().replace('#',''):'';
+        const n=parseInt(rank,10);
+        rank=(n>=1)?String(n).padStart(2,'0'):'';
+        uploaded.push({tag,name,rank});
+      }
+      if(!uploaded.length){showErr('#rankBulkMsg','No valid rows found.');return;}
+
+      const btn=$('#rankUploadBtn');btn.textContent='Uploading…';btn.disabled=true;
+
+      // Existing alliances in this state
+      const{data:existing}=await sb.from('alliances').select('id,tag,name,state_rank').eq('state_id',rankState);
+      const byTag={};(existing||[]).forEach(a=>{byTag[(a.tag||'').toLowerCase()]=a;});
+
+      const uploadedTags=new Set(uploaded.map(u=>u.tag.toLowerCase()));
+      let created=0,updated=0,unranked=0,errors=[];
+
+      // Insert / update from the file
+      for(const u of uploaded){
+        const ex=byTag[u.tag.toLowerCase()];
+        const sr=u.rank?'#'+u.rank:null;
+        if(ex){
+          const patch={state_rank:sr};
+          if(u.name)patch.name=u.name; // update name if provided
+          const{error}=await sb.from('alliances').update(patch).eq('id',ex.id);
+          if(error)errors.push(error.message);else updated++;
+        }else{
+          const{error}=await sb.from('alliances').insert({tag:u.tag,name:u.name||u.tag,state_id:rankState,state_rank:sr,is_showcase:false});
+          if(error)errors.push(error.message);else created++;
+        }
+      }
+
+      // Safe replace: alliances NOT in the file just leave the ranking (rank → null).
+      // We NEVER delete rows — pages, configs and members are always preserved.
+      for(const a of (existing||[])){
+        if(!uploadedTags.has((a.tag||'').toLowerCase()) && a.state_rank){
+          const{error}=await sb.from('alliances').update({state_rank:null}).eq('id',a.id);
+          if(!error)unranked++;
+        }
+      }
+
+      btn.textContent='⬆️ Upload ranking Excel';btn.disabled=false;
+      evt.target.value='';
+      if(errors.length){showErr('#rankBulkMsg','Done with some errors: '+errors[0]);}
+      else{toast('Ranking updated ✓');}
+      $('#rankBulkMsg').style.color='var(--ink-soft)';
+      $('#rankBulkMsg').textContent=`✓ ${created} added, ${updated} updated, ${unranked} removed from ranking (kept safe).`;
+      $('#rankBulkMsg').style.display='';
+      loadRankingEditor();
+    }catch(err){console.error(err);showErr('#rankBulkMsg','Upload failed: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+// ── NAP EDITOR (admins only) ──────────────────────────────────
+async function loadNapEditor(){
+  const stateId=(editingAlliance&&editingAlliance.state_id)||'3139';
+  const lbl=$('#napStateLabel');if(lbl)lbl.textContent='State '+stateId;
+  hideErr('#napErr');
+  const{data}=await sb.from('nap_config').select('*').eq('state_id',stateId).maybeSingle();
+  const rules=Array.isArray(data?.rules)?data.rules:[];
+  const allies=Array.isArray(data?.alliances)?data.alliances:[];
+  // Rules stored as {icon,text}; show as "icon text" per line
+  $('#napRules').value=rules.map(r=>((r.icon?r.icon+' ':'')+(r.text||'')).trim()).join('\n');
+  $('#napRulesFooter').value=data?.rules_footer||'';
+  $('#napAlliances').value=allies.join('\n');
+  $('#napAlliancesFooter').value=data?.alliances_footer||'';
+  $('#napActive').checked=!!(data&&data.active);
+}
+
+// Split "⚔️ DO NOT..." into {icon,text}. First token is the icon if it's non-alphanumeric.
+function parseRuleLine(line){
+  const t=line.trim();
+  if(!t)return null;
+  const m=t.match(/^(\S+)\s+(.*)$/);
+  if(m && /[\u{1F000}-\u{1FFFF}\u2190-\u27BF\u2B00-\u2BFF]/u.test(m[1])){
+    return {icon:m[1],text:m[2]};
+  }
+  return {icon:'•',text:t};
+}
+
+$('#saveNapBtn').onclick=async()=>{
+  hideErr('#napErr');
+  const stateId=(editingAlliance&&editingAlliance.state_id)||'3139';
+  const btn=$('#saveNapBtn');btn.textContent='Saving…';btn.disabled=true;
+
+  const rules=$('#napRules').value.split('\n').map(parseRuleLine).filter(Boolean);
+  const alliances=$('#napAlliances').value.split('\n').map(a=>a.trim().toUpperCase()).filter(Boolean);
+  const payload={
+    state_id:stateId,
+    rules,
+    alliances,
+    rules_footer:$('#napRulesFooter').value.trim(),
+    alliances_footer:$('#napAlliancesFooter').value.trim(),
+    active:$('#napActive').checked
+  };
+
+  // upsert by state_id
+  const{error}=await sb.from('nap_config').upsert(payload,{onConflict:'state_id'});
+  btn.textContent='💾 Save NAP';btn.disabled=false;
+  if(error){showErr('#napErr','Error: '+error.message);}
+  else{toast('NAP saved ✓');}
+};
+
+// ── CREATE NEW STATE (admins only, no SQL needed) ─────────────
+(function(){
+  const btn=document.getElementById('newStateBtn');
+  const form=document.getElementById('newStateForm');
+  const createBtn=document.getElementById('createStateBtn');
+  if(btn)btn.onclick=()=>{ if(form)form.style.display=form.style.display==='none'?'':'none'; };
+  if(createBtn)createBtn.onclick=async()=>{
+    hideErr('#newStateErr');
+    const num=(document.getElementById('newStateNum').value||'').trim();
+    if(!/^\d{3,5}$/.test(num)){showErr('#newStateErr','Enter a valid state number (3–5 digits).');return;}
+    createBtn.textContent='…';createBtn.disabled=true;
+    // does it already exist?
+    const{data:existing}=await sb.from('states').select('id').eq('id',num).maybeSingle();
+    if(existing){showErr('#newStateErr','That state already exists.');createBtn.textContent='Create';createBtn.disabled=false;return;}
+    // create the state row + a starter PXR alliance for it
+    const{error:e1}=await sb.from('states').insert({id:num,svs_wins:0,castle_history:[]});
+    if(e1){showErr('#newStateErr','Could not create state: '+e1.message);createBtn.textContent='Create';createBtn.disabled=false;return;}
+    await sb.from('alliances').insert({tag:'PXR',name:'Phoenix Rising',state_id:num,accent:'#ff7a2e',is_showcase:true,config:{}});
+    toast('State '+num+' created ✓');
+    document.getElementById('newStateNum').value='';
+    form.style.display='none';
+    rankState=num;
+    createBtn.textContent='Create';createBtn.disabled=false;
+    loadRankingEditor();
+  };
+})();
 
 // ── ACCESS MANAGEMENT (assign roles without SQL) ──────────────
 // ┌──────────────────────────────────────────────────────────┐
@@ -1658,46 +2161,156 @@ $('#accessSearch').addEventListener('input', (e)=>{
   }, 350);
 });
 
+// ── FRAMES MANAGEMENT ────────────────────────────────────────
+const ALL_FRAMES = [
+  { id:'bear',   label:'🐻 Cazador',  hint:'10 Bear Traps' },
+  { id:'svs',    label:'⚔️ SvS MVP',  hint:'Top 3 daño SvS' },
+  { id:'perf',   label:'⭐ Perfecto', hint:'100% asistencia' },
+  { id:'meteor', label:'☄️ Meteoro',  hint:'Campeón de meteoro' },
+  { id:'legend', label:'👑 Leyenda',  hint:'Globo del estado' }
+];
+
+function framesPlayerHTML(p) {
+  const unlocked = Array.isArray(p.unlocked_frames) ? p.unlocked_frames : [];
+  const frameToggles = ALL_FRAMES.map(f => {
+    const has = unlocked.includes(f.id);
+    return `<button type="button"
+      class="btn ${has ? 'btn-fire' : 'btn-ghost'} frame-toggle"
+      data-frame="${f.id}"
+      data-pid="${p.id}"
+      style="font-size:.75rem;padding:6px 10px;flex:1;min-width:120px;"
+    >${f.label} ${has ? '✓' : '+'}<br><span style="font-size:.6rem;opacity:.7">${f.hint}</span></button>`;
+  }).join('');
+  return `<div class="ditem" data-id="${p.id}">
+    <div class="ditem-header">
+      <span class="dtag">${p.name||'(sin nombre)'}</span>
+      <span style="font-size:.72rem;color:var(--muted);">ID ${p.governor_id||'—'}</span>
+    </div>
+    <div style="font-size:.76rem;color:var(--ink-soft);margin-bottom:8px;">
+      Marcos actuales: <b>${unlocked.length ? unlocked.map(f=>ALL_FRAMES.find(x=>x.id===f)?.label||f).join(', ') : 'ninguno'}</b>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">${frameToggles}</div>
+  </div>`;
+}
+
+let framesSearchTimer = null;
+document.getElementById('framesSearch').addEventListener('input', e => {
+  clearTimeout(framesSearchTimer);
+  const q = e.target.value.trim();
+  const results = document.getElementById('framesResults');
+  document.getElementById('framesMsg').textContent = '';
+  if (q.length < 2) {
+    results.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:8px;">Escribe al menos 2 caracteres…</p>';
+    return;
+  }
+  framesSearchTimer = setTimeout(async () => {
+    hideErr('#framesErr');
+    results.innerHTML = '<p style="color:var(--muted);font-size:.82rem;padding:8px;">Buscando…</p>';
+    const { data, error } = await sb.from('players')
+      .select('id,name,governor_id,unlocked_frames,active_frame,alliance_id')
+      .or(`name.ilike.%${q}%,governor_id.ilike.%${q}%`)
+      .limit(15);
+    if (error) { showErr('#framesErr', 'Error: ' + error.message); results.innerHTML = ''; return; }
+    if (!data || !data.length) {
+      results.innerHTML = '<p style="color:var(--muted);font-size:.82rem;padding:8px;">No hay jugadores que coincidan.</p>';
+      return;
+    }
+    results.innerHTML = '';
+    data.forEach(p => {
+      const d = document.createElement('div');
+      d.innerHTML = framesPlayerHTML(p);
+      const node = d.firstElementChild;
+      // Wire toggle buttons
+      node.querySelectorAll('.frame-toggle').forEach(btn => {
+        btn.onclick = async () => {
+          const frameId = btn.dataset.frame;
+          const pid = btn.dataset.pid;
+          // Get current unlocked_frames fresh
+          const { data: fresh } = await sb.from('players').select('unlocked_frames').eq('id', pid).single();
+          let frames = Array.isArray(fresh?.unlocked_frames) ? [...fresh.unlocked_frames] : [];
+          const has = frames.includes(frameId);
+          if (has) {
+            frames = frames.filter(f => f !== frameId);
+          } else {
+            frames.push(frameId);
+          }
+          btn.textContent = '…'; btn.disabled = true;
+          const { error } = await sb.from('players').update({ unlocked_frames: frames }).eq('id', pid);
+          btn.disabled = false;
+          if (error) {
+            showErr('#framesErr', 'Error al guardar: ' + error.message);
+            btn.textContent = has ? '✓' : '+';
+          } else {
+            const msg = document.getElementById('framesMsg');
+            const fname = ALL_FRAMES.find(f => f.id === frameId)?.label || frameId;
+            msg.textContent = `✓ ${p.name||'Jugador'}: marco ${fname} ${has ? 'retirado' : 'concedido'}.`;
+            toast('Marco actualizado ✓');
+            // Refresh the player row
+            p.unlocked_frames = frames;
+            const fresh_d = document.createElement('div');
+            fresh_d.innerHTML = framesPlayerHTML(p);
+            const newNode = fresh_d.firstElementChild;
+            newNode.querySelectorAll('.frame-toggle').forEach(b2 => {
+              b2.onclick = btn.parentElement.closest('.ditem').querySelector(`[data-frame="${b2.dataset.frame}"]`).onclick;
+            });
+            node.replaceWith(newNode);
+            // Re-wire new node
+            newNode.querySelectorAll('.frame-toggle').forEach(b2 => {
+              b2.onclick = async () => {
+                // trigger full re-search for simplicity
+                document.getElementById('framesSearch').dispatchEvent(new Event('input'));
+              };
+            });
+          }
+        };
+      });
+      results.appendChild(node);
+    });
+  }, 350);
+});
+
 // ── INIT ──────────────────────────────────────────────────────
 let isStateAdmin=false;
 async function checkAccess(user){
  try{
   const timeout=ms=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms));
-  // Get ALL of this user's profiles — a person can have one per state, and
-  // the most recently created one isn't necessarily the admin one.
+  // Get ALL player profiles for this user (they may have several now)
   const{data:rows,error:perr}=await Promise.race([
     sb.from('players').select('*').eq('owner',user.id).order('created_at',{ascending:false}),
     timeout(8000)
   ]);
   if(perr)throw perr;
-  const rank={admin:0,r5:1,r4:2};
-  const player=(rows||[]).filter(p=>p.role in rank).sort((a,b)=>rank[a.role]-rank[b.role])[0]||null;
-  if(!player){show('scDenied');return;}
+  const allProfiles=rows||[];
+  if(!allProfiles.length){show('scDenied');return;}
+
+  // Find the highest-privilege profile (admin > r5 > r4 > member)
+  const rank=r=>r==='admin'?3:r==='r5'?2:r==='r4'?1:0;
+  const player=allProfiles.slice().sort((a,b)=>rank(b.role)-rank(a.role))[0];
 
   const isAdmin=player.role==='admin'||player.role==='r4'||player.role==='r5';
   if(!isAdmin){show('scDenied');return;}
 
   currentPlayer=player;
-  // Fill the bottom-nav with this admin's real state, not a hard-coded number
-  const st=player.state_id||'';
-  const nsl=document.getElementById('navStateLabel');if(nsl)nsl.textContent=st||'State';
-  const ns=document.getElementById('navState');if(ns&&st)ns.href='./phoenix-state.html?s='+st;
   isStateAdmin=(player.role==='admin'); // only full admins (you + TMQ) edit the state ranking
   if(isStateAdmin){
-    const ag=document.getElementById('adminGroup');if(ag)ag.style.display='';
-    const rt=document.getElementById('rankingTab');if(rt)rt.style.display='none';
-    const at=document.getElementById('accessTab');if(at)at.style.display='none';
+    const rt=document.getElementById('rankingTab');if(rt)rt.style.display='';
+    const at=document.getElementById('accessTab');if(at)at.style.display='';
+    const nt=document.getElementById('napTab');if(nt)nt.style.display='';
+    const gs=document.getElementById('grpState');if(gs)gs.style.display='';
+    const gy=document.getElementById('grpSystem');if(gy)gy.style.display='';
+    const st=document.getElementById('searchTab');if(st)st.style.display='';
+  }
+  // Frames tab: visible for admins and r5
+  if(player.role==='admin'||player.role==='r5'){
+    const ft=document.getElementById('framesTab');if(ft)ft.style.display='';
   }
 
-  // Load alliances this player can manage.
-  // Full admins see every alliance IN THEIR OWN STATE (not all states mixed);
-  // R4/R5 see only their own alliance.
+  // Load alliances this player can manage (same alliance they belong to, or all if super-admin)
   let q=sb.from('alliances').select('*');
   if(player.role!=='admin'){
+    // R4/R5 can only edit their own alliance
     if(player.alliance_id) q=q.eq('id',player.alliance_id);
     else{show('scDenied');return;}
-  }else if(player.state_id){
-    q=q.eq('state_id',player.state_id);
   }
   const{data:als,error:aerr}=await Promise.race([q,timeout(8000)]);
   if(aerr)throw aerr;
@@ -1710,10 +2323,13 @@ async function checkAccess(user){
   if(als.length===1){
     loadEditor(als[0]);
   } else if(isStateAdmin){
-    // Admins (you + TMQ) jump straight into the editor; the switcher handles the rest
-    // Default to PXR if present, else first
-    const pxr=als.find(a=>a.tag==='PXR');
-    loadEditor(pxr||als[0]);
+    // Admins (you + TMQ) jump straight into the editor, defaulting to the
+    // alliance of the STATE currently being browsed (getState()), not just any PXR.
+    const S=String(getState());
+    const inState=als.filter(a=>String(a.state_id)===S);
+    const pick = inState.find(a=>a.tag==='PXR') || inState[0]
+              || als.find(a=>a.tag==='PXR') || als[0];
+    loadEditor(pick);
   } else {
     // Non-admin leaders with multiple alliances see the picker
     const container=$('#alPick');container.innerHTML='';
@@ -1739,6 +2355,7 @@ async function checkAccess(user){
 }
 
 async function init(){
+  syncAdminNav();
   try{
     const{data:{session}}=await sb.auth.getSession();
     if(session?.user){currentUser=session.user;await checkAccess(session.user);}
@@ -1762,6 +2379,256 @@ setTimeout(()=>{
 },9000);
 
 init();
+
+// ── MANAGEMENT SEARCH (admins only) ───────────────────────────
+let _mgmtInit=false, _mgmtTimer=null;
+function initMgmtSearch(){
+  const box=$('#mgmtSearch');
+  if(!box||_mgmtInit)return;
+  _mgmtInit=true;
+  box.addEventListener('input',()=>{
+    clearTimeout(_mgmtTimer);
+    _mgmtTimer=setTimeout(()=>runMgmtSearch(box.value.trim()),300);
+  });
+}
+
+async function runMgmtSearch(q){
+  const res=$('#mgmtResults');
+  $('#mgmtEditCard').style.display='none';
+  if(!q||q.length<2){res.innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Type at least 2 letters…</p>';return;}
+  res.innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Searching…</p>';
+  const[players,alliances]=await Promise.all([
+    sb.from('players').select('id,name,game_rank,alliance_id,state_id,owner').ilike('name','%'+q+'%').limit(20),
+    sb.from('alliances').select('id,tag,name,state_id').or(`name.ilike.%${q}%,tag.ilike.%${q}%`).limit(20)
+  ]);
+  const pl=players.data||[], al=alliances.data||[];
+  // Map alliance id → tag for showing where a player is
+  const{data:allAll}=await sb.from('alliances').select('id,tag');
+  const tagById={};(allAll||[]).forEach(a=>tagById[a.id]=a.tag);
+
+  let html='';
+  if(al.length){
+    html+='<div style="font-family:Fredoka;font-weight:700;font-size:.72rem;color:var(--acc);text-transform:uppercase;margin:6px 2px;">Alliances</div>';
+    al.forEach(a=>{
+      html+=`<div class="mgmt-row" data-type="alliance" data-id="${a.id}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--panel-edge);border-radius:9px;margin-bottom:6px;cursor:pointer;">
+        <span style="font-family:Fredoka;font-weight:700;color:var(--ink);">[${a.tag}]</span>
+        <span style="flex:1;color:var(--ink-soft);font-size:.85rem;">${a.name||''}</span>
+        <span style="font-size:.72rem;color:var(--muted);">State ${a.state_id}</span></div>`;
+    });
+  }
+  if(pl.length){
+    html+='<div style="font-family:Fredoka;font-weight:700;font-size:.72rem;color:var(--acc);text-transform:uppercase;margin:10px 2px 6px;">Players</div>';
+    pl.forEach(p=>{
+      const where=p.alliance_id?('['+(tagById[p.alliance_id]||'?')+']'):'no alliance';
+      html+=`<div class="mgmt-row" data-type="player" data-id="${p.id}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--panel-edge);border-radius:9px;margin-bottom:6px;cursor:pointer;">
+        <span style="flex:1;font-family:Fredoka;font-weight:600;color:var(--ink);">${p.name||'—'}</span>
+        <span style="font-size:.72rem;color:var(--muted);">${where} ${p.game_rank||''}</span>
+        ${p.owner?'<span style="font-size:.66rem;color:#56c98a;">●page</span>':''}</div>`;
+    });
+  }
+  if(!html)html='<p style="color:var(--muted);font-size:.82rem;padding:8px;">No matches.</p>';
+  res.innerHTML=html;
+  res.querySelectorAll('.mgmt-row').forEach(row=>{
+    row.onclick=()=>openMgmtEditor(row.dataset.type,row.dataset.id);
+  });
+}
+
+async function openMgmtEditor(type,id){
+  const card=$('#mgmtEditCard'), body=$('#mgmtEditBody');
+  card.style.display='';card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(type==='player'){
+    const{data:p}=await sb.from('players').select('*').eq('id',id).single();
+    const{data:alls}=await sb.from('alliances').select('id,tag,state_id').order('state_id');
+    const opts=(alls||[]).map(a=>`<option value="${a.id}" ${a.id===p.alliance_id?'selected':''}>[${a.tag}] · ${a.state_id}</option>`).join('');
+    body.innerHTML=`
+      <div style="font-family:Baloo 2;font-weight:800;font-size:1rem;color:var(--ink);margin-bottom:10px;">Edit player</div>
+      <label class="lab">Name</label><input id="meName" value="${(p.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+      <label class="lab">Rank</label>
+      <select id="meRank" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+        ${['','R1','R2','R3','R4','R5'].map(r=>`<option value="${r}" ${r===(p.game_rank||'')?'selected':''}>${r||'— none —'}</option>`).join('')}
+      </select>
+      <label class="lab">Alliance</label>
+      <select id="meAlliance" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:14px;">${opts}</select>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-fire" id="meSave" style="flex:1;">💾 Save</button>
+        <button class="btn btn-danger" id="meDelete" style="width:auto;">🗑️</button>
+      </div>
+      <div class="errmsg" id="meMsg" style="margin-top:8px;"></div>`;
+    $('#meSave').onclick=async()=>{
+      const patch={name:$('#meName').value.trim(),game_rank:$('#meRank').value||null,alliance_id:$('#meAlliance').value};
+      const{error}=await sb.from('players').update(patch).eq('id',id);
+      if(error)showErr('#meMsg','Error: '+error.message);else{toast('Player saved ✓');runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+    $('#meDelete').onclick=async()=>{
+      if(!confirm('Delete this player permanently?'))return;
+      const{error}=await sb.from('players').delete().eq('id',id);
+      if(error)showErr('#meMsg','Error: '+error.message);else{toast('Deleted');card.style.display='none';runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+  }else{
+    const{data:a}=await sb.from('alliances').select('*').eq('id',id).single();
+    body.innerHTML=`
+      <div style="font-family:Baloo 2;font-weight:800;font-size:1rem;color:var(--ink);margin-bottom:10px;">Edit alliance</div>
+      <label class="lab">Tag</label><input id="maTag" value="${(a.tag||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:10px;">
+      <label class="lab">Name</label><input id="maName" value="${(a.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:9px;border:2px solid var(--panel-edge);border-radius:9px;margin-bottom:14px;">
+      <button class="btn btn-fire" id="maSave" style="width:100%;">💾 Save</button>
+      <div class="errmsg" id="maMsg" style="margin-top:8px;"></div>`;
+    $('#maSave').onclick=async()=>{
+      const{error}=await sb.from('alliances').update({tag:$('#maTag').value.trim(),name:$('#maName').value.trim()}).eq('id',id);
+      if(error)showErr('#maMsg','Error: '+error.message);else{toast('Alliance saved ✓');runMgmtSearch($('#mgmtSearch').value.trim());}
+    };
+  }
+}
 </script>
+<script>
+/* PHX nav: make bottom-nav links carry the current state so navigating
+   between pages no longer bounces back to 3139. Runs after botnav exists. */
+(function(){
+  try{
+    var s=(typeof getState==='function')?getState():'3139';
+    if(!s||s==='3139')return;
+    var links=document.querySelectorAll('.botnav a');
+    for(var i=0;i<links.length;i++){
+      var href=links[i].getAttribute('href');
+      if(!href||href.indexOf('phoenix-')===-1)continue;
+      if(/[?&]s=/.test(href))continue;
+      links[i].setAttribute('href', href+(href.indexOf('?')>-1?'&':'?')+'s='+s);
+    }
+  }catch(e){}
+})();
+</script>
+
+<!-- 🍪 THE CAVE (shared module) — private space for Hestelae & TMQ -->
+<button id="caveBtn" style="display:none;position:fixed;bottom:78px;right:16px;z-index:60;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(180deg,#8a5a3a,#6a3f28);box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:1.5rem;cursor:pointer;">🍪<span id="caveDot" style="display:none;position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#ff3b3b;border:2px solid #1a1009;border-radius:50%;"></span></button>
+<style>
+@keyframes caveNudge{0%,100%{transform:translateY(0) rotate(0);}25%{transform:translateY(-6px) rotate(-8deg);}75%{transform:translateY(-3px) rotate(8deg);}}
+#caveBtn.has-new{animation:caveNudge 1.1s ease-in-out infinite;}
+</style>
+<div id="cavePanel" style="display:none;position:fixed;inset:0;z-index:70;background:rgba(20,12,8,.75);backdrop-filter:blur(4px);align-items:flex-end;">
+  <div style="background:linear-gradient(180deg,#2a1c14,#1a1009);width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;border:1px solid #4a3020;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="padding:16px 18px;border-bottom:1px solid #3a2818;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.4rem;">🍪</span>
+      <div style="flex:1;">
+        <div style="font-family:'Baloo 2',cursive;font-weight:800;color:#ffd9a0;font-size:1.05rem;">Our cave</div>
+        <div style="font-size:.72rem;color:#b0876a;">Just us. Nobody else can see this. 🤍</div>
+      </div>
+      <button id="caveClose" style="background:none;border:none;color:#b0876a;font-size:1.5rem;cursor:pointer;">×</button>
+    </div>
+    <div id="caveMessages" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="padding:12px 16px;border-top:1px solid #3a2818;display:flex;gap:8px;">
+      <input id="caveInput" placeholder="Leave a message…" style="flex:1;background:#1a1009;border:1.5px solid #4a3020;border-radius:12px;color:#ffe8d0;font-family:Inter,sans-serif;font-size:.9rem;padding:11px 13px;outline:none;">
+      <button id="caveSend" style="background:linear-gradient(180deg,#c98a5a,#a06840);border:none;border-radius:12px;color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;padding:0 18px;cursor:pointer;">Send</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var __sb=(typeof sb!=='undefined'&&sb)?sb:((typeof _sb!=='undefined'&&_sb)?_sb:null);
+  if(!__sb)return;
+  var CAVE_EMAILS=['hestelae@gmail.com','ld9791@gmail.com'];
+  var caveOpen=false, caveChannel=null, caveLastSeen=0, myEmail='';
+  try{ caveLastSeen=parseInt(localStorage.getItem('caveLastSeen')||'0',10)||0; }catch(_){}
+
+  function maybeShowCave(){
+    var btn=document.getElementById('caveBtn'); if(!btn)return;
+    if(CAVE_EMAILS.indexOf(myEmail)>-1){ btn.style.display=''; subscribeCave(); refreshCaveDot(); }
+    else { btn.style.display='none'; }
+  }
+  function subscribeCave(){
+    if(caveChannel)return;
+    try{
+      caveChannel=__sb.channel('cave-rt-'+Math.random().toString(36).slice(2,7))
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'cave_messages'},function(payload){
+          if(caveOpen){ appendCaveMessage(payload.new); markCaveSeen(); } else { refreshCaveDot(true); }
+        })
+        .on('postgres_changes',{event:'DELETE',schema:'public',table:'cave_messages'},function(){ if(caveOpen)loadCave(); })
+        .subscribe();
+    }catch(e){console.warn('Cave realtime failed:',e);}
+  }
+  async function refreshCaveDot(force){
+    var btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
+    if(!btn||!dot)return;
+    try{
+      var r=await __sb.from('cave_messages').select('created_at,author_email').order('created_at',{ascending:false}).limit(1);
+      var data=r.data;
+      if(data&&data.length){
+        var t=new Date(data[0].created_at).getTime();
+        var fromOther=(data[0].author_email||'').toLowerCase()!==myEmail;
+        if((force||t>caveLastSeen)&&fromOther&&!caveOpen){ dot.style.display='';btn.classList.add('has-new'); }
+      }
+    }catch(_){}
+  }
+  function markCaveSeen(){
+    caveLastSeen=Date.now();
+    try{ localStorage.setItem('caveLastSeen',String(caveLastSeen)); }catch(_){}
+    var btn=document.getElementById('caveBtn'), dot=document.getElementById('caveDot');
+    if(dot)dot.style.display='none'; if(btn)btn.classList.remove('has-new');
+  }
+  async function openCave(){
+    caveOpen=true; document.getElementById('cavePanel').style.display='flex';
+    markCaveSeen(); await loadCave(); subscribeCave();
+  }
+  function closeCave(){ caveOpen=false; document.getElementById('cavePanel').style.display='none'; }
+  function caveBubble(m){
+    var mine=(m.author_email||'').toLowerCase()===myEmail;
+    var who=(m.author_email||'').toLowerCase()==='hestelae@gmail.com'?'Hestelae':'TMQ';
+    var when=new Date(m.created_at).toLocaleString();
+    var bubble=document.createElement('div');
+    bubble.dataset.id=m.id;
+    bubble.style.cssText='max-width:80%;align-self:'+(mine?'flex-end':'flex-start')+';background:'+(mine?'linear-gradient(180deg,#c98a5a,#a06840)':'#2e2016')+';color:'+(mine?'#fff':'#ffe8d0')+';padding:9px 13px;border-radius:14px;position:relative;';
+    var del=mine?'<button data-del="'+m.id+'" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:.75rem;cursor:pointer;padding:0;margin-top:4px;">🗑️ delete</button>':'';
+    bubble.innerHTML='<div style="font-size:.9rem;line-height:1.4;white-space:pre-wrap;">'+(m.body||'').replace(/</g,'&lt;')+'</div><div style="font-size:.62rem;opacity:.7;margin-top:4px;">'+who+' · '+when+'</div>'+del;
+    var db=bubble.querySelector('[data-del]');
+    if(db)db.onclick=function(){ deleteCaveMsg(m.id); };
+    return bubble;
+  }
+  function appendCaveMessage(m){
+    var box=document.getElementById('caveMessages'); if(!box)return;
+    var ph=box.querySelector('[data-empty]'); if(ph)ph.remove();
+    box.appendChild(caveBubble(m)); box.scrollTop=box.scrollHeight;
+  }
+  async function loadCave(){
+    var box=document.getElementById('caveMessages');
+    box.innerHTML='<div style="text-align:center;color:#8a6a4a;font-size:.82rem;padding:20px;">…</div>';
+    try{
+      var r=await __sb.from('cave_messages').select('*').order('created_at',{ascending:true});
+      if(r.error)throw r.error;
+      var data=r.data;
+      if(!data||!data.length){ box.innerHTML='<div data-empty style="text-align:center;color:#8a6a4a;font-size:.85rem;padding:24px;line-height:1.5;">Nobody\'s written yet 🍪<br>Leave the first message.</div>'; return; }
+      box.innerHTML=''; data.forEach(function(m){ box.appendChild(caveBubble(m)); }); box.scrollTop=box.scrollHeight;
+    }catch(e){ box.innerHTML='<div style="text-align:center;color:#c88;font-size:.82rem;padding:20px;">Couldn\'t load the cave. '+(e.message||'')+'</div>'; }
+  }
+  async function sendCave(){
+    var input=document.getElementById('caveInput');
+    var body=input.value.trim(); if(!body)return; input.value='';
+    var r=await __sb.from('cave_messages').insert({author_email:myEmail,author_name:myEmail==='hestelae@gmail.com'?'Hestelae':'TMQ',body});
+    if(r.error){input.value=body;alert('Could not send: '+r.error.message);return;}
+    markCaveSeen(); if(!caveChannel)await loadCave();
+  }
+  async function deleteCaveMsg(id){
+    if(!confirm('Delete this message?'))return;
+    var r=await __sb.from('cave_messages').delete().eq('id',id);
+    if(r.error){alert('Could not delete: '+r.error.message);return;}
+    var box=document.getElementById('caveMessages');
+    var el=box&&box.querySelector('[data-id="'+id+'"]'); if(el)el.remove();
+  }
+  window.deleteCaveMsg=deleteCaveMsg;
+
+  document.getElementById('caveBtn')&&document.getElementById('caveBtn').addEventListener('click',openCave);
+  document.getElementById('caveClose')&&document.getElementById('caveClose').addEventListener('click',closeCave);
+  document.getElementById('caveSend')&&document.getElementById('caveSend').addEventListener('click',sendCave);
+  document.getElementById('caveInput')&&document.getElementById('caveInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendCave();});
+
+  // Detect the logged-in user's email (session), then decide whether to show the cave.
+  __sb.auth.getSession().then(function(res){
+    myEmail=((res&&res.data&&res.data.session&&res.data.session.user&&res.data.session.user.email)||'').toLowerCase();
+    maybeShowCave();
+  }).catch(function(){});
+  __sb.auth.onAuthStateChange(function(_e,session){
+    myEmail=((session&&session.user&&session.user.email)||'').toLowerCase();
+    maybeShowCave();
+  });
+})();
+</script>
+
 </body>
 </html>
