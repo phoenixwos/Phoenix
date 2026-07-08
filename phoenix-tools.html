@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Herramientas · Phoenix</title>
+<title>Tools · Phoenix</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -55,18 +55,18 @@
 </head>
 <body>
 <div class="top"><div class="in">
-  <a class="back" id="backLink" href="phoenix-state.html">◂ <span id="backNum">Volver</span></a>
-  <h1>🛠️ Herramientas</h1>
+  <a class="back" id="backLink" href="phoenix-state.html">◂ <span id="backNum">Back</span></a>
+  <h1>🛠️ Tools</h1>
 </div></div>
 
 <div class="wrap">
-  <p class="lead">Utilidades del estado para líderes y jugadores. <b>Dona</b> para ayudar a seguir construyendo herramientas útiles para el crecimiento del estado.</p>
+  <p class="lead">State utilities for leaders and players. <b>Donate</b> to help keep building useful tools for the state's growth.</p>
 
   <a class="card" id="cardMap" style="display:none;">
     <div class="emoji">🏰</div>
     <div class="body">
-      <h3>Mapa del Castillo</h3>
-      <p>Reparte el territorio del castillo entre alianzas, pintando zona por zona.</p>
+      <h3>Castle Map</h3>
+      <p>Split the castle territory between alliances, painting zone by zone.</p>
       <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
@@ -75,8 +75,8 @@
   <a class="card blue" id="cardNumbers" style="display:none;">
     <div class="emoji">🔢</div>
     <div class="body">
-      <h3>Mapa por Números</h3>
-      <p>Reparto por numeración estilo TMQ — asigna rangos de casillas por alianza.</p>
+      <h3>Castle Numbers</h3>
+      <p>TMQ-style numbered assignment — give each alliance a range of cell numbers.</p>
       <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
@@ -85,8 +85,8 @@
   <a class="card gold" id="cardRedeem" style="display:none;">
     <div class="emoji">🎁</div>
     <div class="body">
-      <h3>Canjeo de Códigos</h3>
-      <p>Canjea códigos de regalo para toda la alianza desde el roster de IDs.</p>
+      <h3>Gift Code Redeem</h3>
+      <p>Redeem gift codes for the whole alliance from the ID roster.</p>
       <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
@@ -95,9 +95,19 @@
   <a class="card" id="cardRatio">
     <div class="emoji">⚖️</div>
     <div class="body">
-      <h3>Calculadora de Ratios</h3>
-      <p>Mete tu total de tropas y el ratio (Bear Trap, Defensa, Básico o el tuyo) y calcula cuántas de cada tipo llevar.</p>
-      <span class="tag everyone">Para todos</span>
+      <h3>Troop Ratio Calculator</h3>
+      <p>Enter your total troops and a ratio (Bear Trap, Defense, Basic, or your own) to see how many of each type to bring.</p>
+      <span class="tag everyone">Everyone</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card" id="cardCapacity">
+    <div class="emoji">🐎</div>
+    <div class="body">
+      <h3>Rally Capacity</h3>
+      <p>Enter the leader's deployment capacity to find the max troops per joiner (default 15 joiners).</p>
+      <span class="tag everyone">Everyone</span>
     </div>
     <div class="arr">›</div>
   </a>
@@ -105,20 +115,20 @@
   <a class="card blue" id="cardRally" style="display:none;">
     <div class="emoji">⏱️</div>
     <div class="body">
-      <h3>Sincronizador de Rally</h3>
-      <p>Calcula cuándo debe mandar cada líder para golpear todos a la vez.</p>
+      <h3>Rally Sync</h3>
+      <p>Calculate when each leader needs to send so everyone lands at the same time.</p>
       <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
   </a>
 
-  <p class="note">¿Se te ocurre otra herramienta útil? Díselo a un líder. 🔥</p>
+  <p class="note">Got an idea for another useful tool? Tell a leader. 🔥</p>
 </div>
 
 <nav class="botnav" id="botnav">
-  <a href="phoenix-state.html"><span class="ic">🗺️</span><span id="navStateLabel">Estado</span></a>
-  <a href="phoenix-alliance.html"><span class="ic">🏰</span>Alianza</a>
-  <a href="phoenix-profile.html"><span class="ic">🚪</span>Perfil</a>
+  <a href="phoenix-state.html"><span class="ic">🗺️</span><span id="navStateLabel">State</span></a>
+  <a href="phoenix-alliance.html"><span class="ic">🏰</span>Alliance</a>
+  <a href="phoenix-profile.html"><span class="ic">🚪</span>Profile</a>
   <a href="phoenix-tools.html" class="active"><span class="ic">🛠️</span>Tools</a>
 </nav>
 
@@ -139,7 +149,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardRatio:'phoenix-ratio-calc.html'};
+  var dest={cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -149,8 +159,8 @@
     if(href && href.indexOf('phoenix-')>-1) a.setAttribute('href', withState(href));
   });
   var bl=document.getElementById('backLink'); if(bl) bl.href=withState('phoenix-state.html');
-  var bn=document.getElementById('backNum'); if(bn && S && S!=='3139') bn.textContent='Estado '+S;
-  var nsl=document.getElementById('navStateLabel'); if(nsl) nsl.textContent=(S&&S!=='3139')?S:'Estado';
+  var bn=document.getElementById('backNum'); if(bn && S && S!=='3139') bn.textContent='State '+S;
+  var nsl=document.getElementById('navStateLabel'); if(nsl) nsl.textContent=(S&&S!=='3139')?S:'State';
 })();
 </script>
 <script>

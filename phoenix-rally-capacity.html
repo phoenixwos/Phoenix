@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Rally Capacity Calculator · Phoenix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--fire:#ff7a3c;--fire-deep:#e85a18;--gold:#f0b93d;
+    --green:#4ade80;--green-deep:#22c55e;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:40px;}
+  h1,h2,.num{font-family:'Rajdhani',sans-serif;}
+  .wrap{max-width:480px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
+  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  .lead{font-size:.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
+
+  .box{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:16px;margin-bottom:14px;}
+  .box label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ice-dim);margin-bottom:7px;font-weight:600;}
+  .box input{width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font-family:'Rajdhani';font-weight:700;font-size:1.4rem;padding:12px 14px;outline:none;text-align:center;}
+  .box input:focus{border-color:var(--ice);}
+  .hint{text-align:center;font-size:.7rem;color:var(--text-dim);margin-top:6px;}
+
+  .joiners-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
+  .joiners-row label{margin:0;flex:1;}
+  .joiners-row input{width:74px;font-size:1.1rem;padding:9px;flex:none;}
+  .joiners-hint{font-size:.68rem;color:var(--text-dim);margin-top:4px;}
+
+  .result{text-align:center;background:linear-gradient(180deg,#123420,#0e2718);
+    border:1.5px solid var(--green-deep);border-radius:18px;padding:26px 16px;margin-bottom:14px;display:none;}
+  .result.show{display:block;}
+  .result .lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:8px;font-weight:600;}
+  .result .amount{font-size:2.6rem;font-weight:700;color:var(--text);letter-spacing:.01em;}
+  .result .sub{font-size:.78rem;color:var(--text-dim);margin-top:8px;}
+
+  .breakdown{display:flex;justify-content:space-between;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:12px 16px;font-size:.8rem;color:var(--text-dim);}
+  .breakdown b{color:var(--text);font-family:'Rajdhani';font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  </div>
+  <h1 style="margin-bottom:6px;">🐎 Rally Capacity Calculator</h1>
+  <p class="lead">Enter the rally leader's deployment capacity, subtract the troops the leader is sending, and find the max each joiner can safely bring, rounded down.</p>
+
+  <div class="box">
+    <label>Rally leader's deployment capacity</label>
+    <input type="text" id="capInput" placeholder="e.g. 2000k or 2000000" inputmode="numeric">
+    <div class="hint">You can type "2000k" for 2,000,000 — it's read automatically.</div>
+
+    <div class="joiners-row">
+      <label>Leader's own troops</label>
+      <input type="text" id="leaderInput" placeholder="0" inputmode="numeric" style="width:110px;font-size:1.1rem;padding:9px;">
+    </div>
+    <div class="joiners-hint">The leader's own troops are subtracted first — only the rest gets split among joiners.</div>
+
+    <div class="joiners-row">
+      <label>Number of joiners</label>
+      <input type="number" id="joinersInput" min="1" value="15">
+    </div>
+    <div class="joiners-hint">Default is 15 — change it if your rally leader's tech allows more or fewer joiners.</div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="lbl">🎯 Max troops per joiner</div>
+    <div class="amount" id="amount">0</div>
+    <div class="sub" id="sub"></div>
+  </div>
+
+  <div class="breakdown" id="breakdown" style="display:none;">
+    <span>Total used (leader + joiners)</span>
+    <b id="usedAmount">0</b>
+  </div>
+
+  <div id="warnBox" style="display:none;margin-top:10px;background:#3a1a10;border:1px solid #ff5a5a;border-radius:10px;padding:10px 12px;font-size:.78rem;color:#ffb3b3;"></div>
+</div>
+
+<script>
+/* ── State-aware back link (no login required for this tool) ─── */
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+function parseAmount(raw){
+  raw=(raw||'').trim().toLowerCase().replace(/,/g,'');
+  if(!raw) return 0;
+  const m=raw.match(/^([\d.]+)\s*(k|m)?$/);
+  if(!m) return 0;
+  let n=parseFloat(m[1]);
+  if(m[2]==='k') n*=1000;
+  if(m[2]==='m') n*=1000000;
+  return Math.max(0,n);
+}
+function fmtNum(n){ return Math.round(n).toLocaleString('en-US'); }
+
+function calc(){
+  const cap=parseAmount(document.getElementById('capInput').value);
+  const leaderTroops=parseAmount(document.getElementById('leaderInput').value);
+  const joiners=Math.max(1,parseInt(document.getElementById('joinersInput').value||'15',10)||15);
+  const resultBox=document.getElementById('result');
+  const breakdown=document.getElementById('breakdown');
+  const warnBox=document.getElementById('warnBox');
+
+  if(cap<=0){
+    resultBox.classList.remove('show');
+    breakdown.style.display='none';
+    warnBox.style.display='none';
+    return;
+  }
+
+  const remaining=Math.max(0,cap-leaderTroops); // what's left for joiners after the leader's own troops
+  const perJoiner=Math.floor(remaining/joiners); // round DOWN — never exceed the leader's real capacity
+  const used=perJoiner*joiners;
+
+  document.getElementById('amount').textContent=fmtNum(perJoiner);
+  document.getElementById('sub').textContent=`Across ${joiners} joiners`;
+  document.getElementById('usedAmount').textContent=fmtNum(used+leaderTroops)+' / '+fmtNum(cap);
+  resultBox.classList.add('show');
+  breakdown.style.display='flex';
+
+  if(leaderTroops>cap){
+    warnBox.textContent='⚠️ The leader\'s own troops are higher than the total capacity — check your numbers.';
+    warnBox.style.display='block';
+  }else{
+    warnBox.style.display='none';
+  }
+}
+
+document.getElementById('capInput').addEventListener('input',calc);
+document.getElementById('leaderInput').addEventListener('input',calc);
+document.getElementById('joinersInput').addEventListener('input',calc);
+</script>
+</body>
+</html>

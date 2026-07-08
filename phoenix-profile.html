@@ -1053,12 +1053,12 @@ function renderFramePicker(p){
       const val=chip.dataset.frame||null;
       try{
         const{error}=await sb.from('players').update({active_frame:val}).eq('id',p.id);
-        if(error){toast('No se pudo guardar el marco',true);return;}
+        if(error){toast('Could not save frame',true);return;}
         p.active_frame=val;
         applyFrame($('#vAvatar'),p);
         renderFramePicker(p);
-        toast('Marco actualizado ✓');
-      }catch(e){toast('Error al guardar',true);}
+        toast('Frame updated ✓');
+      }catch(e){toast('Error saving frame',true);}
     };
   });
 }

@@ -647,7 +647,7 @@ TEK"></textarea>
 
 <nav class="botnav">
   <a href="./phoenix-state.html"><span class="ic">🗺️</span><span id="navStateNum">3139</span></a>
-  <a href="./phoenix-alliance.html?tag=PXR">PXR</a>
+  <a href="./phoenix-alliance.html">Alliance</a>
   <a href="./phoenix-profile.html"><span class="ic">👤</span>Profile</a>
   <a href="./phoenix-admin.html" class="active"><span class="ic">🔐</span>Admin</a>
 </nav>
@@ -2244,7 +2244,7 @@ document.getElementById('framesSearch').addEventListener('input', e => {
             const msg = document.getElementById('framesMsg');
             const fname = ALL_FRAMES.find(f => f.id === frameId)?.label || frameId;
             msg.textContent = `✓ ${p.name||'Jugador'}: marco ${fname} ${has ? 'retirado' : 'concedido'}.`;
-            toast('Marco actualizado ✓');
+            toast('Frame updated ✓');
             // Refresh the player row
             p.unlocked_frames = frames;
             const fresh_d = document.createElement('div');
@@ -2319,6 +2319,14 @@ async function checkAccess(user){
   // Sort alliances alphabetically by tag for easy switching
   als.sort((a,b)=>(a.tag||'').localeCompare(b.tag||''));
   adminAlliances=als;
+
+  // Point the nav's Alliance button at this admin's own alliance
+  // (not a hardcoded PXR, which was wrong for anyone managing a different state).
+  const navAl=als.find(a=>String(a.state_id)===String(getState()))||als[0];
+  if(navAl){
+    const navBtn=document.querySelector('.botnav a[href*="phoenix-alliance.html"]');
+    if(navBtn){ navBtn.textContent=navAl.tag; navBtn.href=stateUrl('phoenix-alliance.html')+(stateUrl('phoenix-alliance.html').includes('?')?'&':'?')+'tag='+navAl.tag; }
+  }
 
   if(als.length===1){
     loadEditor(als[0]);
