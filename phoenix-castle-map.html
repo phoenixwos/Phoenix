@@ -75,8 +75,9 @@
   .active-chip .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
 
   .board-panel{display:flex; flex-direction:column; align-items:center; padding:18px 6px 22px;}
-  .board-outer{width:100%; overflow-x:auto; overflow-y:hidden; display:flex; justify-content:center; padding:10px 0;}
-  .board{display:grid; transform:rotate(45deg); gap:2px;}
+  .board-outer{width:100%; overflow-x:auto; overflow-y:hidden; display:flex; justify-content:center; align-items:center; padding:10px 0;}
+  .board-stage{position:relative; display:flex; justify-content:center; align-items:center;}
+  .board{display:grid; gap:2px; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(45deg); transform-origin:center;}
   .cell{width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:3px; position:relative;}
   .cell-inner{transform:rotate(-45deg); font-size:.5rem; font-weight:700; text-align:center; line-height:1; color:#08131f; pointer-events:none;}
   .cell.castle{background:radial-gradient(circle at 35% 30%, #ff7a68, var(--castle)); box-shadow:0 0 10px rgba(214,69,80,.7);}
@@ -167,7 +168,7 @@
   <div class="panel board-panel">
     <div class="panel-title" style="align-self:flex-start;" data-i18n="boardSectionTitle">3 · Tap a city to paint it (whole block)</div>
     <div class="compass"><span><span data-i18n="compassWest">West</span> ◄</span><span data-i18n="compassNorth">▲ North</span><span><span data-i18n="compassEast">East</span> ►</span></div>
-    <div class="board-outer"><div class="board" id="board"></div></div>
+    <div class="board-outer"><div class="board-stage" id="boardStage"><div class="board" id="board"></div></div></div>
   </div>
 
   <div class="panel">
@@ -298,13 +299,19 @@ function render(){
   boardEl.innerHTML = '';
 
   // Fit the whole rotated diamond inside the visible width of its container.
-  const outer = boardEl.parentElement;
+  const outer = boardEl.parentElement.parentElement; // .board-outer (board is now inside .board-stage)
   const availableWidth = (outer.clientWidth || 340) - 16;
   const idealCellPx = Math.floor(availableWidth / (totalSide * Math.SQRT2));
   const cellPx = Math.max(8, Math.min(26, idealCellPx));
 
   boardEl.style.gridTemplateColumns = `repeat(${totalSide}, ${cellPx}px)`;
   boardEl.style.gridTemplateRows = `repeat(${totalSide}, ${cellPx}px)`;
+
+  // Reserve the full square footprint of the 45°-rotated diamond so its
+  // top/bottom/side tips are never clipped.
+  const diag = Math.ceil(totalSide * cellPx * Math.SQRT2) + 8;
+  const stage = document.getElementById('boardStage');
+  if(stage){ stage.style.width = diag + 'px'; stage.style.height = diag + 'px'; }
 
   for(let j = 0; j < totalSide; j++){
     for(let i = 0; i < totalSide; i++){
