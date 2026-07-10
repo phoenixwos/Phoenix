@@ -100,6 +100,18 @@
 
   <button class="addbtn" id="addBtn" style="display:none;">+ Add Rally 3 (triple rally)</button>
 
+  <div class="rally-card" style="margin-top:4px;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--text);cursor:pointer;">
+      <input type="checkbox" id="useStartTime" style="width:18px;height:18px;accent-color:var(--ice);">
+      Set a start time (optional)
+    </label>
+    <p style="font-size:.74rem;color:var(--text-dim);margin:6px 0 0;">Off = just shows the time gaps between rallies. On = shows the exact clock time each rally must send (e.g. 16:15:00, 16:15:04…).</p>
+    <div id="startTimeWrap" style="display:none;margin-top:8px;">
+      <label style="font-size:.72rem;color:var(--text-dim);">Impact time (your local clock)</label>
+      <input type="time" id="startTime" step="1" style="width:100%;box-sizing:border-box;margin-top:4px;font-family:'Rajdhani';font-size:1.1rem;font-weight:700;">
+    </div>
+  </div>
+
   <button class="calcbtn" id="calcBtn">🎯 Calculate sync</button>
 
   <div class="results" id="results">
@@ -202,9 +214,30 @@ function rallyCardHTML(n){
 
 function renderRallyCards(){
   const box=document.getElementById('ralliesBox');
+  // Preserve whatever the user already typed before rebuilding the cards,
+  // so adding/removing a rally never wipes the other fields.
+  const saved={};
+  for(let i=1;i<=MAX_RALLIES;i++){
+    const l=document.getElementById('leader'+i);
+    if(!l) continue;
+    saved[i]={
+      leader:l.value,
+      ratio:(document.getElementById('ratio'+i)||{}).value||'',
+      min:(document.getElementById('min'+i)||{}).value||'',
+      sec:(document.getElementById('sec'+i)||{}).value||''
+    };
+  }
   let html='';
   for(let i=1;i<=rallyCount;i++) html+=rallyCardHTML(i);
   box.innerHTML=html;
+  // Restore the saved values
+  for(let i=1;i<=rallyCount;i++){
+    if(!saved[i]) continue;
+    const l=document.getElementById('leader'+i); if(l) l.value=saved[i].leader;
+    const r=document.getElementById('ratio'+i); if(r) r.value=saved[i].ratio;
+    const mn=document.getElementById('min'+i); if(mn) mn.value=saved[i].min;
+    const sc=document.getElementById('sec'+i); if(sc) sc.value=saved[i].sec;
+  }
   box.querySelectorAll('[data-remove]').forEach(btn=>{
     btn.onclick=()=>{ rallyCount--; renderRallyCards(); updateAddBtn(); };
   });
@@ -222,6 +255,10 @@ function updateAddBtn(){
 document.getElementById('addBtn').onclick=()=>{
   if(rallyCount<MAX_RALLIES){ rallyCount++; renderRallyCards(); }
 };
+
+document.getElementById('useStartTime').addEventListener('change', function(){
+  document.getElementById('startTimeWrap').style.display = this.checked ? '' : 'none';
+});
 
 function fmt(totalSec){
   totalSec=Math.max(0,Math.round(totalSec));
@@ -247,16 +284,33 @@ function calc(){
 
 function startCountdowns(rows,maxMarch){
   if(countdownTimer) clearInterval(countdownTimer);
+  const impactDate=getImpactDate();
+
+  // If a start time was set, count toward that absolute impact clock time
+  // (so anyone can open the screen and the alerts fire at the real moment).
+  // If it's already passed today, assume it's for tomorrow.
+  let impactAtMs=null;
+  if(impactDate){
+    impactAtMs=impactDate.getTime();
+    if(impactAtMs < Date.now()-5000) impactAtMs += 24*60*60*1000;
+  }
   const t0=Date.now();
+
   function tick(){
-    const elapsed=(Date.now()-t0)/1000;
-    const impactLeft=maxMarch-elapsed;
+    let impactLeft, elapsed;
+    if(impactAtMs!=null){
+      impactLeft=(impactAtMs-Date.now())/1000;      // seconds until absolute impact
+      elapsed=maxMarch-impactLeft;                   // keeps per-rally math consistent
+    } else {
+      elapsed=(Date.now()-t0)/1000;
+      impactLeft=maxMarch-elapsed;
+    }
     const clockEl=document.getElementById('impactClock');
     clockEl.textContent = impactLeft<=0 ? '💥 ¡IMPACTO!' : fmt(impactLeft);
     clockEl.classList.toggle('hit', impactLeft<=0);
 
     rows.forEach(r=>{
-      const left=r.delay-elapsed;
+      const left=r.delay-elapsed;   // for absolute mode: time until this rally must send
       const row=document.getElementById('tlrow'+r.n);
       const timeEl=document.getElementById('tltime'+r.n);
       if(!row||!timeEl) return;
@@ -271,7 +325,6 @@ function startCountdowns(rows,maxMarch){
       }
     });
     if(impactLeft<=-2 && rows.every(r=>(r.delay-elapsed)<=0)){
-      // keep running a bit after impact, then stop refreshing to save battery
       clearInterval(countdownTimer);
     }
   }
@@ -280,30 +333,68 @@ function startCountdowns(rows,maxMarch){
 }
 
 function renderTimeline(rows){
+  const impactDate=getImpactDate();
   const tl=document.getElementById('timeline');
-  tl.innerHTML=rows.map(r=>`
+  tl.innerHTML=rows.map(r=>{
+    let sendLabel='';
+    if(impactDate){
+      const sendAt=new Date(impactDate.getTime() - r.marchSec*1000);
+      sendLabel=`<div class="ratio" style="color:var(--ice);">Send at ${fmtClock(sendAt)}</div>`;
+    }
+    return `
     <div class="tl-row" id="tlrow${r.n}">
       <div class="tl-badge">${r.n}</div>
       <div class="tl-info">
         <div class="who">${escapeHtml(r.leader)}</div>
         <div class="ratio">${r.ratio?('Ratio '+escapeHtml(r.ratio)+' · '):''}March ${fmt(r.marchSec)}</div>
+        ${sendLabel}
       </div>
       <div class="tl-time" id="tltime${r.n}">—</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+function fmtClock(date){
+  const h=String(date.getHours()).padStart(2,'0');
+  const m=String(date.getMinutes()).padStart(2,'0');
+  const s=String(date.getSeconds()).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+// Returns the impact Date if the user set a start time, else null.
+function getImpactDate(){
+  if(!document.getElementById('useStartTime').checked) return null;
+  const v=document.getElementById('startTime').value;
+  if(!v) return null;
+  const parts=v.split(':').map(Number);
+  const d=new Date();
+  d.setHours(parts[0]||0, parts[1]||0, parts[2]||0, 0);
+  return d;
 }
 
 function buildMessage(rows,maxMarch){
+  const impactDate=getImpactDate();
   let msg='📢 RALLY ORDER — JOIN IN THIS ORDER\n\n';
   rows.forEach(r=>{
     msg += `${r.n}️⃣ Rally ${r.n} — Leader: ${r.leader}`;
     if(r.ratio) msg += ` (ratio ${r.ratio})`;
     msg += '\n';
   });
-  msg += '\n🚀 Send schedule (from now):\n';
-  rows.forEach(r=>{
-    msg += `Rally ${r.n} (${r.leader}): ${r.delay<=0.5?'send NOW':'send in '+fmt(r.delay)}\n`;
-  });
-  msg += `\n🎯 Everyone impacts together in: ${fmt(maxMarch)}`;
+  if(impactDate){
+    msg += '\n🚀 Send times (exact clock):\n';
+    rows.forEach(r=>{
+      // this rally sends at impact time minus its own march time
+      const sendAt=new Date(impactDate.getTime() - r.marchSec*1000);
+      msg += `Rally ${r.n} (${r.leader}): send at ${fmtClock(sendAt)}\n`;
+    });
+    msg += `\n🎯 Combined impact at: ${fmtClock(impactDate)}`;
+  } else {
+    msg += '\n🚀 Send schedule (from now):\n';
+    rows.forEach(r=>{
+      msg += `Rally ${r.n} (${r.leader}): ${r.delay<=0.5?'send NOW':'send in '+fmt(r.delay)}\n`;
+    });
+    msg += `\n🎯 Everyone impacts together in: ${fmt(maxMarch)}`;
+  }
   return msg;
 }
 
