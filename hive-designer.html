@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Hive Designer</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;
+    --z1:#4ade80;--z2:#fde047;--z3:#f87171;--z4:#60a5fa;--trap:#fb923c;
+    --banner:#22c55e;--cover:rgba(34,197,94,.22);--farm:#7f1d1d;--building:#7c3aed;--empty:#13233a;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 14px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.4rem;margin:0 0 4px;text-shadow:0 0 18px rgba(127,217,238,.25);}
+  .wrap{max-width:560px;margin:0 auto;}
+  header{text-align:center;margin-bottom:14px;}
+  .eyebrow{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);margin-bottom:4px;}
+  p.sub{font-size:.82rem;color:var(--text-dim);margin:0;}
+  .tag-note{max-width:560px;margin:0 auto 14px;background:rgba(127,217,238,.08);
+    border:1px solid rgba(127,217,238,.25);color:var(--ice);font-size:.78rem;padding:9px 12px;border-radius:8px;text-align:center;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:10px;font-weight:600;}
+
+  .mode-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+  .mode-btn{padding:9px 6px;border-radius:9px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.76rem;font-weight:600;cursor:pointer;text-align:center;}
+  .mode-btn.active{border-color:var(--ice);color:var(--ice);background:rgba(127,217,238,.08);}
+
+  .obstacle-size{display:none;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;
+    background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;padding:8px;}
+  .obstacle-size.show{display:flex;}
+  .osz{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--text-dim);}
+  .osz button{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--panel);
+    color:var(--ice);font-weight:700;cursor:pointer;}
+  .osz .val{min-width:16px;text-align:center;color:var(--text);font-weight:700;}
+
+  .toggle-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;}
+  .toggle-row button{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.76rem;font-weight:600;cursor:pointer;}
+  .toggle-row button.on{border-color:var(--banner);color:var(--banner);background:rgba(34,197,94,.1);}
+
+  .board-outer{width:100%;overflow:auto;display:flex;justify-content:center;padding:10px 0;-webkit-overflow-scrolling:touch;}
+  .stage{position:relative;flex:0 0 auto;}
+  .board{position:absolute;}
+  .cell{position:absolute;border-radius:1px;background:var(--empty);box-shadow:inset 0 0 0 .5px rgba(10,20,32,.55);}
+  .cell.undercity{background:transparent;box-shadow:none;}
+  .cell.z1{background:var(--z1);} .cell.z2{background:var(--z2);}
+  .cell.z3{background:var(--z3);} .cell.z4{background:var(--z4);}
+  .cell.trap{background:var(--trap);}
+  .cell.banner{background:var(--banner);box-shadow:0 0 5px rgba(34,197,94,.8);}
+  .cell.obstacle{}
+  .cell.cover{background:var(--cover);}
+  /* a city drawn as ONE solid 2x2 block, no internal grid lines */
+  .cityblock{position:absolute;pointer-events:none;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(10,20,32,.45);}
+  .cityblock.z1{background:var(--z1);} .cityblock.z2{background:var(--z2);}
+  .cityblock.z3{background:var(--z3);} .cityblock.z4{background:var(--z4);}
+  .citynum{position:absolute;display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;font-weight:700;color:#08131f;pointer-events:none;line-height:1;}
+  .icon{position:absolute;display:flex;align-items:center;justify-content:center;pointer-events:none;line-height:1;}
+
+  .obstacle-palette{display:none;margin-bottom:10px;}
+  .obstacle-palette.show{display:block;}
+  .ob-group{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ice-dim);margin:6px 0 5px;font-weight:600;}
+  .ob-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .ob-btn{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.72rem;font-weight:600;cursor:pointer;text-align:center;line-height:1.25;}
+  .ob-btn.active{border-color:var(--ice);color:var(--ice);background:rgba(127,217,238,.08);}
+
+  .zoom-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:2px;}
+  .zoom-row button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--ice);font-size:1.1rem;font-weight:700;cursor:pointer;line-height:1;}
+  .zoom-row .val{min-width:70px;text-align:center;font-size:.78rem;color:var(--text-dim);}
+
+  .stepper-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .stepper-row:last-child{margin-bottom:0;}
+  .stepper-label{font-size:.82rem;}
+  .stepper-label small{display:block;color:var(--text-dim);font-size:.7rem;}
+  .stepper{display:flex;align-items:center;gap:10px;}
+  .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--ice);font-size:1.1rem;font-weight:700;cursor:pointer;line-height:1;}
+  .stepper .val{min-width:22px;text-align:center;font-weight:700;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-dim);}
+  .legend-swatch{width:13px;height:13px;border-radius:4px;flex:0 0 auto;}
+
+  .footer-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .btn-ghost{flex:1;min-width:100px;background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    padding:10px;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;text-align:center;}
+  .instructions{font-size:.78rem;color:var(--text-dim);line-height:1.5;}
+  .warn{color:#fca5a5;font-weight:600;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d1b2a;
+    color:#fff;padding:10px 20px;border-radius:14px;font-weight:600;font-size:.85rem;opacity:0;transition:.25s;
+    z-index:999;border:1px solid var(--line);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tag-note">🧪 Hive Designer — cities auto-spiral around the traps, dodging banners &amp; buildings. Cap 106.</div>
+
+  <header>
+    <div class="eyebrow">Phoenix · Hive</div>
+    <h1>🐝 Hive Designer</h1>
+    <p class="sub">2 bear traps · up to 106 cities · banners · farms · bonus buildings</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">What do you want to place?</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="trap">🐻 Bear traps</button>
+      <button class="mode-btn" data-mode="banner">🚩 Banner (1x1)</button>
+      <button class="mode-btn" data-mode="obstacle">🏚️ Obstacle / building</button>
+      <button class="mode-btn" data-mode="city">🏙️ Add city (manual)</button>
+    </div>
+    <div class="obstacle-palette" id="obstaclePalette">
+      <div class="ob-group">Alliance buildings · 2×2 (city-sized)</div>
+      <div class="ob-grid">
+        <button class="ob-btn active" data-ob="a_meat">🥩<br>Farm</button>
+        <button class="ob-btn" data-ob="a_wood">🪵<br>Sawmill</button>
+        <button class="ob-btn" data-ob="a_coal">⛏️<br>Coal</button>
+        <button class="ob-btn" data-ob="a_iron">🔩<br>Iron</button>
+        <button class="ob-btn" data-ob="hq">🏛️<br>HQ 3×3</button>
+        <button class="ob-btn" data-ob="bonus">🏆<br>Bonus</button>
+        <button class="ob-btn" data-ob="misc">🚧<br>Obstacle</button>
+      </div>
+      <div class="ob-group">Resource tiles · 1×1 (removable)</div>
+      <div class="ob-grid">
+        <button class="ob-btn" data-ob="n_meat">🥩<br>Meat</button>
+        <button class="ob-btn" data-ob="n_wood">🪵<br>Wood</button>
+        <button class="ob-btn" data-ob="n_coal">⛏️<br>Coal</button>
+        <button class="ob-btn" data-ob="n_iron">🔩<br>Iron</button>
+      </div>
+    </div>
+    <div class="obstacle-size" id="obstacleSize">
+      <div class="osz">Width <button id="owMinus">−</button><span class="val" id="owVal">2</span><button id="owPlus">+</button></div>
+      <div class="osz">Height <button id="ohMinus">−</button><span class="val" id="ohVal">2</span><button id="ohPlus">+</button></div>
+    </div>
+    <div class="instructions" id="modeHelp"></div>
+  </div>
+
+  <div class="panel" style="display:flex;flex-direction:column;align-items:center;">
+    <div class="toggle-row">
+      <button id="coverToggle">🚩 Show banner 7x7 coverage: Off</button>
+    </div>
+    <div class="board-outer"><div class="stage" id="stage"><div class="board" id="board"></div></div></div>
+    <div class="zoom-row">
+      <button id="zoomMinus">−</button>
+      <div class="val" id="zoomVal">cell size</div>
+      <button id="zoomPlus">+</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--trap)"></span>Bear trap (3x3)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--banner)"></span>Banner (1x1)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#b45309"></span>🥩🪵 Farms</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#475569"></span>⛏️🔩 Mines</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#7c3aed"></span>🏛️ HQ</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#eab308"></span>🏆 Bonus</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--z1)"></span>Ring 1 · closest</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--z2)"></span>Ring 2</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--z3)"></span>Ring 3</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--z4)"></span>Periphery</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Settings</div>
+    <div class="stepper-row">
+      <div class="stepper-label">Colored rings per trap<br><small>how many colors before "periphery"</small></div>
+      <div class="stepper">
+        <button id="ringMinus">−</button>
+        <div class="val" id="ringVal">3</div>
+        <button id="ringPlus">+</button>
+      </div>
+    </div>
+    <div class="stepper-row">
+      <div class="stepper-label">Max cities<br><small>alliance cap (100) + a few strays</small></div>
+      <div class="stepper">
+        <button id="capMinus">−</button>
+        <div class="val" id="capVal">106</div>
+        <button id="capPlus">+</button>
+      </div>
+    </div>
+    <div class="stepper-row">
+      <div class="stepper-label">Show position numbers</div>
+      <div class="stepper">
+        <button id="numToggle" style="width:auto;padding:0 14px;">On</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Summary</div>
+    <div id="summary" class="instructions">—</div>
+    <div class="footer-actions">
+      <div class="btn-ghost" id="resetBtn">🔄 Reset all</div>
+      <div class="btn-ghost" id="dlBtn">🖼️ Download</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">💾 Saved designs</div>
+    <div id="saveAuthNote" class="instructions" style="display:none;margin-bottom:8px;"></div>
+    <div id="saveArea">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="saveName" placeholder="Design name…" style="flex:1;min-width:0;background:var(--bg-deep);
+          border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;font-size:.85rem;">
+        <button class="btn-ghost" id="saveNewBtn" style="flex:0 0 auto;min-width:90px;">💾 Save</button>
+      </div>
+      <div id="savedList" class="instructions">—</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const N = 40;
+let CELL = 10;
+let ringsPerTrap = 3;
+let maxCities = 106;
+let showNumbers = true;
+let showCover = false;
+let mode = 'trap';
+let obW = 2, obH = 2;
+
+function defaultState(){
+  return {
+    trapA:{x:12,y:16}, trapB:{x:24,y:22},
+    banners:new Set(),
+    obstacles:[],          // {x,y,w,h,kind:'farm'|'building'}
+    manualCities:new Set() // "x,y" lattice top-left, forced blue
+  };
+}
+let {trapA, trapB, banners, obstacles, manualCities} = defaultState();
+
+const boardEl = document.getElementById('board');
+const stageEl = document.getElementById('stage');
+
+const modeHelp = {
+  trap:'Tap a spot to move the nearest bear trap there (3x3). Cities re-flow around it automatically.',
+  banner:'Tap a tile to place a banner (1x1). Cities flow around it — a banner between two cities leaves a small gap. Tap a banner to remove it.',
+  obstacle:'Pick a building below, then tap the top-left tile. Cities flow tightly around it. Tap an existing one to remove it.',
+  city:'Manually drop a city (2x2, blue) anywhere free — e.g. an extra city outside the rings. Tap it again to remove.'
+};
+// all obstacle types block cities equally; icon/colour/size just describe them.
+// Alliance buildings are city-sized (2x2, fixed). Resource nodes are 1x1 (removable).
+const OBSTACLE_TYPES = {
+  a_meat:{label:'All. farm',  icon:'🥩', color:'#b45309', w:2, h:2},
+  a_wood:{label:'All. sawmill',icon:'🪵', color:'#92400e', w:2, h:2},
+  a_coal:{label:'All. coal',  icon:'⛏️', color:'#334155', w:2, h:2},
+  a_iron:{label:'All. iron',  icon:'🔩', color:'#475569', w:2, h:2},
+  hq:    {label:'HQ',         icon:'🏛️', color:'#7c3aed', w:3, h:3},
+  bonus: {label:'Bonus bldg', icon:'🏆', color:'#eab308', w:2, h:2},
+  misc:  {label:'Obstacle',   icon:'🚧', color:'#6b7280', w:2, h:2},
+  n_meat:{label:'Meat tile',  icon:'🥩', color:'#f59e0b', w:1, h:1},
+  n_wood:{label:'Wood tile',  icon:'🪵', color:'#a16207', w:1, h:1},
+  n_coal:{label:'Coal tile',  icon:'⛏️', color:'#64748b', w:1, h:1},
+  n_iron:{label:'Iron tile',  icon:'🔩', color:'#94a3b8', w:1, h:1},
+};
+let obType='a_meat';
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+
+function trapCells(t){const c=[];for(let dx=0;dx<3;dx++)for(let dy=0;dy<3;dy++)c.push([t.x+dx,t.y+dy]);return c;}
+function isTrapCell(x,y){return trapCells(trapA).some(c=>c[0]===x&&c[1]===y)||trapCells(trapB).some(c=>c[0]===x&&c[1]===y);}
+
+function obstacleAt(x,y){
+  return obstacles.find(o=> x>=o.x && x<o.x+o.w && y>=o.y && y<o.y+o.h);
+}
+
+function coverSet(){
+  const s=new Set();
+  banners.forEach(k=>{
+    const [bx,by]=k.split(',').map(Number);
+    for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){
+      const x=bx+dx,y=by+dy;
+      if(x>=0&&x<N&&y>=0&&y<N) s.add(x+','+y);
+    }
+  });
+  return s;
+}
+
+function chebyshevBlockTrap(ex,ey,t){
+  let min=Infinity;
+  const bc=[[ex,ey],[ex+1,ey],[ex,ey+1],[ex+1,ey+1]];
+  const tc=trapCells(t);
+  bc.forEach(b=>tc.forEach(c=>{
+    const d=Math.max(Math.abs(b[0]-c[0]),Math.abs(b[1]-c[1]));
+    if(d<min) min=d;
+  }));
+  return min;
+}
+
+// snap any tile to the nearest 2x2 lattice block top-left (parity locked to trapA)
+function latticeParity(){ return {px:((trapA.x%2)+2)%2, py:((trapA.y%2)+2)%2}; }
+function snapToLattice(x,y){
+  const {px,py}=latticeParity();
+  let bx=px+2*Math.round((x-px)/2), by=py+2*Math.round((y-py)/2);
+  bx=Math.max(0,Math.min(N-2,bx)); by=Math.max(0,Math.min(N-2,by));
+  return [bx,by];
+}
+
+// Cities (2x2) pack as CLOSE to the traps as possible (shortest march time),
+// flowing tightly around banners/obstacles. In open space they keep the trap's
+// 2x2 parity so rows stay clean; they only break parity to hug an obstacle,
+// wasting the minimum space. Order: closest first, aligned-to-grid first.
+function computeCities(){
+  const blocked=new Set();
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(isTrapCell(x,y)) blocked.add(x+','+y);
+  banners.forEach(k=>blocked.add(k));
+  obstacles.forEach(o=>{
+    for(let dx=0;dx<o.w;dx++)for(let dy=0;dy<o.h;dy++) blocked.add((o.x+dx)+','+(o.y+dy));
+  });
+
+  const {px,py}=latticeParity();
+  const candidates=[];
+  for(let y=0;y<=N-2;y++){
+    for(let x=0;x<=N-2;x++){
+      const cells=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]];
+      if(cells.some(([cx,cy])=>blocked.has(cx+','+cy))) continue;
+      const dA=chebyshevBlockTrap(x,y,trapA);
+      const dB=chebyshevBlockTrap(x,y,trapB);
+      const d = Math.min(dA,dB);
+      const aligned = (x%2===px && y%2===py) ? 0 : 1;
+      candidates.push({x,y,d,aligned});
+    }
+  }
+  // closest to a trap first; among equals prefer on-grid, then a stable scan order
+  candidates.sort((a,b)=> a.d-b.d || a.aligned-b.aligned || a.y-b.y || a.x-b.x);
+
+  const cities=[]; const cellBlock={}; const used=new Set();
+  function place(x,y,zone){
+    const num=cities.length+1;
+    cities.push({x,y,num,zone});
+    [[x,y],[x+1,y],[x,y+1],[x+1,y+1]].forEach(([cx,cy])=>{
+      cellBlock[cx+','+cy]={num,zone}; used.add(cx+','+cy);
+    });
+  }
+  for(const c of candidates){
+    if(cities.length>=maxCities) break;
+    const cells=[[c.x,c.y],[c.x+1,c.y],[c.x,c.y+1],[c.x+1,c.y+1]];
+    if(cells.some(([cx,cy])=>used.has(cx+','+cy))) continue;   // no overlap
+    const ring = Math.ceil(c.d/2);
+    if(ring>ringsPerTrap+1) continue;                          // beyond periphery → manual only
+    const zone = ring<=ringsPerTrap ? ring : 4;
+    place(c.x,c.y,zone);
+  }
+  // manual blue cities anywhere free (not capped)
+  manualCities.forEach(k=>{
+    const [x,y]=k.split(',').map(Number);
+    const cells=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]];
+    if(cells.some(([cx,cy])=>blocked.has(cx+','+cy)||used.has(cx+','+cy))) return;
+    place(x,y,4);
+  });
+  return {cities,cellBlock};
+}
+
+function sizeStage(){
+  const boardPx = N*CELL;
+  const stagePx = Math.ceil(boardPx*Math.SQRT2)+4;
+  stageEl.style.width=stagePx+'px';
+  stageEl.style.height=stagePx+'px';
+  boardEl.style.width=boardPx+'px';
+  boardEl.style.height=boardPx+'px';
+  boardEl.style.left=((stagePx-boardPx)/2)+'px';
+  boardEl.style.top=((stagePx-boardPx)/2)+'px';
+  boardEl.style.transform='rotate(45deg)';
+  boardEl.style.transformOrigin='center center';
+}
+
+function makeCell(x,y,w,h,cls,onClick){
+  const d=document.createElement('div');
+  d.className='cell '+cls;
+  d.style.left=(x*CELL)+'px';
+  d.style.top=(y*CELL)+'px';
+  d.style.width=(w*CELL-1)+'px';
+  d.style.height=(h*CELL-1)+'px';
+  if(onClick) d.addEventListener('click',onClick);
+  boardEl.appendChild(d);
+  return d;
+}
+function makeIcon(x,y,w,h,fontPx,char){
+  const ic=document.createElement('div');
+  ic.className='icon';
+  ic.style.left=(x*CELL)+'px';ic.style.top=(y*CELL)+'px';
+  ic.style.width=(w*CELL)+'px';ic.style.height=(h*CELL)+'px';
+  ic.style.fontSize=fontPx+'px';
+  ic.style.transform='rotate(-45deg)';
+  ic.textContent=char;
+  boardEl.appendChild(ic);
+}
+
+function render(){
+  sizeStage();
+  boardEl.innerHTML='';
+  const cover = showCover ? coverSet() : null;
+  const {cities,cellBlock}=computeCities();
+  const counts={1:0,2:0,3:0,4:0};
+
+  // base layer: one clickable tile each. City tiles are transparent here (the solid
+  // 2x2 block is drawn on top) so no internal grid lines show inside a city.
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const key=x+','+y;
+      let cls='empty';
+      if(cover && cover.has(key)) cls='cover';
+      if(cellBlock[key]) cls='undercity';
+      makeCell(x,y,1,1,cls,()=>onCellClick(x,y));
+    }
+  }
+  // traps as single 3x3 blocks
+  [trapA,trapB].forEach(t=>{
+    makeCell(t.x,t.y,3,3,'trap',()=>onCellClick(t.x+1,t.y+1));
+    makeIcon(t.x,t.y,3,3,Math.round(CELL*1.4),'🐻');
+  });
+  // banners
+  banners.forEach(k=>{
+    const [x,y]=k.split(',').map(Number);
+    makeCell(x,y,1,1,'banner',()=>onCellClick(x,y));
+  });
+  // obstacles (each coloured + iconed by its type)
+  obstacles.forEach(o=>{
+    const t=OBSTACLE_TYPES[o.type]||OBSTACLE_TYPES.a_meat;
+    const d=makeCell(o.x,o.y,o.w,o.h,'obstacle',()=>onCellClick(o.x,o.y));
+    d.style.background=t.color;
+    makeIcon(o.x,o.y,o.w,o.h,Math.round(Math.min(o.w,o.h)*CELL*0.5), t.icon);
+  });
+  // cities: one SOLID 2x2 block each (no internal grid) + big centred number
+  cities.forEach(c=>{
+    counts[c.zone]++;
+    const blk=document.createElement('div');
+    blk.className='cityblock z'+c.zone;
+    blk.style.left=(c.x*CELL)+'px';
+    blk.style.top=(c.y*CELL)+'px';
+    blk.style.width=(2*CELL-1)+'px';
+    blk.style.height=(2*CELL-1)+'px';
+    boardEl.appendChild(blk);
+    if(!showNumbers) return;
+    const badge=document.createElement('div');
+    badge.className='citynum';
+    badge.style.left=(c.x*CELL)+'px';
+    badge.style.top=(c.y*CELL)+'px';
+    badge.style.width=(2*CELL)+'px';
+    badge.style.height=(2*CELL)+'px';
+    badge.style.fontSize=Math.max(9,Math.round(CELL*0.95))+'px';
+    badge.style.transform='rotate(-45deg)';
+    badge.textContent=c.num;
+    boardEl.appendChild(badge);
+  });
+
+  const total=cities.length;
+  const capNote = total>=maxCities ? ` <span class="warn">(cap reached)</span>` : '';
+  document.getElementById('summary').innerHTML=
+    `<b>${total}</b> / ${maxCities} cities${capNote} · Ring1: ${counts[1]} · Ring2: ${counts[2]} · Ring3: ${counts[3]} · Periphery/blue: ${counts[4]}<br>`+
+    `Banners: ${banners.size} · Buildings/obstacles: ${obstacles.length} · Manual cities: ${manualCities.size}`;
+}
+
+function onCellClick(x,y){
+  if(mode==='trap'){
+    const nx=Math.max(0,Math.min(N-3,x-1)), ny=Math.max(0,Math.min(N-3,y-1));
+    const cA={x:trapA.x+1,y:trapA.y+1}, cB={x:trapB.x+1,y:trapB.y+1};
+    const dA=Math.hypot(x-cA.x,y-cA.y), dB=Math.hypot(x-cB.x,y-cB.y);
+    if(dA<=dB) trapA={x:nx,y:ny}; else trapB={x:nx,y:ny};
+  } else if(mode==='banner'){
+    if(isTrapCell(x,y)){toast("Can't place on a bear trap");return;}
+    if(obstacleAt(x,y)){toast("Can't place on a building");return;}
+    const key=x+','+y;
+    if(banners.has(key)) banners.delete(key); else banners.add(key);
+  } else if(mode==='city'){
+    if(isTrapCell(x,y)){toast("Can't place on a bear trap");return;}
+    const [bx,by]=snapToLattice(x,y);
+    const key=bx+','+by;
+    if(manualCities.has(key)) manualCities.delete(key); else manualCities.add(key);
+  } else { // obstacle (any building type)
+    const existing=obstacleAt(x,y);
+    if(existing){
+      obstacles=obstacles.filter(o=>o!==existing);
+    } else {
+      const ox=Math.max(0,Math.min(N-obW,x)), oy=Math.max(0,Math.min(N-obH,y));
+      const cells=[];
+      for(let dx=0;dx<obW;dx++)for(let dy=0;dy<obH;dy++)cells.push([ox+dx,oy+dy]);
+      if(cells.some(c=>isTrapCell(c[0],c[1]))){toast("Can't place on a bear trap");return;}
+      obstacles.push({x:ox,y:oy,w:obW,h:obH,type:obType});
+    }
+  }
+  render();
+}
+
+function applyObType(){
+  const t=OBSTACLE_TYPES[obType];
+  obW=t.w; obH=t.h;
+  document.getElementById('owVal').textContent=obW;
+  document.getElementById('ohVal').textContent=obH;
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.dataset.mode;
+    document.getElementById('modeHelp').textContent=modeHelp[mode];
+    const isObstacle = (mode==='obstacle');
+    document.getElementById('obstaclePalette').classList.toggle('show', isObstacle);
+    document.getElementById('obstacleSize').classList.toggle('show', isObstacle);
+    if(isObstacle) applyObType();
+  });
+});
+document.getElementById('modeHelp').textContent=modeHelp[mode];
+
+document.querySelectorAll('.ob-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ob-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    obType=btn.dataset.ob;
+    applyObType();
+  });
+});
+
+document.getElementById('owMinus').addEventListener('click',()=>{obW=Math.max(1,obW-1);document.getElementById('owVal').textContent=obW;});
+document.getElementById('owPlus').addEventListener('click',()=>{obW=Math.min(6,obW+1);document.getElementById('owVal').textContent=obW;});
+document.getElementById('ohMinus').addEventListener('click',()=>{obH=Math.max(1,obH-1);document.getElementById('ohVal').textContent=obH;});
+document.getElementById('ohPlus').addEventListener('click',()=>{obH=Math.min(6,obH+1);document.getElementById('ohVal').textContent=obH;});
+
+document.getElementById('coverToggle').addEventListener('click',function(){
+  showCover=!showCover;
+  this.textContent='🚩 Show banner 7x7 coverage: '+(showCover?'On':'Off');
+  this.classList.toggle('on',showCover);
+  render();
+});
+
+document.getElementById('ringMinus').addEventListener('click',()=>{ringsPerTrap=Math.max(1,ringsPerTrap-1);document.getElementById('ringVal').textContent=ringsPerTrap;render();});
+document.getElementById('ringPlus').addEventListener('click',()=>{ringsPerTrap=Math.min(6,ringsPerTrap+1);document.getElementById('ringVal').textContent=ringsPerTrap;render();});
+document.getElementById('capMinus').addEventListener('click',()=>{maxCities=Math.max(1,maxCities-1);document.getElementById('capVal').textContent=maxCities;render();});
+document.getElementById('capPlus').addEventListener('click',()=>{maxCities=Math.min(200,maxCities+1);document.getElementById('capVal').textContent=maxCities;render();});
+document.getElementById('numToggle').addEventListener('click',function(){showNumbers=!showNumbers;this.textContent=showNumbers?'On':'Off';render();});
+document.getElementById('zoomMinus').addEventListener('click',()=>{CELL=Math.max(6,CELL-1);render();});
+document.getElementById('zoomPlus').addEventListener('click',()=>{CELL=Math.min(22,CELL+1);render();});
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  ({trapA, trapB, banners, obstacles, manualCities} = defaultState());
+  render(); toast('Reset');
+});
+
+document.getElementById('dlBtn').addEventListener('click',()=>{
+  const cover = showCover ? coverSet() : null;
+  const {cities,cellBlock}=computeCities();
+  const px=18, size=N*px;
+  const c=document.createElement('canvas');c.width=size;c.height=size;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#0a1420';ctx.fillRect(0,0,size,size);
+  const colz={1:'#4ade80',2:'#fde047',3:'#f87171',4:'#60a5fa'};
+  // base tiles (skip city tiles; cities drawn as solid blocks after)
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const X=x*px,Y=y*px,key=x+','+y;
+    if(cellBlock[key]) continue;
+    let col='#13233a';
+    if(cover && cover.has(key)) col='rgba(34,197,94,.22)';
+    ctx.fillStyle=col;ctx.fillRect(X,Y,px-1,px-1);
+  }
+  // cities as solid 2x2 blocks
+  cities.forEach(c2=>{
+    ctx.fillStyle=colz[c2.zone];
+    ctx.fillRect(c2.x*px, c2.y*px, 2*px-1, 2*px-1);
+  });
+  [trapA,trapB].forEach(t=>{ctx.fillStyle='#fb923c';ctx.fillRect(t.x*px,t.y*px,3*px-1,3*px-1);});
+  banners.forEach(k=>{const [x,y]=k.split(',').map(Number);ctx.fillStyle='#22c55e';ctx.fillRect(x*px,y*px,px-1,px-1);});
+  obstacles.forEach(o=>{const t=OBSTACLE_TYPES[o.type]||OBSTACLE_TYPES.a_meat;ctx.fillStyle=t.color;ctx.fillRect(o.x*px,o.y*px,o.w*px-1,o.h*px-1);});
+  if(showNumbers){
+    ctx.fillStyle='#08131f';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='bold '+Math.round(px*0.95)+'px Inter, sans-serif';
+    cities.forEach(c2=>{ ctx.fillText(c2.num, (c2.x+1)*px, (c2.y+1)*px); });
+  }
+  const a=document.createElement('a');a.download='hive-designer.png';a.href=c.toDataURL('image/png');a.click();
+});
+
+render();
+
+/* ── SAVED DESIGNS (Supabase) ───────────────────────────────── */
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const _sb = window.supabase ? window.supabase.createClient(SUPA_URL,SUPA_KEY) : null;
+let _user=null;
+
+// full design → plain object for jsonb
+function serialize(){
+  return {
+    v:1, N,
+    trapA, trapB,
+    banners:[...banners],
+    obstacles:obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h,type:o.type})),
+    manualCities:[...manualCities],
+    ringsPerTrap, maxCities
+  };
+}
+function loadDesign(d){
+  try{
+    trapA={x:d.trapA.x,y:d.trapA.y}; trapB={x:d.trapB.x,y:d.trapB.y};
+    banners=new Set(d.banners||[]);
+    obstacles=(d.obstacles||[]).map(o=>({x:o.x,y:o.y,w:o.w,h:o.h,type:o.type}));
+    manualCities=new Set(d.manualCities||[]);
+    if(d.ringsPerTrap){ ringsPerTrap=d.ringsPerTrap; document.getElementById('ringVal').textContent=ringsPerTrap; }
+    if(d.maxCities){ maxCities=d.maxCities; document.getElementById('capVal').textContent=maxCities; }
+    render();
+  }catch(e){ toast('Could not load design'); }
+}
+
+async function initSaved(){
+  const note=document.getElementById('saveAuthNote');
+  const area=document.getElementById('saveArea');
+  if(!_sb){ note.style.display='block'; note.textContent='Saving unavailable here.'; area.style.display='none'; return; }
+  const {data:{session}} = await _sb.auth.getSession();
+  _user = session ? session.user : null;
+  if(!_user){
+    note.style.display='block';
+    note.innerHTML='Log in on the Phoenix app to save and load your hive designs.';
+    area.style.display='none';
+    return;
+  }
+  note.style.display='none'; area.style.display='block';
+  refreshList();
+}
+
+async function refreshList(){
+  const list=document.getElementById('savedList');
+  list.textContent='Loading…';
+  const {data,error}=await _sb.from('hive_maps').select('id,name,updated_at').order('updated_at',{ascending:false});
+  if(error){ list.textContent='Could not load your designs.'; return; }
+  if(!data.length){ list.textContent='No saved designs yet.'; return; }
+  list.innerHTML='';
+  data.forEach(row=>{
+    const item=document.createElement('div');
+    item.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line);';
+    const name=document.createElement('div');
+    name.textContent=row.name; name.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:600;';
+    const mk=(txt,fn)=>{const b=document.createElement('button');b.textContent=txt;
+      b.style.cssText='background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:7px;padding:5px 8px;font-size:.72rem;font-weight:600;cursor:pointer;';
+      b.addEventListener('click',fn);return b;};
+    item.appendChild(name);
+    item.appendChild(mk('Load',()=>loadRow(row.id)));
+    item.appendChild(mk('Save',()=>updateRow(row.id,row.name)));
+    item.appendChild(mk('✏️',()=>renameRow(row.id,row.name)));
+    item.appendChild(mk('🗑',()=>deleteRow(row.id,row.name)));
+    list.appendChild(item);
+  });
+}
+
+async function saveNew(){
+  const name=document.getElementById('saveName').value.trim();
+  if(!name){ toast('Give it a name first'); return; }
+  const {error}=await _sb.from('hive_maps').insert({user_id:_user.id,name,data:serialize()});
+  if(error){ toast('Save failed'); return; }
+  document.getElementById('saveName').value='';
+  toast('Saved'); refreshList();
+}
+async function updateRow(id,name){
+  const {error}=await _sb.from('hive_maps').update({data:serialize(),updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ toast('Update failed'); return; }
+  toast('Updated “'+name+'”'); refreshList();
+}
+async function loadRow(id){
+  const {data,error}=await _sb.from('hive_maps').select('data').eq('id',id).maybeSingle();
+  if(error||!data){ toast('Load failed'); return; }
+  loadDesign(data.data); toast('Loaded');
+}
+async function renameRow(id,old){
+  const name=prompt('New name:',old); if(!name) return;
+  const {error}=await _sb.from('hive_maps').update({name:name.trim()}).eq('id',id);
+  if(error){ toast('Rename failed'); return; }
+  refreshList();
+}
+async function deleteRow(id,name){
+  if(!confirm('Delete “'+name+'”? This cannot be undone.')) return;
+  const {error}=await _sb.from('hive_maps').delete().eq('id',id);
+  if(error){ toast('Delete failed'); return; }
+  toast('Deleted'); refreshList();
+}
+
+document.getElementById('saveNewBtn').addEventListener('click',saveNew);
+if(_sb){ _sb.auth.onAuthStateChange(()=>initSaved()); }
+initSaved();
+</script>
+
+</body>
+</html>
