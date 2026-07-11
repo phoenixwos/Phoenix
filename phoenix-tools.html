@@ -41,6 +41,9 @@
   .card .body h3{font-size:1.02rem; margin-bottom:2px;}
   .card .body p{font-size:.8rem; color:var(--ink-soft); line-height:1.35;}
   .card .arr{color:var(--fire); font-size:1.3rem; flex:none;}
+  .grp{font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.98rem; color:var(--ink); margin:20px 4px 10px; display:flex; align-items:baseline; gap:8px;}
+  .grp:first-of-type{margin-top:6px;}
+  .grp span{font-family:'Inter',sans-serif; font-weight:600; font-size:.72rem; color:var(--ink-soft);}
   .tag{display:inline-block; font-family:'Fredoka'; font-weight:600; font-size:.64rem; text-transform:uppercase; letter-spacing:.04em; padding:2px 7px; border-radius:8px; margin-top:5px;}
   .tag.leaders{background:#fff2e8; color:var(--fire-deep);}
   .tag.everyone{background:#e6f7ee; color:var(--green-d);}
@@ -61,6 +64,42 @@
 
 <div class="wrap">
   <p class="lead">State utilities for leaders and players. <b>Donate</b> to help keep building useful tools for the state's growth.</p>
+
+  <!-- ════ PXR TOOLS ════ -->
+  <div class="grp" id="grpPXR" style="display:none;">🔥 PXR tools <span>· admin or R4/R5 of PXR</span></div>
+
+  <a class="card" id="cardHive" style="display:none;">
+    <div class="emoji">🐝</div>
+    <div class="body">
+      <h3>Hive Designer</h3>
+      <p>Plan the alliance hive: bear traps, ringed cities, banners &amp; obstacles.</p>
+      <span class="tag leaders">PXR · R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card blue" id="cardWorld" style="display:none;">
+    <div class="emoji">🗺️</div>
+    <div class="body">
+      <h3>World Map</h3>
+      <p>Drop a saved hive on your local map, plan banner chains and see which alliance farms you cover.</p>
+      <span class="tag leaders">PXR · R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card blue" id="cardRally" style="display:none;">
+    <div class="emoji">⏱️</div>
+    <div class="body">
+      <h3>Rally Sync</h3>
+      <p>Calculate when each leader needs to send so everyone lands at the same time.</p>
+      <span class="tag leaders">PXR · R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <!-- ════ LEADER TOOLS ════ -->
+  <div class="grp" id="grpLeader" style="display:none;">🛡️ Leader tools <span>· R4 / R5</span></div>
 
   <a class="card" id="cardMap" style="display:none;">
     <div class="emoji">🏰</div>
@@ -92,6 +131,9 @@
     <div class="arr">›</div>
   </a>
 
+  <!-- ════ FOR EVERYONE ════ -->
+  <div class="grp">🌍 For everyone</div>
+
   <a class="card" id="cardRatio">
     <div class="emoji">⚖️</div>
     <div class="body">
@@ -108,16 +150,6 @@
       <h3>Rally Capacity</h3>
       <p>Enter the leader's deployment capacity to find the max troops per joiner (default 15 joiners).</p>
       <span class="tag everyone">Everyone</span>
-    </div>
-    <div class="arr">›</div>
-  </a>
-
-  <a class="card blue" id="cardRally" style="display:none;">
-    <div class="emoji">⏱️</div>
-    <div class="body">
-      <h3>Rally Sync</h3>
-      <p>Calculate when each leader needs to send so everyone lands at the same time.</p>
-      <span class="tag leaders">R4 / R5</span>
     </div>
     <div class="arr">›</div>
   </a>
@@ -149,7 +181,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
+  var dest={cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -170,21 +202,30 @@
 (function(){
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  function reveal(){
-    ['cardMap','cardNumbers','cardRedeem','cardRally'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.style.display='';
-    });
-  }
+  function show(ids){ ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; }); }
+  function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem']); }        // any R4/R5/admin
+  function revealPXR(){ show(['grpPXR','cardHive','cardWorld','cardRally']); }                 // admin OR R4/R5 of PXR
   try{
     if(!(window.supabase&&window.supabase.createClient)) return;
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
-      if(!s) return; // not signed in → only the public Ratio Calculator card shows
-      sb.from('players').select('role').eq('owner',s.user.id).then(function(res){
+      if(!s) return; // not signed in → only the public "For everyone" cards show
+      // check ALL of the user's profiles (highest privilege wins), not just one state
+      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).then(function(res){
         var rows=res.data||[];
         var staff=rows.some(function(p){return p.role==='admin'||p.role==='r4'||p.role==='r5';});
-        if(staff) reveal();
+        if(staff) revealLeader();
+        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        if(isAdmin){ revealPXR(); return; }
+        // R4/R5 only unlock PXR tools if one of their alliances is PXR
+        var ids=[];
+        rows.forEach(function(p){ if((p.role==='r4'||p.role==='r5')&&p.alliance_id&&ids.indexOf(p.alliance_id)<0) ids.push(p.alliance_id); });
+        if(!ids.length) return;
+        sb.from('alliances').select('id,tag').in('id',ids).then(function(ar){
+          var pxr=(ar.data||[]).some(function(a){return ((a.tag||'').toUpperCase()).indexOf('PXR')===0;});
+          if(pxr) revealPXR();
+        }).catch(function(){});
       }).catch(function(){});
     }).catch(function(){});
   }catch(e){}
