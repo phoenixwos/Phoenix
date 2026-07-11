@@ -11,7 +11,9 @@
   :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
     --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;
     --terr:rgba(96,165,250,.16);--seed:#3b82f6;--banner-ok:#22c55e;--banner-bad:#ef4444;
-    --farm-on:#facc15;--farm-off:#7c6f2a;--terrain:#334155;--target:#a855f7;}
+    --farm-on:#facc15;--farm-off:#7c6f2a;--terrain:#334155;--target:#a855f7;--castle:#f97316;
+    --mountain:#4b5563;--lake:#1d4ed8;--building:#a855f7;
+    --res-meat:#ef4444;--res-wood:#a16207;--res-coal:#64748b;--res-iron:#94a3b8;}
   *{box-sizing:border-box;} html,body{margin:0;padding:0;}
   body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
     color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
@@ -24,8 +26,8 @@
     border-radius:14px;padding:12px;margin-bottom:12px;}
   .panel-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:9px;font-weight:600;}
   .row{display:flex;gap:6px;flex-wrap:wrap;}
-  .tool{flex:1;min-width:72px;padding:9px 4px;border-radius:9px;border:1px solid var(--line);background:var(--bg-deep);
-    color:var(--text-dim);font-size:.74rem;font-weight:600;cursor:pointer;text-align:center;}
+  .tool{flex:1;min-width:70px;padding:9px 4px;border-radius:9px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.73rem;font-weight:600;cursor:pointer;text-align:center;}
   .tool.active{border-color:var(--ice);color:var(--ice);background:rgba(127,217,238,.08);}
   .sub-row{display:none;gap:6px;flex-wrap:wrap;margin-top:8px;}
   .sub-row.show{display:flex;}
@@ -35,12 +37,12 @@
   select,input{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
     padding:8px 10px;border-radius:8px;font-size:.82rem;}
   .field{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--text-dim);}
-  .field input{width:64px;}
+  .field input{width:70px;}
   .canvas-wrap{width:100%;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#0b1626;touch-action:none;}
   canvas{display:block;width:100%;}
-  .zoom-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
-  .zoom-row button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
-    color:var(--ice);font-size:1.1rem;font-weight:700;cursor:pointer;}
+  .zoom-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .zoom-row button{padding:0 12px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--ice);font-size:.82rem;font-weight:700;cursor:pointer;}
   .legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px;}
   .legend-item{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text-dim);}
   .sw{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
@@ -49,6 +51,8 @@
   .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 12px;
     border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;}
   .instructions{font-size:.76rem;color:var(--text-dim);line-height:1.5;}
+  .note{background:rgba(127,217,238,.08);border:1px solid rgba(127,217,238,.25);color:var(--ice);font-size:.74rem;
+    padding:9px 11px;border-radius:9px;margin-top:8px;line-height:1.45;}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d1b2a;
     color:#fff;padding:10px 20px;border-radius:14px;font-weight:600;font-size:.85rem;opacity:0;transition:.25s;z-index:99;border:1px solid var(--line);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -58,8 +62,8 @@
 <div class="wrap">
   <header>
     <div class="eyebrow">Phoenix · World</div>
-    <h1>🗺️ Local World Map</h1>
-    <p class="sub">Import a hive · plan banner chains · check coverage of alliance farms</p>
+    <h1>🗺️ World Map</h1>
+    <p class="sub">Full 1200×1200 state map, preloaded with terrain &amp; resource data</p>
   </header>
 
   <div class="panel">
@@ -69,16 +73,16 @@
       <select id="hiveSelect" style="flex:1;min-width:0;"><option value="">— your saved hives —</option></select>
       <button class="btn" id="hiveLoadBtn">📥 Place</button>
     </div>
-    <div class="instructions" style="margin-top:6px;">Then pick <b>Move hive</b> below and tap to reposition it.</div>
+    <div class="instructions" style="margin-top:6px;">Placed at the view centre. Pick <b>Move hive</b> and tap to reposition.</div>
   </div>
 
   <div class="panel">
     <div class="panel-title">Place</div>
     <div class="row">
-      <button class="tool" data-tool="pan">✋ Pan</button>
+      <button class="tool active" data-tool="pan">✋ Pan</button>
       <button class="tool" data-tool="hive">📍 Move hive</button>
-      <button class="tool active" data-tool="banner">🚩 Banner</button>
-      <button class="tool" data-tool="farm">🌾 Alliance farm</button>
+      <button class="tool" data-tool="banner">🚩 Banner</button>
+      <button class="tool" data-tool="farm">🌾 Extra farm</button>
       <button class="tool" data-tool="terrain">⛰️ Terrain</button>
       <button class="tool" data-tool="target">🎯 Target</button>
       <button class="tool" data-tool="erase">🧽 Erase</button>
@@ -91,84 +95,103 @@
     </div>
     <div class="sub-row" id="terrainSub">
       <span class="chip active" data-brush="1">Brush 1</span>
-      <span class="chip" data-brush="2">2</span>
       <span class="chip" data-brush="3">3</span>
-      <span class="chip" data-brush="4">4</span>
+      <span class="chip" data-brush="5">5</span>
+      <span class="chip" data-brush="8">8</span>
     </div>
     <div class="instructions" id="toolHelp" style="margin-top:8px;"></div>
   </div>
 
   <div class="panel">
-    <div class="panel-title">View · centred on game coordinates</div>
+    <div class="panel-title">View</div>
     <div class="row" style="align-items:center;">
-      <div class="field">Center X <input id="cx" type="number" value="348"></div>
-      <div class="field">Y <input id="cy" type="number" value="556"></div>
-      <button class="btn" id="recenterBtn">Recenter</button>
-      <div class="field">Window <input id="winSize" type="number" value="80" min="30" max="200" step="10"></div>
+      <div class="field">Go to X <input id="cx" type="number" value="600"></div>
+      <div class="field">Y <input id="cy" type="number" value="600"></div>
+      <button class="btn" id="gotoBtn">Center here</button>
     </div>
     <div class="canvas-wrap" id="canvasWrap"><canvas id="map"></canvas></div>
     <div class="zoom-row">
-      <button id="zoomMinus">−</button><span class="instructions" id="zoomVal">zoom</span><button id="zoomPlus">+</button>
+      <button id="zOut">− zoom out</button>
+      <button id="zFit">🌍 Whole map</button>
+      <button id="zIn">zoom in +</button>
+      <span class="instructions" id="zoomVal"></span>
     </div>
     <div class="legend">
+      <div class="legend-item"><span class="sw" style="background:var(--castle)"></span>Castle</div>
+      <div class="legend-item"><span class="sw" style="background:var(--building)"></span>Facility/FT/SH</div>
+      <div class="legend-item"><span class="sw" style="background:var(--mountain)"></span>Mountain</div>
+      <div class="legend-item"><span class="sw" style="background:var(--lake)"></span>Lake</div>
+      <div class="legend-item"><span class="sw" style="background:var(--res-meat)"></span>🥩</div>
+      <div class="legend-item"><span class="sw" style="background:var(--res-wood)"></span>🪵</div>
+      <div class="legend-item"><span class="sw" style="background:var(--res-coal)"></span>⛏️</div>
+      <div class="legend-item"><span class="sw" style="background:var(--res-iron)"></span>🔩</div>
       <div class="legend-item"><span class="sw" style="background:var(--seed)"></span>Hive</div>
       <div class="legend-item"><span class="sw" style="background:var(--terr)"></span>Territory</div>
       <div class="legend-item"><span class="sw" style="background:var(--banner-ok)"></span>Banner ok</div>
       <div class="legend-item"><span class="sw" style="background:var(--banner-bad)"></span>Banner off</div>
-      <div class="legend-item"><span class="sw" style="background:var(--farm-on)"></span>Farm claimed</div>
-      <div class="legend-item"><span class="sw" style="background:var(--farm-off)"></span>Farm not yet</div>
-      <div class="legend-item"><span class="sw" style="background:var(--terrain)"></span>Terrain</div>
       <div class="legend-item"><span class="sw" style="background:var(--target)"></span>Target</div>
     </div>
+    <div class="note" id="dataNote">Loading world data…</div>
   </div>
 
   <div class="panel">
     <div class="panel-title">Coverage</div>
-    <div id="status" class="status">Place a hive and some banners to begin.</div>
+    <div id="status" class="status">Zoom into your zone, place a hive and some banners to begin.</div>
     <div class="row" style="margin-top:10px;">
       <button class="btn" id="clearBtn">🔄 Clear placements</button>
       <button class="btn" id="pngBtn">🖼️ Export PNG</button>
     </div>
   </div>
-
-  <div class="instructions" style="text-align:center;opacity:.7;">
-    Banner = 1×1 covering 7×7 · alliance farm = 2×2, claimed at 75% (3/4 tiles) · a banner only counts if it chains back to the hive.
-  </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ───────── model ───────── */
-let WN = 80;                 // window size in tiles
-let CELL = 11;               // px per tile
-let originX = 348-40, originY = 556-40; // game coord of tile (0,0)
-let tool = 'banner';
-let farmRes = 'meat';
-let brush = 1;
-let panX = 0, panY = 0;      // px pan offset
+/* ───────── map + view ───────── */
+const MAP=1200;
+let viewX=0, viewY=0, CELL=0.5;
+let tool='pan', farmRes='meat', brush=1;
 
-// placements are stored in GAME coordinates
-let hiveRaw = null;          // loaded hive design
-let hiveCenter = null;       // {x,y} game coord where hive is dropped
-let banners = new Set();     // "gx,gy"
-let farms = [];              // {x,y,res}  (top-left, 2x2)
-let terrain = new Set();     // "gx,gy"
-let target = null;           // {x,y}
+// preloaded fixed world data — sourced from the wosnerdwarriors/wos-data open dataset
+// (their site states "All data is free to copy and use" — see wosnerds.com)
+let WORLD={mountain:new Set(),lake:new Set(),castle:new Set(),building:new Set(),resources:[],loaded:false};
+function expandRLE(rows){ const s=new Set(); rows.forEach(([y,ranges])=>{ ranges.forEach(([x0,x1])=>{ for(let x=x0;x<=x1;x++) s.add(x+','+y); }); }); return s; }
+async function loadWorldData(){
+  const note=document.getElementById('dataNote');
+  try{
+    const [m,l,c,b,r] = await Promise.all([
+      fetch('wm-mountain.json').then(x=>x.json()),
+      fetch('wm-lake.json').then(x=>x.json()),
+      fetch('wm-castle.json').then(x=>x.json()),
+      fetch('wm-building.json').then(x=>x.json()),
+      fetch('wm-resources.json').then(x=>x.json())
+    ]);
+    WORLD.mountain=expandRLE(m); WORLD.lake=expandRLE(l); WORLD.castle=expandRLE(c); WORLD.building=expandRLE(b);
+    WORLD.resources=r; WORLD.loaded=true;
+    note.textContent='World data loaded: castle, mountains, lakes, facility/fortress/stronghold areas and '+r.length+' alliance resource nodes (source: wosnerds.com open data).';
+  }catch(e){
+    note.textContent='Could not load the world data files (wm-*.json) — make sure they were uploaded next to this page on GitHub. Showing a blank map for now.';
+  }
+  draw();
+}
+const RES_BY_IDX=['meat','wood','coal','iron'];
+const RES_COLOR={meat:'#ef4444',wood:'#a16207',coal:'#64748b',iron:'#94a3b8'};
 
-const RES = {meat:{i:'🥩',c:'#b45309'},wood:{i:'🪵',c:'#92400e'},coal:{i:'⛏️',c:'#334155'},iron:{i:'🔩',c:'#475569'}};
+// placements (game coords)
+let hiveRaw=null, hiveCenter=null;
+let banners=new Set(), farms=[], terrain=new Set(), target=null;
+const RES={meat:{i:'🥩'},wood:{i:'🪵'},coal:{i:'⛏️'},iron:{i:'🔩'}};
 
 const canvas=document.getElementById('map'), ctx=canvas.getContext('2d');
 const wrap=document.getElementById('canvasWrap');
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
-
 const toolHelp={
-  pan:'Drag to move the map.',
+  pan:'Drag to move the map. Use zoom to go from the whole state to your local zone.',
   hive:'Tap where you want the centre of your imported hive.',
   banner:'Tap to place/remove a banner (covers 7×7). Green = chained to the hive, red = disconnected.',
-  farm:'Tap to place a 2×2 alliance farm of the chosen resource. Tap it again to remove.',
-  terrain:'Paint blocked terrain (mountains/lakes / facility margins). Territory can\'t cross it.',
-  target:'Tap to set a target (a facility you want to reach). Tap again to clear.',
-  erase:'Tap a banner / farm / terrain / target to remove it.'
+  farm:'Tap to mark an extra alliance farm you want to track. Tap it again to remove.',
+  terrain:'Paint extra blocked terrain by hand. Territory can\'t cross it.',
+  target:'Tap to set a target you want to reach. Tap again to clear.',
+  erase:'Tap a banner / extra farm / hand-painted terrain / target to remove it.'
 };
 document.getElementById('toolHelp').textContent=toolHelp[tool];
 
@@ -177,51 +200,37 @@ function trapCells(t){const c=[];for(let dx=0;dx<3;dx++)for(let dy=0;dy<3;dy++)c
 function chebBlockTrap(x,y,tc){let m=Infinity;const bc=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]];
   bc.forEach(b=>tc.forEach(c=>{const d=Math.max(Math.abs(b[0]-c[0]),Math.abs(b[1]-c[1]));if(d<m)m=d;}));return m;}
 function hiveFootprint(d){
-  // returns {cells:Set 'x,y' (territory: traps+cities), blockers:Set, minx,miny,maxx,maxy} in hive-internal coords
-  const N=d.N||40, rings=d.ringsPerTrap||3, cap=d.maxCities||106;
-  const A=d.trapA, B=d.trapB;
-  const tcA=trapCells(A), tcB=trapCells(B);
-  const blocked=new Set(), cells=new Set();
+  const N=d.N||40, rings=d.ringsPerTrap||3, cap=d.maxCities||106, A=d.trapA, B=d.trapB;
+  const tcA=trapCells(A), tcB=trapCells(B), blocked=new Set(), cells=new Set();
   const isTrap=(x,y)=>tcA.some(c=>c[0]===x&&c[1]===y)||tcB.some(c=>c[0]===x&&c[1]===y);
   for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(isTrap(x,y)){blocked.add(x+','+y);cells.add(x+','+y);}
   (d.banners||[]).forEach(k=>blocked.add(k));
   (d.obstacles||[]).forEach(o=>{for(let dx=0;dx<o.w;dx++)for(let dy=0;dy<o.h;dy++)blocked.add((o.x+dx)+','+(o.y+dy));});
-  const px=((A.x%2)+2)%2, py=((A.y%2)+2)%2;
-  const cand=[];
+  const px=((A.x%2)+2)%2, py=((A.y%2)+2)%2, cand=[];
   for(let y=0;y<=N-2;y++)for(let x=0;x<=N-2;x++){
     const cs=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]];
     if(cs.some(([cx,cy])=>blocked.has(cx+','+cy)))continue;
-    const dA=chebBlockTrap(x,y,tcA),dB=chebBlockTrap(x,y,tcB),dd=Math.min(dA,dB);
-    const al=(x%2===px&&y%2===py)?0:1;
-    cand.push({x,y,d:dd,al});
+    const dd=Math.min(chebBlockTrap(x,y,tcA),chebBlockTrap(x,y,tcB));
+    cand.push({x,y,d:dd,al:(x%2===px&&y%2===py)?0:1});
   }
   cand.sort((a,b)=>a.d-b.d||a.al-b.al||a.y-b.y||a.x-b.x);
   const used=new Set(); let count=0;
-  for(const c of cand){
-    if(count>=cap)break;
+  for(const c of cand){ if(count>=cap)break;
     const cs=[[c.x,c.y],[c.x+1,c.y],[c.x,c.y+1],[c.x+1,c.y+1]];
     if(cs.some(([cx,cy])=>used.has(cx+','+cy)))continue;
-    const ring=Math.ceil(c.d/2); if(ring>rings+1)continue;
-    cs.forEach(([cx,cy])=>{used.add(cx+','+cy);cells.add(cx+','+cy);});
-    count++;
-  }
-  (d.manualCities||[]).forEach(k=>{
-    const [x,y]=k.split(',').map(Number);
+    if(Math.ceil(c.d/2)>rings+1)continue;
+    cs.forEach(([cx,cy])=>{used.add(cx+','+cy);cells.add(cx+','+cy);}); count++; }
+  (d.manualCities||[]).forEach(k=>{const [x,y]=k.split(',').map(Number);
     const cs=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]];
     if(cs.some(([cx,cy])=>used.has(cx+','+cy)||blocked.has(cx+','+cy)))return;
-    cs.forEach(([cx,cy])=>{used.add(cx+','+cy);cells.add(cx+','+cy);});
-  });
-  // bounds
+    cs.forEach(([cx,cy])=>{used.add(cx+','+cy);cells.add(cx+','+cy);});});
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
   [...cells,...blocked].forEach(k=>{const [x,y]=k.split(',').map(Number);minx=Math.min(minx,x);miny=Math.min(miny,y);maxx=Math.max(maxx,x);maxy=Math.max(maxy,y);});
   return {cells,blockers:blocked,cx:(minx+maxx)/2,cy:(miny+maxy)/2};
 }
-
-// world-coord territory seed + blockers from the placed hive
 function hiveWorldCells(){
   if(!hiveRaw||!hiveCenter) return {seed:new Set(),block:new Set()};
-  const fp=hiveFootprint(hiveRaw);
-  const ox=Math.round(hiveCenter.x-fp.cx), oy=Math.round(hiveCenter.y-fp.cy);
+  const fp=hiveFootprint(hiveRaw), ox=Math.round(hiveCenter.x-fp.cx), oy=Math.round(hiveCenter.y-fp.cy);
   const seed=new Set(), block=new Set();
   fp.cells.forEach(k=>{const [x,y]=k.split(',').map(Number);seed.add((x+ox)+','+(y+oy));});
   fp.blockers.forEach(k=>{const [x,y]=k.split(',').map(Number);block.add((x+ox)+','+(y+oy));});
@@ -231,156 +240,147 @@ function hiveWorldCells(){
 /* ───────── territory / connection ───────── */
 function computeTerritory(){
   const {seed,block}=hiveWorldCells();
-  const terr=new Set(seed);
-  const conn=new Set();
-  const bl=new Set([...terrain,...block]);
-  // BFS: a banner connects if adjacent (Cheby<=1) to current territory; then adds 7x7 (minus blockers)
-  let changed=true;
-  const bList=[...banners];
-  while(changed){
-    changed=false;
-    for(const b of bList){
-      if(conn.has(b)) continue;
-      const [bx,by]=b.split(',').map(Number);
-      let adj=false;
+  const terr=new Set(seed), conn=new Set();
+  const bl=new Set([...terrain,...block,...WORLD.mountain,...WORLD.lake,...WORLD.building,...WORLD.castle]);
+  const bList=[...banners]; let changed=true;
+  while(changed){ changed=false;
+    for(const b of bList){ if(conn.has(b))continue;
+      const [bx,by]=b.split(',').map(Number); let adj=false;
       for(let dx=-1;dx<=1&&!adj;dx++)for(let dy=-1;dy<=1;dy++){ if(terr.has((bx+dx)+','+(by+dy))){adj=true;break;} }
-      if(adj){
-        conn.add(b); changed=true;
-        for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){
-          const k=(bx+dx)+','+(by+dy);
-          if(!bl.has(k)) terr.add(k);
-        }
-      }
+      if(adj){ conn.add(b); changed=true;
+        for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){ const k=(bx+dx)+','+(by+dy); if(!bl.has(k))terr.add(k); } }
     }
   }
   return {terr,conn,seed};
 }
+function farmClaimed(f,terr){let n=0;for(let dx=0;dx<2;dx++)for(let dy=0;dy<2;dy++) if(terr.has((f.x+dx)+','+(f.y+dy)))n++;return n>=3;}
+function worldFarmClaimed(rx,ry,terr){let n=0;for(let dx=0;dx<2;dx++)for(let dy=0;dy<2;dy++) if(terr.has((rx+dx)+','+(ry+dy)))n++;return n>=3;}
 
-function farmClaimed(f,terr){
-  let n=0;
-  for(let dx=0;dx<2;dx++)for(let dy=0;dy<2;dy++) if(terr.has((f.x+dx)+','+(f.y+dy))) n++;
-  return n>=3;
-}
+/* ───────── view helpers ───────── */
+function fit(){ const w=wrap.clientWidth; canvas.width=w; canvas.height=Math.min(w*1.15,620); }
+function t2p(gx,gy){ return [ (gx-viewX)*CELL, (gy-viewY)*CELL ]; }
+function p2t(px,py){ return [ Math.floor(viewX+px/CELL), Math.floor(viewY+py/CELL) ]; }
+function centerOn(cx,cy){ viewX=cx-(canvas.width/CELL)/2; viewY=cy-(canvas.height/CELL)/2; }
+function clampView(){ const spanX=canvas.width/CELL, spanY=canvas.height/CELL;
+  viewX=Math.max(-spanX*0.5,Math.min(MAP-spanX*0.5,viewX)); viewY=Math.max(-spanY*0.5,Math.min(MAP-spanY*0.5,viewY)); }
 
 /* ───────── rendering ───────── */
-function fit(){
-  const w=wrap.clientWidth;
-  canvas.width=w; canvas.height=Math.min(w*1.15, 620);
+function drawSet(set,color){
+  ctx.fillStyle=color;
+  const vw=canvas.width, vh=canvas.height;
+  set.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=t2p(gx,gy);
+    if(px>-CELL*4&&py>-CELL*4&&px<vw+CELL*4&&py<vh+CELL*4) ctx.fillRect(px,py,Math.max(1,CELL+0.5),Math.max(1,CELL+0.5));});
 }
-function tileToPx(gx,gy){ return [ (gx-originX)*CELL+panX, (gy-originY)*CELL+panY ]; }
-function pxToTile(px,py){ return [ Math.floor((px-panX)/CELL)+originX, Math.floor((py-panY)/CELL)+originY ]; }
-
 function draw(){
   fit();
   const {terr,conn,seed}=computeTerritory();
   ctx.fillStyle='#0b1626'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  const x0=originX, y0=originY;
-  // territory shading
+  const vw=canvas.width, vh=canvas.height;
+  const [bx0,by0]=t2p(0,0), [bx1,by1]=t2p(MAP,MAP);
+  ctx.fillStyle='#0e1c30'; ctx.fillRect(bx0,by0,bx1-bx0,by1-by0);
+  ctx.strokeStyle='rgba(127,217,238,.25)'; ctx.lineWidth=1; ctx.strokeRect(bx0,by0,bx1-bx0,by1-by0);
+  const step = CELL>=4?10 : CELL>=1?50 : 200;
+  if(CELL>=0.6){ ctx.strokeStyle='rgba(127,217,238,.06)';
+    for(let g=0;g<=MAP;g+=step){ const [px]=t2p(g,0); if(px>=0&&px<=vw){ctx.beginPath();ctx.moveTo(px,Math.max(0,by0));ctx.lineTo(px,Math.min(vh,by1));ctx.stroke();}
+      const [,py]=t2p(0,g); if(py>=0&&py<=vh){ctx.beginPath();ctx.moveTo(Math.max(0,bx0),py);ctx.lineTo(Math.min(vw,bx1),py);ctx.stroke();} } }
+  // world terrain (fixed data)
+  drawSet(WORLD.mountain,'#4b5563');
+  drawSet(WORLD.lake,'#1d4ed8');
+  drawSet(WORLD.building,'#a855f7');
+  drawSet(WORLD.castle,'#f97316');
+  // world resource nodes (points, drawn as small squares — coloured by type, brighter if claimed)
+  if(WORLD.resources.length && CELL>0.25){
+    WORLD.resources.forEach(([rx,ry,ti])=>{
+      const [px,py]=t2p(rx,ry); if(px<-6||py<-6||px>vw+6||py>vh+6)return;
+      const claimed=CELL>=1.2 ? worldFarmClaimed(rx,ry,terr) : false;
+      ctx.fillStyle=claimed?'#facc15':RES_COLOR[RES_BY_IDX[ti]];
+      const s=Math.max(2,CELL*1.6);
+      ctx.fillRect(px-s/2,py-s/2,s,s);
+    });
+  }
+  // territory
   ctx.fillStyle='rgba(96,165,250,.16)';
-  terr.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=tileToPx(gx,gy);
-    if(px<-CELL||py<-CELL||px>canvas.width||py>canvas.height)return; ctx.fillRect(px,py,CELL,CELL);});
-  // grid lines (light) every 10
-  ctx.strokeStyle='rgba(127,217,238,.08)'; ctx.lineWidth=1;
-  for(let i=0;i<=WN;i+=10){ const [px]=tileToPx(x0+i,y0); ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,canvas.height);ctx.stroke();
-    const [,py]=tileToPx(x0,y0+i); ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(canvas.width,py);ctx.stroke(); }
+  terr.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=t2p(gx,gy);if(px>-CELL&&py>-CELL&&px<vw+CELL&&py<vh+CELL)ctx.fillRect(px,py,Math.max(1,CELL),Math.max(1,CELL));});
   // hive seed
-  ctx.fillStyle='#3b82f6';
-  seed.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=tileToPx(gx,gy);ctx.fillRect(px,py,CELL,CELL);});
-  // terrain
-  ctx.fillStyle='#334155';
-  terrain.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=tileToPx(gx,gy);ctx.fillRect(px,py,CELL,CELL);});
-  // farms
-  farms.forEach(f=>{const [px,py]=tileToPx(f.x,f.y);const claimed=farmClaimed(f,terr);
-    ctx.fillStyle=claimed?'#facc15':'#7c6f2a'; ctx.fillRect(px,py,CELL*2-1,CELL*2-1);
-    ctx.fillStyle='#08131f'; ctx.font=Math.round(CELL*1.1)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(RES[f.res].i,px+CELL,py+CELL);});
+  ctx.fillStyle='#3b82f6'; seed.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=t2p(gx,gy);if(px>-CELL&&py>-CELL&&px<vw+CELL&&py<vh+CELL)ctx.fillRect(px,py,Math.max(1,CELL),Math.max(1,CELL));});
+  // hand-painted terrain
+  ctx.fillStyle='#334155'; terrain.forEach(k=>{const [gx,gy]=k.split(',').map(Number);const [px,py]=t2p(gx,gy);if(px>-CELL&&py>-CELL&&px<vw+CELL&&py<vh+CELL)ctx.fillRect(px,py,Math.max(1,CELL),Math.max(1,CELL));});
+  // extra farms (hand placed)
+  farms.forEach(f=>{const [px,py]=t2p(f.x,f.y);if(px<-CELL*2||py<-CELL*2||px>vw+CELL*2||py>vh+CELL*2)return;const claimed=farmClaimed(f,terr);
+    ctx.fillStyle=claimed?'#facc15':'#7c6f2a';ctx.fillRect(px,py,Math.max(2,CELL*2-1),Math.max(2,CELL*2-1));
+    if(CELL*2>12){ctx.fillStyle='#08131f';ctx.font=Math.round(CELL*1.1)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(RES[f.res].i,px+CELL,py+CELL);}});
   // banners
-  banners.forEach(b=>{const [gx,gy]=b.split(',').map(Number);const [px,py]=tileToPx(gx,gy);
-    const ok=conn.has(b);
-    ctx.fillStyle=ok?'#22c55e':'#ef4444'; ctx.fillRect(px,py,CELL,CELL);
-    ctx.strokeStyle=ok?'#bbf7d0':'#fecaca'; ctx.lineWidth=2; ctx.strokeRect(px+1,py+1,CELL-2,CELL-2);});
+  banners.forEach(b=>{const [gx,gy]=b.split(',').map(Number);const [px,py]=t2p(gx,gy);if(px<-CELL*2||py<-CELL*2||px>vw+CELL*2||py>vh+CELL*2)return;const ok=conn.has(b);
+    ctx.fillStyle=ok?'#22c55e':'#ef4444';ctx.fillRect(px,py,Math.max(2,CELL),Math.max(2,CELL));});
   // target
-  if(target){const [px,py]=tileToPx(target.x,target.y);ctx.fillStyle='#a855f7';
-    ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,CELL*0.8,0,7);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font=Math.round(CELL)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🎯',px+CELL/2,py+CELL/2);}
-  // coord labels
-  ctx.fillStyle='rgba(134,160,183,.9)';ctx.font='10px Inter, sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
-  for(let i=0;i<=WN;i+=10){ const [px]=tileToPx(x0+i,y0); if(px>10&&px<canvas.width-20) ctx.fillText('x'+(x0+i),px+2,2);
-    const [,py]=tileToPx(x0,y0+i); if(py>10&&py<canvas.height-12) ctx.fillText('y'+(y0+i),2,py+1); }
+  if(target){const [px,py]=t2p(target.x,target.y);const r=Math.max(4,CELL*0.9);ctx.fillStyle='#a855f7';ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,r,0,7);ctx.fill();}
+  if(CELL>=0.6){ ctx.fillStyle='rgba(134,160,183,.9)';ctx.font='10px Inter, sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+    for(let g=0;g<=MAP;g+=step){ const [px]=t2p(g,0); if(px>12&&px<vw-24)ctx.fillText('x'+g,px+2,2);
+      const [,py]=t2p(0,g); if(py>12&&py<vh-12)ctx.fillText('y'+g,2,py+1); } }
   updateStatus(terr,conn);
-  document.getElementById('zoomVal').textContent='zoom · '+CELL+'px/tile';
+  document.getElementById('zoomVal').textContent=(CELL<1?('1:'+Math.round(1/CELL)):(CELL.toFixed(1)+'px/tile'));
 }
-
 function updateStatus(terr,conn){
-  const claimed=farms.filter(f=>farmClaimed(f,terr)).length;
-  const byRes={meat:0,wood:0,coal:0,iron:0};
+  const claimed=farms.filter(f=>farmClaimed(f,terr)).length, byRes={meat:0,wood:0,coal:0,iron:0};
   farms.forEach(f=>{if(farmClaimed(f,terr))byRes[f.res]++;});
-  let targetTxt='';
-  if(target){ const inside=terr.has(target.x+','+target.y)||[...Array(3)].some((_,dx)=>[...Array(3)].some((_,dy)=>terr.has((target.x+dx-1)+','+(target.y+dy-1))));
-    targetTxt=`<br>🎯 Target: <b>${inside?'reached':'not reached yet'}</b>`; }
+  let worldClaimed=0, worldByRes={meat:0,wood:0,coal:0,iron:0};
+  if(WORLD.resources.length){
+    WORLD.resources.forEach(([rx,ry,ti])=>{ if(worldFarmClaimed(rx,ry,terr)){ worldClaimed++; worldByRes[RES_BY_IDX[ti]]++; } });
+  }
+  let tt='';
+  if(target){const inside=[...Array(3)].some((_,dx)=>[...Array(3)].some((_,dy)=>terr.has((target.x+dx-1)+','+(target.y+dy-1))));
+    tt=`<br>🎯 Target (${target.x}·${target.y}): <b>${inside?'reached':'not reached yet'}</b>`;}
   document.getElementById('status').innerHTML=
     `Banners: <b>${conn.size}/${banners.size}</b> connected · Territory: <b>${terr.size}</b> tiles<br>`+
-    `Alliance farms claimed (75%): <b>${claimed}/${farms.length}</b> `+
-    `<span style="color:var(--text-dim)">(🥩${byRes.meat} 🪵${byRes.wood} ⛏️${byRes.coal} 🔩${byRes.iron})</span>`+
-    targetTxt;
+    `World resource nodes claimed (75%): <b>${worldClaimed}/${WORLD.resources.length}</b> `+
+    `<span style="color:var(--text-dim)">(🥩${worldByRes.meat} 🪵${worldByRes.wood} ⛏️${worldByRes.coal} 🔩${worldByRes.iron})</span><br>`+
+    `Extra hand-placed farms claimed: <b>${claimed}/${farms.length}</b>`+tt;
 }
 
 /* ───────── interaction ───────── */
 function applyAt(gx,gy){
+  if(gx<0||gy<0||gx>=MAP||gy>=MAP)return;
   const k=gx+','+gy;
   if(tool==='hive'){ if(!hiveRaw){toast('Import a hive first');return;} hiveCenter={x:gx,y:gy}; }
   else if(tool==='banner'){ if(banners.has(k))banners.delete(k); else banners.add(k); }
-  else if(tool==='farm'){
-    const hit=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2);
-    if(hit>=0)farms.splice(hit,1); else farms.push({x:gx,y:gy,res:farmRes});
-  }
+  else if(tool==='farm'){ const h=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2); if(h>=0)farms.splice(h,1); else farms.push({x:gx,y:gy,res:farmRes}); }
   else if(tool==='terrain'){ for(let dx=0;dx<brush;dx++)for(let dy=0;dy<brush;dy++)terrain.add((gx+dx)+','+(gy+dy)); }
   else if(tool==='target'){ if(target&&target.x===gx&&target.y===gy)target=null; else target={x:gx,y:gy}; }
-  else if(tool==='erase'){
-    if(banners.has(k))banners.delete(k);
-    else if(terrain.has(k))terrain.delete(k);
-    else{ const hit=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2); if(hit>=0)farms.splice(hit,1);
-      else if(target&&target.x===gx&&target.y===gy)target=null; }
-  }
+  else if(tool==='erase'){ if(banners.has(k))banners.delete(k); else if(terrain.has(k))terrain.delete(k);
+    else{const h=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2);if(h>=0)farms.splice(h,1);else if(target&&target.x===gx&&target.y===gy)target=null;} }
   draw();
 }
-
-let dragging=false, dragMoved=false, last=null, paintTerr=false;
-function evtPos(e){const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return [ (t.clientX-r.left)*(canvas.width/r.width), (t.clientY-r.top)*(canvas.height/r.height) ];}
-function down(e){const [mx,my]=evtPos(e);last=[mx,my];dragging=true;dragMoved=false;
-  if(tool==='terrain'){paintTerr=true;const [gx,gy]=pxToTile(mx,my);applyAt(gx,gy);}
-}
-function move(e){ if(!dragging)return; const [mx,my]=evtPos(e);
-  if(tool==='pan'){ panX+=mx-last[0]; panY+=my-last[1]; last=[mx,my]; dragMoved=true; draw(); }
-  else if(paintTerr){ const [gx,gy]=pxToTile(mx,my); applyAt(gx,gy); }
-  else { if(Math.abs(mx-last[0])>4||Math.abs(my-last[1])>4)dragMoved=true; }
-}
-function up(e){ if(dragging&&!dragMoved&&tool!=='pan'&&!paintTerr){ const [mx,my]=last; const [gx,gy]=pxToTile(mx,my); applyAt(gx,gy);} dragging=false;paintTerr=false; }
+let dragging=false,dragMoved=false,last=null,painting=false;
+function ep(e){const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return [(t.clientX-r.left)*(canvas.width/r.width),(t.clientY-r.top)*(canvas.height/r.height)];}
+function down(e){const [mx,my]=ep(e);last=[mx,my];dragging=true;dragMoved=false;
+  if(tool==='terrain'){painting=true;const [gx,gy]=p2t(mx,my);applyAt(gx,gy);}}
+function move(e){if(!dragging)return;const [mx,my]=ep(e);
+  if(tool==='pan'){viewX-=(mx-last[0])/CELL;viewY-=(my-last[1])/CELL;clampView();last=[mx,my];dragMoved=true;draw();}
+  else if(painting){const [gx,gy]=p2t(mx,my);applyAt(gx,gy);}
+  else if(Math.abs(mx-last[0])>4||Math.abs(my-last[1])>4)dragMoved=true;}
+function up(){if(dragging&&!dragMoved&&tool!=='pan'&&!painting){const [mx,my]=last;const [gx,gy]=p2t(mx,my);applyAt(gx,gy);}dragging=false;painting=false;}
 canvas.addEventListener('mousedown',down);canvas.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
 canvas.addEventListener('touchstart',e=>{e.preventDefault();down(e);},{passive:false});
 canvas.addEventListener('touchmove',e=>{e.preventDefault();move(e);},{passive:false});
-canvas.addEventListener('touchend',e=>{up(e);});
+canvas.addEventListener('touchend',up);
 
 /* ───────── controls ───────── */
 document.querySelectorAll('.tool').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  tool=b.dataset.tool; document.getElementById('toolHelp').textContent=toolHelp[tool];
+  tool=b.dataset.tool;document.getElementById('toolHelp').textContent=toolHelp[tool];
   document.getElementById('farmSub').classList.toggle('show',tool==='farm');
-  document.getElementById('terrainSub').classList.toggle('show',tool==='terrain');
-}));
-document.querySelectorAll('#farmSub .chip').forEach(c=>c.addEventListener('click',()=>{
-  document.querySelectorAll('#farmSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');farmRes=c.dataset.res;}));
-document.querySelectorAll('#terrainSub .chip').forEach(c=>c.addEventListener('click',()=>{
-  document.querySelectorAll('#terrainSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');brush=+c.dataset.brush;}));
+  document.getElementById('terrainSub').classList.toggle('show',tool==='terrain');}));
+document.querySelectorAll('#farmSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#farmSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');farmRes=c.dataset.res;}));
+document.querySelectorAll('#terrainSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#terrainSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');brush=+c.dataset.brush;}));
 
-function recenter(){ const cx=+document.getElementById('cx').value||348, cy=+document.getElementById('cy').value||556;
-  WN=Math.max(30,Math.min(200,+document.getElementById('winSize').value||80));
-  originX=cx-Math.floor(WN/2); originY=cy-Math.floor(WN/2); panX=0;panY=0;
-  CELL=Math.max(6,Math.floor(canvas.width/WN)); draw(); }
-document.getElementById('recenterBtn').addEventListener('click',recenter);
-document.getElementById('zoomMinus').addEventListener('click',()=>{CELL=Math.max(5,CELL-1);draw();});
-document.getElementById('zoomPlus').addEventListener('click',()=>{CELL=Math.min(22,CELL+1);draw();});
-document.getElementById('clearBtn').addEventListener('click',()=>{banners=new Set();farms=[];terrain=new Set();target=null;draw();toast('Cleared placements');});
+function zoomBy(f){ const cx=viewX+(canvas.width/CELL)/2, cy=viewY+(canvas.height/CELL)/2;
+  CELL=Math.max(canvas.width/MAP*0.9, Math.min(24, CELL*f)); centerOn(cx,cy); clampView(); draw(); }
+document.getElementById('zIn').addEventListener('click',()=>zoomBy(1.6));
+document.getElementById('zOut').addEventListener('click',()=>zoomBy(1/1.6));
+document.getElementById('zFit').addEventListener('click',()=>{CELL=canvas.width/MAP;centerOn(MAP/2,MAP/2);clampView();draw();});
+document.getElementById('gotoBtn').addEventListener('click',()=>{const cx=+document.getElementById('cx').value,cy=+document.getElementById('cy').value;
+  if(CELL<6)CELL=8; centerOn(cx,cy);clampView();draw();});
+document.getElementById('clearBtn').addEventListener('click',()=>{banners=new Set();farms=[];terrain=new Set();target=null;hiveRaw=null;hiveCenter=null;draw();toast('Cleared');});
 document.getElementById('pngBtn').addEventListener('click',()=>{const a=document.createElement('a');a.download='world-map.png';a.href=canvas.toDataURL('image/png');a.click();});
 
 /* ───────── Supabase: load saved hives ───────── */
@@ -394,22 +394,22 @@ async function initHives(){
   if(!session){note.style.display='block';note.innerHTML='Log in on the Phoenix app to import your saved hives.';area.style.display='none';return;}
   note.style.display='none';area.style.display='flex';
   const {data,error}=await _sb.from('hive_maps').select('id,name').order('updated_at',{ascending:false});
-  const sel=document.getElementById('hiveSelect');
-  sel.innerHTML='<option value="">— your saved hives —</option>';
-  if(!error&&data) data.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;sel.appendChild(o);});
+  const sel=document.getElementById('hiveSelect');sel.innerHTML='<option value="">— your saved hives —</option>';
+  if(!error&&data)data.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;sel.appendChild(o);});
 }
 document.getElementById('hiveLoadBtn').addEventListener('click',async()=>{
-  const id=document.getElementById('hiveSelect').value; if(!id){toast('Pick a hive');return;}
+  const id=document.getElementById('hiveSelect').value;if(!id){toast('Pick a hive');return;}
   const {data,error}=await _sb.from('hive_maps').select('data').eq('id',id).maybeSingle();
   if(error||!data){toast('Load failed');return;}
-  hiveRaw=data.data; hiveCenter={x:originX+Math.floor(WN/2),y:originY+Math.floor(WN/2)};
-  draw(); toast('Hive placed — use “Move hive” to reposition');
+  hiveRaw=data.data; if(CELL<6)CELL=8;
+  const cx=viewX+(canvas.width/CELL)/2, cy=viewY+(canvas.height/CELL)/2; hiveCenter={x:Math.round(cx),y:Math.round(cy)};
+  draw();toast('Hive placed — use “Move hive” to reposition');
 });
-if(_sb) _sb.auth.onAuthStateChange(()=>initHives());
+if(_sb)_sb.auth.onAuthStateChange(()=>initHives());
 
 /* init */
-function boot(){ fit(); CELL=Math.max(6,Math.floor(canvas.width/WN)); draw(); initHives(); }
-window.addEventListener('resize',()=>{fit();draw();});
+function boot(){ fit(); CELL=canvas.width/MAP; centerOn(MAP/2,MAP/2); clampView(); draw(); initHives(); loadWorldData(); }
+window.addEventListener('resize',()=>{fit();clampView();draw();});
 boot();
 </script>
 </body>
