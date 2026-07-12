@@ -123,6 +123,7 @@
       <button id="zOut">− zoom out</button>
       <button id="zFit">🌍 Whole map</button>
       <button id="zIn">zoom in +</button>
+      <button id="covToggle">🚩 7×7: off</button>
       <span class="instructions" id="zoomVal"></span>
     </div>
     <div class="legend">
@@ -200,6 +201,7 @@ const RES_COLOR={meat:'#ef4444',wood:'#a16207',coal:'#64748b',iron:'#94a3b8'};
 // placements (game coords)
 let hiveRaw=null, hiveCenter=null;
 let banners=new Set(), farms=[], terrain=new Set(), target=null;
+let showCover=false;
 let routePriority='balanced';   // balanced | iron | wood | meat | coal
 let routeStart=null;            // {x,y} when there's no territory yet
 let routeOptionsData=null;      // [{label, banners:[...], farms, byRes}]
@@ -334,6 +336,12 @@ function draw(){
   farms.forEach(f=>{const [px,py]=t2p(f.x,f.y);if(px<-CELL*2||py<-CELL*2||px>vw+CELL*2||py>vh+CELL*2)return;const claimed=farmClaimed(f,terr);
     ctx.fillStyle=claimed?'#facc15':'#7c6f2a';ctx.fillRect(px,py,Math.max(2,CELL*2-1),Math.max(2,CELL*2-1));
     if(CELL*2>12){ctx.fillStyle='#08131f';ctx.font=Math.round(CELL*1.1)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(RES[f.res].i,px+CELL,py+CELL);}});
+  // banner 7×7 coverage highlight (optional)
+  if(showCover && banners.size){
+    ctx.fillStyle='rgba(34,197,94,.16)'; ctx.strokeStyle='rgba(34,197,94,.5)'; ctx.lineWidth=1;
+    banners.forEach(b=>{const [gx,gy]=b.split(',').map(Number);const [px,py]=t2p(gx-3,gy-3);
+      const s=7*CELL; if(px<-s||py<-s||px>vw+s||py>vh+s)return; ctx.fillRect(px,py,s,s); if(CELL>=2)ctx.strokeRect(px,py,s,s);});
+  }
   // banners
   banners.forEach(b=>{const [gx,gy]=b.split(',').map(Number);const [px,py]=t2p(gx,gy);if(px<-CELL*2||py<-CELL*2||px>vw+CELL*2||py>vh+CELL*2)return;const ok=conn.has(b);
     ctx.fillStyle=ok?'#22c55e':'#ef4444';ctx.fillRect(px,py,Math.max(2,CELL),Math.max(2,CELL));});
@@ -513,6 +521,7 @@ document.querySelectorAll('#terrainSub .chip').forEach(c=>c.addEventListener('cl
 function zoomBy(f){ const cx=viewX+(canvas.width/CELL)/2, cy=viewY+(canvas.height/CELL)/2;
   CELL=Math.max(canvas.width/MAP*0.9, Math.min(24, CELL*f)); centerOn(cx,cy); clampView(); draw(); }
 document.getElementById('zIn').addEventListener('click',()=>zoomBy(1.6));
+document.getElementById('covToggle').addEventListener('click',function(){showCover=!showCover;this.textContent='🚩 7×7: '+(showCover?'on':'off');this.style.color=showCover?'#22c55e':'';draw();});
 document.getElementById('zOut').addEventListener('click',()=>zoomBy(1/1.6));
 document.getElementById('zFit').addEventListener('click',()=>{CELL=canvas.width/MAP;centerOn(MAP/2,MAP/2);clampView();draw();});
 document.getElementById('gotoBtn').addEventListener('click',()=>{const cx=+document.getElementById('cx').value,cy=+document.getElementById('cy').value;
@@ -548,7 +557,7 @@ if(_sb)_sb.auth.onAuthStateChange(()=>{initHives();initPlans();});
 function serializePlan(){
   return { v:1, hiveRaw, hiveCenter, banners:[...banners],
     farms:farms.map(f=>({x:f.x,y:f.y,res:f.res})), terrain:[...terrain], target,
-    view:{viewX,viewY,CELL} };
+    view:{viewX,viewY,CELL}, showCover };
 }
 function loadPlan(d){
   try{
@@ -557,6 +566,7 @@ function loadPlan(d){
     farms=(d.farms||[]).map(f=>({x:f.x,y:f.y,res:f.res}));
     terrain=new Set(d.terrain||[]); target=d.target||null;
     if(d.view){viewX=d.view.viewX;viewY=d.view.viewY;CELL=d.view.CELL;}
+    showCover=!!d.showCover; const ct=document.getElementById('covToggle'); if(ct){ct.textContent='🚩 7×7: '+(showCover?'on':'off');ct.style.color=showCover?'#22c55e':'';}
     clampView(); draw();
   }catch(e){toast('Could not load plan');}
 }
