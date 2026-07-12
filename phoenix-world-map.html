@@ -86,6 +86,7 @@
       <button class="tool" data-tool="terrain">⛰️ Terrain</button>
       <button class="tool" data-tool="target">🎯 Target</button>
       <button class="tool" data-tool="route">🧭 Route</button>
+      <button class="tool" data-tool="facsel">🏛️ Facilities</button>
       <button class="tool" data-tool="erase">🧽 Erase</button>
     </div>
     <div class="sub-row" id="farmSub">
@@ -109,6 +110,7 @@
     </div>
     <div class="instructions" id="toolHelp" style="margin-top:8px;"></div>
     <div id="routeOptions" style="display:none;margin-top:10px;"></div>
+    <div id="facInfo" style="display:none;margin-top:10px;padding:10px;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;"></div>
   </div>
 
   <div class="panel">
@@ -175,21 +177,24 @@ let tool='pan', farmRes='meat', brush=1;
 
 // preloaded fixed world data — sourced from the wosnerdwarriors/wos-data open dataset
 // (their site states "All data is free to copy and use" — see wosnerds.com)
-let WORLD={mountain:new Set(),lake:new Set(),castle:new Set(),building:new Set(),resources:[],loaded:false};
+let WORLD={mountain:new Set(),lake:new Set(),castle:new Set(),building:new Set(),resources:[],facilities:[],loaded:false};
+let facNames={};        // index → user given name (saved with the plan)
+let selectedFac=null;   // index of selected facility
 function expandRLE(rows){ const s=new Set(); rows.forEach(([y,ranges])=>{ ranges.forEach(([x0,x1])=>{ for(let x=x0;x<=x1;x++) s.add(x+','+y); }); }); return s; }
 async function loadWorldData(){
   const note=document.getElementById('dataNote');
   try{
-    const [m,l,c,b,r] = await Promise.all([
+    const [m,l,c,b,r,fac] = await Promise.all([
       fetch('wm-mountain.json').then(x=>x.json()),
       fetch('wm-lake.json').then(x=>x.json()),
       fetch('wm-castle.json').then(x=>x.json()),
       fetch('wm-building.json').then(x=>x.json()),
-      fetch('wm-resources.json').then(x=>x.json())
+      fetch('wm-resources.json').then(x=>x.json()),
+      fetch('wm-facilities.json').then(x=>x.json())
     ]);
     WORLD.mountain=expandRLE(m); WORLD.lake=expandRLE(l); WORLD.castle=expandRLE(c); WORLD.building=expandRLE(b);
-    WORLD.resources=r; WORLD.loaded=true;
-    note.textContent='World data loaded: castle, mountains, lakes, facility/fortress/stronghold areas and '+r.length+' alliance resource nodes (source: wosnerds.com open data).';
+    WORLD.resources=r; WORLD.facilities=fac||[]; WORLD.loaded=true;
+    note.textContent='World data loaded: castle, mountains, lakes, '+ (fac?fac.length:0) +' facilities/forts/strongholds and '+r.length+' alliance resource nodes (source: wosnerds.com open data).';
   }catch(e){
     note.textContent='Could not load the world data files (wm-*.json) — make sure they were uploaded next to this page on GitHub. Showing a blank map for now.';
   }
@@ -218,6 +223,7 @@ const toolHelp={
   terrain:'Paint extra blocked terrain by hand. Territory can\'t cross it.',
   target:'Tap to set a target you want to reach. Tap again to clear.',
   route:'Tap a destination (a facility, a farm, a spot). The route starts from your current territory if you have any, otherwise from the first point you tap. Pick a priority above, then choose one of the options.',
+  facsel:'Tap a facility / fortress / stronghold to select it. You can give it a name (saved with the plan), see its type, and route to it.',
   erase:'Tap a banner / extra farm / hand-painted terrain / target to remove it.'
 };
 document.getElementById('toolHelp').textContent=toolHelp[tool];
@@ -323,6 +329,21 @@ function draw(){
       ctx.fillStyle=claimed?'#facc15':RES_COLOR[RES_BY_IDX[ti]];
       const s=Math.max(2,CELL*1.6);
       ctx.fillRect(px-s/2,py-s/2,s,s);
+    });
+  }
+  // facility / fort / stronghold markers + labels
+  if(WORLD.facilities.length){
+    WORLD.facilities.forEach((f,idx)=>{
+      const [px,py]=t2p(f.cx,f.cy); if(px<-20||py<-20||px>vw+20||py>vh+20)return;
+      const isFtSh=f.type==='ftsh'; const col=isFtSh?'#f472b6':'#c084fc';
+      if(idx===selectedFac){ ctx.strokeStyle='#7fd9ee'; ctx.lineWidth=2; const [sx,sy]=t2p(f.x,f.y); ctx.strokeRect(sx-1,sy-1,f.w*CELL+2,f.h*CELL+2); }
+      ctx.fillStyle=col; ctx.beginPath(); ctx.arc(px,py,Math.max(2.5,CELL*1.2),0,7); ctx.fill();
+      if(CELL>=3){
+        const nm=facNames[idx]||((isFtSh?'FT/SH ':'Fac ')+f.n);
+        ctx.font='10px Inter, sans-serif'; const tw=ctx.measureText(nm).width;
+        ctx.fillStyle='rgba(6,13,22,.75)'; ctx.fillRect(px+6,py-7,tw+6,14);
+        ctx.fillStyle='#eaf3f9'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(nm,px+9,py);
+      }
     });
   }
   // territory
@@ -478,6 +499,51 @@ function renderRouteOptions(opts){
   box.appendChild(cancel);
 }
 
+/* ───────── facility select / name ───────── */
+function selectFacilityAt(gx,gy){
+  let best=-1,bd=1e18;
+  WORLD.facilities.forEach((f,i)=>{
+    // inside its box, or nearest centre within ~6 tiles
+    const inside = gx>=f.x-1&&gx<=f.x+f.w&&gy>=f.y-1&&gy<=f.y+f.h;
+    const d=(gx-f.cx)**2+(gy-f.cy)**2;
+    if(inside){ if(d<bd){bd=-1;best=i;} }
+    else if(bd>=0 && d<bd && d<80){ bd=d; best=i; }
+  });
+  selectedFac = best>=0?best:null;
+  renderFacInfo(); draw();
+}
+function facTypeLabel(t){ return t==='ftsh'?'Fortress / Stronghold':(t==='castle'?'Castle':'Facility'); }
+function renderFacInfo(){
+  const box=document.getElementById('facInfo');
+  if(selectedFac===null){ box.style.display='none'; box.innerHTML=''; return; }
+  const f=WORLD.facilities[selectedFac];
+  const nm=facNames[selectedFac]||'';
+  const def=(f.type==='ftsh'?'FT/SH ':'Fac ')+f.n;
+  const {terr}=computeTerritory();
+  let touching=false;
+  for(let x=f.x-1;x<=f.x+f.w&&!touching;x++)for(let y=f.y-1;y<=f.y+f.h;y++){ if(terr.has(x+','+y)){touching=true;break;} }
+  box.style.display='block';
+  box.innerHTML=
+    `<div style="font-weight:700;margin-bottom:6px;">${facTypeLabel(f.type)} · #${f.n} <span style="color:var(--text-dim);font-weight:400">(${f.cx}·${f.cy})</span></div>`+
+    `<div style="color:${touching?'#22c55e':'#f87171'};font-size:.8rem;margin-bottom:8px;">${touching?'✓ your territory borders it':'✗ not connected to your territory yet'}</div>`+
+    `<div style="display:flex;gap:8px;">`+
+    `<input id="facNameInput" placeholder="${def}" value="${nm.replace(/"/g,'&quot;')}" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:7px 10px;border-radius:8px;font-size:.82rem;">`+
+    `<button class="btn" id="facNameSave">Name</button>`+
+    `<button class="btn" id="facRoute">🧭 Route</button>`+
+    `</div>`;
+  document.getElementById('facNameSave').addEventListener('click',()=>{
+    const v=document.getElementById('facNameInput').value.trim();
+    if(v)facNames[selectedFac]=v; else delete facNames[selectedFac];
+    renderFacInfo(); draw(); toast('Name saved (remember to Save the plan)');
+  });
+  document.getElementById('facRoute').addEventListener('click',()=>{
+    tool='route'; document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.tool[data-tool="route"]').classList.add('active');
+    document.getElementById('routeSub').classList.add('show');
+    runRoute({x:f.cx,y:f.cy});
+  });
+}
+
 /* ───────── interaction ───────── */
 function applyAt(gx,gy){
   if(gx<0||gy<0||gx>=MAP||gy>=MAP)return;
@@ -488,6 +554,7 @@ function applyAt(gx,gy){
   else if(tool==='terrain'){ for(let dx=0;dx<brush;dx++)for(let dy=0;dy<brush;dy++)terrain.add((gx+dx)+','+(gy+dy)); }
   else if(tool==='target'){ if(target&&target.x===gx&&target.y===gy)target=null; else target={x:gx,y:gy}; }
   else if(tool==='route'){ runRoute({x:gx,y:gy}); return; }
+  else if(tool==='facsel'){ selectFacilityAt(gx,gy); return; }
   else if(tool==='erase'){ if(banners.has(k))banners.delete(k); else if(terrain.has(k))terrain.delete(k);
     else{const h=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2);if(h>=0)farms.splice(h,1);else if(target&&target.x===gx&&target.y===gy)target=null;} }
   draw();
@@ -513,7 +580,8 @@ document.querySelectorAll('.tool').forEach(b=>b.addEventListener('click',()=>{
   document.getElementById('farmSub').classList.toggle('show',tool==='farm');
   document.getElementById('terrainSub').classList.toggle('show',tool==='terrain');
   document.getElementById('routeSub').classList.toggle('show',tool==='route');
-  if(tool!=='route'){const rb=document.getElementById('routeOptions');rb.style.display='none';rb.innerHTML='';routeStart=null;}}));
+  if(tool!=='route'){const rb=document.getElementById('routeOptions');rb.style.display='none';rb.innerHTML='';routeStart=null;}
+  if(tool!=='facsel'){selectedFac=null;const fb=document.getElementById('facInfo');if(fb){fb.style.display='none';fb.innerHTML='';}}}));
 document.querySelectorAll('#routeSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#routeSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');routePriority=c.dataset.pri;}));
 document.querySelectorAll('#farmSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#farmSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');farmRes=c.dataset.res;}));
 document.querySelectorAll('#terrainSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#terrainSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');brush=+c.dataset.brush;}));
@@ -557,7 +625,7 @@ if(_sb)_sb.auth.onAuthStateChange(()=>{initHives();initPlans();});
 function serializePlan(){
   return { v:1, hiveRaw, hiveCenter, banners:[...banners],
     farms:farms.map(f=>({x:f.x,y:f.y,res:f.res})), terrain:[...terrain], target,
-    view:{viewX,viewY,CELL}, showCover };
+    view:{viewX,viewY,CELL}, showCover, facNames };
 }
 function loadPlan(d){
   try{
@@ -567,6 +635,7 @@ function loadPlan(d){
     terrain=new Set(d.terrain||[]); target=d.target||null;
     if(d.view){viewX=d.view.viewX;viewY=d.view.viewY;CELL=d.view.CELL;}
     showCover=!!d.showCover; const ct=document.getElementById('covToggle'); if(ct){ct.textContent='🚩 7×7: '+(showCover?'on':'off');ct.style.color=showCover?'#22c55e':'';}
+    facNames=d.facNames||{}; selectedFac=null;
     clampView(); draw();
   }catch(e){toast('Could not load plan');}
 }
