@@ -85,6 +85,7 @@
       <button class="tool" data-tool="farm">🌾 Extra farm</button>
       <button class="tool" data-tool="terrain">⛰️ Terrain</button>
       <button class="tool" data-tool="target">🎯 Target</button>
+      <button class="tool" data-tool="route">🧭 Route</button>
       <button class="tool" data-tool="erase">🧽 Erase</button>
     </div>
     <div class="sub-row" id="farmSub">
@@ -99,7 +100,15 @@
       <span class="chip" data-brush="5">5</span>
       <span class="chip" data-brush="8">8</span>
     </div>
+    <div class="sub-row" id="routeSub">
+      <span class="chip active" data-pri="balanced">⚖️ Balanced</span>
+      <span class="chip" data-pri="iron">🔩 Need iron</span>
+      <span class="chip" data-pri="wood">🪵 Need wood</span>
+      <span class="chip" data-pri="meat">🥩 Need meat</span>
+      <span class="chip" data-pri="coal">⛏️ Need coal</span>
+    </div>
     <div class="instructions" id="toolHelp" style="margin-top:8px;"></div>
+    <div id="routeOptions" style="display:none;margin-top:10px;"></div>
   </div>
 
   <div class="panel">
@@ -132,6 +141,18 @@
       <div class="legend-item"><span class="sw" style="background:var(--target)"></span>Target</div>
     </div>
     <div class="note" id="dataNote">Loading world data…</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">💾 Saved world plans</div>
+    <div id="planAuthNote" class="instructions" style="display:none;margin-bottom:8px;"></div>
+    <div id="planArea">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="planName" placeholder="Plan name…" style="flex:1;min-width:0;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;font-size:.85rem;">
+        <button class="btn" id="planSaveBtn" style="flex:0 0 auto;min-width:90px;">💾 Save</button>
+      </div>
+      <div id="planList" class="instructions">—</div>
+    </div>
   </div>
 
   <div class="panel">
@@ -179,6 +200,9 @@ const RES_COLOR={meat:'#ef4444',wood:'#a16207',coal:'#64748b',iron:'#94a3b8'};
 // placements (game coords)
 let hiveRaw=null, hiveCenter=null;
 let banners=new Set(), farms=[], terrain=new Set(), target=null;
+let routePriority='balanced';   // balanced | iron | wood | meat | coal
+let routeStart=null;            // {x,y} when there's no territory yet
+let routeOptionsData=null;      // [{label, banners:[...], farms, byRes}]
 const RES={meat:{i:'🥩'},wood:{i:'🪵'},coal:{i:'⛏️'},iron:{i:'🔩'}};
 
 const canvas=document.getElementById('map'), ctx=canvas.getContext('2d');
@@ -191,6 +215,7 @@ const toolHelp={
   farm:'Tap to mark an extra alliance farm you want to track. Tap it again to remove.',
   terrain:'Paint extra blocked terrain by hand. Territory can\'t cross it.',
   target:'Tap to set a target you want to reach. Tap again to clear.',
+  route:'Tap a destination (a facility, a farm, a spot). The route starts from your current territory if you have any, otherwise from the first point you tap. Pick a priority above, then choose one of the options.',
   erase:'Tap a banner / extra farm / hand-painted terrain / target to remove it.'
 };
 document.getElementById('toolHelp').textContent=toolHelp[tool];
@@ -314,6 +339,7 @@ function draw(){
     ctx.fillStyle=ok?'#22c55e':'#ef4444';ctx.fillRect(px,py,Math.max(2,CELL),Math.max(2,CELL));});
   // target
   if(target){const [px,py]=t2p(target.x,target.y);const r=Math.max(4,CELL*0.9);ctx.fillStyle='#a855f7';ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,r,0,7);ctx.fill();}
+  if(routeStart){const [px,py]=t2p(routeStart.x,routeStart.y);ctx.strokeStyle='#7fd9ee';ctx.lineWidth=2;const r=Math.max(5,CELL*1.2);ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,r,0,7);ctx.stroke();}
   if(CELL>=0.6){ ctx.fillStyle='rgba(134,160,183,.9)';ctx.font='10px Inter, sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
     for(let g=0;g<=MAP;g+=step){ const [px]=t2p(g,0); if(px>12&&px<vw-24)ctx.fillText('x'+g,px+2,2);
       const [,py]=t2p(0,g); if(py>12&&py<vh-12)ctx.fillText('y'+g,2,py+1); } }
@@ -337,6 +363,113 @@ function updateStatus(terr,conn){
     `Extra hand-placed farms claimed: <b>${claimed}/${farms.length}</b>`+tt;
 }
 
+/* ───────── route planner (A* over a banner lattice) ───────── */
+const STEP=5; // banner spacing so each 7×7 overlaps the previous one (connected)
+function blockedForRoute(){
+  const {block}=hiveWorldCells();
+  return {isBlocked:(x,y)=> x<0||y<0||x>=MAP||y>=MAP||WORLD.mountain.has(x+','+y)||WORLD.lake.has(x+','+y)||WORLD.building.has(x+','+y)||WORLD.castle.has(x+','+y)||terrain.has(x+','+y)||block.has(x+','+y)};
+}
+// farms (world + hand-placed) as top-left → resource type, and a tile→farm index
+function allFarms(){
+  const list=[];
+  WORLD.resources.forEach(([x,y,ti])=>list.push({x,y,res:RES_BY_IDX[ti]}));
+  farms.forEach(f=>list.push({x:f.x,y:f.y,res:f.res}));
+  const tile2farm=new Map();
+  list.forEach((f,i)=>{for(let dx=0;dx<2;dx++)for(let dy=0;dy<2;dy++)tile2farm.set((f.x+dx)+','+(f.y+dy),i);});
+  return {list,tile2farm};
+}
+function farmsCoveredBy(bx,by,tile2farm){
+  const got=new Set();
+  for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){const i=tile2farm.get((bx+dx)+','+(by+dy));if(i!==undefined)got.add(i);}
+  return got;
+}
+function planRoute(start,tgt,priority){
+  const {isBlocked}=blockedForRoute();
+  const {list,tile2farm}=allFarms();
+  const sx=start.x, sy=start.y;
+  const snap=(p)=>[sx+Math.round((p.x-sx)/STEP)*STEP, sy+Math.round((p.y-sy)/STEP)*STEP];
+  const [s0x,s0y]=snap(start); const [t0x,t0y]=snap(tgt);
+  const key=(x,y)=>x+','+y;
+  // farm value: balanced = any farm counts 1; specific = target resource counts a lot, others little
+  function farmValue(bx,by){
+    const set=farmsCoveredBy(bx,by,tile2farm); let v=0;
+    set.forEach(i=>{const r=list[i].res; v += (priority==='balanced')?1:(r===priority?1:0.15);});
+    return v;
+  }
+  function astar(wFarm){
+    const h=(x,y)=>Math.max(Math.abs(x-t0x),Math.abs(y-t0y))/STEP;
+    const g=new Map(), came=new Map();
+    const startK=key(s0x,s0y); g.set(startK,0);
+    const pq=[[h(s0x,s0y),0,s0x,s0y]]; came.set(startK,null);
+    const done=new Set();
+    let guard=0;
+    while(pq.length && guard++<60000){
+      // pop min (simple linear — lattices are small in practice)
+      let mi=0; for(let i=1;i<pq.length;i++) if(pq[i][0]<pq[mi][0]) mi=i;
+      const [f,gg,cx,cy]=pq.splice(mi,1)[0];
+      const ck=key(cx,cy); if(done.has(ck))continue; done.add(ck);
+      if(Math.max(Math.abs(cx-t0x),Math.abs(cy-t0y))<=STEP){
+        const path=[]; let k=ck; while(k){const [px,py]=k.split(',').map(Number);path.push([px,py]);k=came.get(k);}
+        path.reverse(); return path;
+      }
+      for(let dx=-STEP;dx<=STEP;dx+=STEP)for(let dy=-STEP;dy<=STEP;dy+=STEP){
+        if(dx===0&&dy===0)continue; const nx=cx+dx, ny=cy+dy;
+        if(isBlocked(nx,ny))continue;
+        const cost=Math.max(0.05, 1 - wFarm*farmValue(nx,ny));
+        const ng=gg+cost, nk=key(nx,ny);
+        if(!g.has(nk)||ng<g.get(nk)){ g.set(nk,ng); came.set(nk,ck); pq.push([ng+h(nx,ny)*Math.max(0.15,1-wFarm),ng,nx,ny]); }
+      }
+    }
+    return null;
+  }
+  const weights = priority==='balanced' ? [0,0.35,1.0] : [0,0.5,1.4];
+  const seen=new Set(), options=[];
+  weights.forEach((w,idx)=>{
+    const path=astar(w); if(!path)return;
+    const sig=path.length+':'+path[Math.floor(path.length/2)].join(',');
+    // build banner set + covered farms
+    const bset=path.map(([x,y])=>x+','+y);
+    const covered=new Set(); path.forEach(([x,y])=>farmsCoveredBy(x,y,tile2farm).forEach(i=>covered.add(i)));
+    const byRes={meat:0,wood:0,coal:0,iron:0}; covered.forEach(i=>byRes[list[i].res]++);
+    const labels=['Minimum banners','Balanced','Max '+(priority==='balanced'?'farms':priority)];
+    options.push({label:labels[idx], banners:bset, nFarms:covered.size, byRes});
+  });
+  // de-dup identical option sets
+  const uniq=[]; const keys=new Set();
+  options.forEach(o=>{const k=o.banners.length+'|'+o.nFarms; if(!keys.has(k)){keys.add(k);uniq.push(o);}});
+  return uniq;
+}
+function runRoute(tgt){
+  if(!WORLD.loaded){toast('World data still loading…');return;}
+  const {seed}=hiveWorldCells();
+  let start;
+  if(seed.size||banners.size){
+    // start from the tile of current territory nearest the target
+    const {terr}=computeTerritory(); let best=null,bd=1e18;
+    terr.forEach(k=>{const [x,y]=k.split(',').map(Number);const d=(x-tgt.x)**2+(y-tgt.y)**2;if(d<bd){bd=d;best={x,y};}});
+    start=best||tgt;
+  } else if(routeStart){ start=routeStart; }
+  else { routeStart=tgt; toast('Start set — now tap the destination'); draw(); return; }
+  const opts=planRoute(start,tgt,routePriority);
+  routeOptionsData=opts; renderRouteOptions(opts);
+}
+function renderRouteOptions(opts){
+  const box=document.getElementById('routeOptions');
+  if(!opts||!opts.length){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='block';
+  box.innerHTML='<div class="instructions" style="margin-bottom:6px;">Choose a route to add its banners (then you can tweak them by hand):</div>';
+  opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className='btn'; b.style.cssText='display:block;width:100%;text-align:left;margin-bottom:6px;';
+    b.innerHTML=`<b>${o.label}</b> — ${o.banners.length} banners · ${o.nFarms} farms `+
+      `<span style="color:var(--text-dim)">(🥩${o.byRes.meat} 🪵${o.byRes.wood} ⛏️${o.byRes.coal} 🔩${o.byRes.iron})</span>`;
+    b.addEventListener('click',()=>{ o.banners.forEach(k=>banners.add(k)); routeStart=null; routeOptionsData=null; box.style.display='none'; box.innerHTML=''; draw(); toast('Route added — edit banners by hand if needed'); });
+    box.appendChild(b);
+  });
+  const cancel=document.createElement('button'); cancel.className='btn'; cancel.style.cssText='display:block;width:100%;text-align:center;';
+  cancel.textContent='Cancel'; cancel.addEventListener('click',()=>{routeStart=null;routeOptionsData=null;box.style.display='none';box.innerHTML='';draw();});
+  box.appendChild(cancel);
+}
+
 /* ───────── interaction ───────── */
 function applyAt(gx,gy){
   if(gx<0||gy<0||gx>=MAP||gy>=MAP)return;
@@ -346,6 +479,7 @@ function applyAt(gx,gy){
   else if(tool==='farm'){ const h=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2); if(h>=0)farms.splice(h,1); else farms.push({x:gx,y:gy,res:farmRes}); }
   else if(tool==='terrain'){ for(let dx=0;dx<brush;dx++)for(let dy=0;dy<brush;dy++)terrain.add((gx+dx)+','+(gy+dy)); }
   else if(tool==='target'){ if(target&&target.x===gx&&target.y===gy)target=null; else target={x:gx,y:gy}; }
+  else if(tool==='route'){ runRoute({x:gx,y:gy}); return; }
   else if(tool==='erase'){ if(banners.has(k))banners.delete(k); else if(terrain.has(k))terrain.delete(k);
     else{const h=farms.findIndex(f=>gx>=f.x&&gx<f.x+2&&gy>=f.y&&gy<f.y+2);if(h>=0)farms.splice(h,1);else if(target&&target.x===gx&&target.y===gy)target=null;} }
   draw();
@@ -369,7 +503,10 @@ document.querySelectorAll('.tool').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   tool=b.dataset.tool;document.getElementById('toolHelp').textContent=toolHelp[tool];
   document.getElementById('farmSub').classList.toggle('show',tool==='farm');
-  document.getElementById('terrainSub').classList.toggle('show',tool==='terrain');}));
+  document.getElementById('terrainSub').classList.toggle('show',tool==='terrain');
+  document.getElementById('routeSub').classList.toggle('show',tool==='route');
+  if(tool!=='route'){const rb=document.getElementById('routeOptions');rb.style.display='none';rb.innerHTML='';routeStart=null;}}));
+document.querySelectorAll('#routeSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#routeSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');routePriority=c.dataset.pri;}));
 document.querySelectorAll('#farmSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#farmSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');farmRes=c.dataset.res;}));
 document.querySelectorAll('#terrainSub .chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('#terrainSub .chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');brush=+c.dataset.brush;}));
 
@@ -405,10 +542,62 @@ document.getElementById('hiveLoadBtn').addEventListener('click',async()=>{
   const cx=viewX+(canvas.width/CELL)/2, cy=viewY+(canvas.height/CELL)/2; hiveCenter={x:Math.round(cx),y:Math.round(cy)};
   draw();toast('Hive placed — use “Move hive” to reposition');
 });
-if(_sb)_sb.auth.onAuthStateChange(()=>initHives());
+if(_sb)_sb.auth.onAuthStateChange(()=>{initHives();initPlans();});
+
+/* ───────── Supabase: saved world plans ───────── */
+function serializePlan(){
+  return { v:1, hiveRaw, hiveCenter, banners:[...banners],
+    farms:farms.map(f=>({x:f.x,y:f.y,res:f.res})), terrain:[...terrain], target,
+    view:{viewX,viewY,CELL} };
+}
+function loadPlan(d){
+  try{
+    hiveRaw=d.hiveRaw||null; hiveCenter=d.hiveCenter||null;
+    banners=new Set(d.banners||[]);
+    farms=(d.farms||[]).map(f=>({x:f.x,y:f.y,res:f.res}));
+    terrain=new Set(d.terrain||[]); target=d.target||null;
+    if(d.view){viewX=d.view.viewX;viewY=d.view.viewY;CELL=d.view.CELL;}
+    clampView(); draw();
+  }catch(e){toast('Could not load plan');}
+}
+async function initPlans(){
+  const note=document.getElementById('planAuthNote'), area=document.getElementById('planArea');
+  if(!_sb){note.style.display='block';note.textContent='Saving unavailable here.';area.style.display='none';return;}
+  const {data:{session}}=await _sb.auth.getSession();
+  if(!session){note.style.display='block';note.innerHTML='Log in on the Phoenix app to save world plans.';area.style.display='none';return;}
+  note.style.display='none';area.style.display='block'; refreshPlans();
+}
+async function refreshPlans(){
+  const list=document.getElementById('planList'); list.textContent='Loading…';
+  const {data,error}=await _sb.from('world_maps').select('id,name,updated_at').order('updated_at',{ascending:false});
+  if(error){list.textContent='Could not load your plans.';return;}
+  if(!data.length){list.textContent='No saved plans yet.';return;}
+  list.innerHTML='';
+  data.forEach(row=>{
+    const item=document.createElement('div');
+    item.style.cssText='display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line);';
+    const nm=document.createElement('div');nm.textContent=row.name;
+    nm.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:600;';
+    const mk=(t,fn)=>{const b=document.createElement('button');b.textContent=t;
+      b.style.cssText='background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:7px;padding:5px 8px;font-size:.72rem;font-weight:600;cursor:pointer;';b.addEventListener('click',fn);return b;};
+    item.appendChild(nm);
+    item.appendChild(mk('Load',async()=>{const {data:r,error:e}=await _sb.from('world_maps').select('data').eq('id',row.id).maybeSingle();if(e||!r){toast('Load failed');return;}loadPlan(r.data);toast('Loaded');}));
+    item.appendChild(mk('Save',async()=>{const {error:e}=await _sb.from('world_maps').update({data:serializePlan(),updated_at:new Date().toISOString()}).eq('id',row.id);if(e){toast('Update failed');return;}toast('Updated “'+row.name+'”');refreshPlans();}));
+    item.appendChild(mk('✏️',async()=>{const nn=prompt('New name:',row.name);if(!nn)return;const {error:e}=await _sb.from('world_maps').update({name:nn.trim()}).eq('id',row.id);if(e){toast('Rename failed');return;}refreshPlans();}));
+    item.appendChild(mk('🗑',async()=>{if(!confirm('Delete “'+row.name+'”?'))return;const {error:e}=await _sb.from('world_maps').delete().eq('id',row.id);if(e){toast('Delete failed');return;}toast('Deleted');refreshPlans();}));
+    list.appendChild(item);
+  });
+}
+document.getElementById('planSaveBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('planName').value.trim(); if(!name){toast('Give it a name first');return;}
+  if(!_sb)return; const {data:{session}}=await _sb.auth.getSession(); if(!session){toast('Log in first');return;}
+  const {error}=await _sb.from('world_maps').insert({user_id:session.user.id,name,data:serializePlan()});
+  if(error){toast('Save failed');return;}
+  document.getElementById('planName').value=''; toast('Saved'); refreshPlans();
+});
 
 /* init */
-function boot(){ fit(); CELL=canvas.width/MAP; centerOn(MAP/2,MAP/2); clampView(); draw(); initHives(); loadWorldData(); }
+function boot(){ fit(); CELL=canvas.width/MAP; centerOn(MAP/2,MAP/2); clampView(); draw(); initHives(); initPlans(); loadWorldData(); }
 window.addEventListener('resize',()=>{fit();clampView();draw();});
 boot();
 </script>
