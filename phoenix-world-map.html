@@ -279,7 +279,9 @@ function computeTerritory(){
   while(changed){ changed=false;
     for(const b of bList){ if(conn.has(b))continue;
       const [bx,by]=b.split(',').map(Number); let adj=false;
-      for(let dx=-1;dx<=1&&!adj;dx++)for(let dy=-1;dy<=1;dy++){ if(terr.has((bx+dx)+','+(by+dy))){adj=true;break;} }
+      // a banner connects if its 7×7 area TOUCHES existing territory (edge-to-edge is
+      // enough, no overlap needed): any territory tile within radius 4 of the centre.
+      for(let dx=-4;dx<=4&&!adj;dx++)for(let dy=-4;dy<=4;dy++){ if(terr.has((bx+dx)+','+(by+dy))){adj=true;break;} }
       if(adj){ conn.add(b); changed=true;
         for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){ const k=(bx+dx)+','+(by+dy); if(!bl.has(k))terr.add(k); } }
     }
@@ -393,7 +395,7 @@ function updateStatus(terr,conn){
 }
 
 /* ───────── route planner (A* over a banner lattice) ───────── */
-const STEP=5; // banner spacing so each 7×7 overlaps the previous one (connected)
+const STEP=7; // banner spacing: each 7×7 touches the next by its edge (no wasteful overlap), like the in-game zig-zag chain
 function blockedForRoute(){
   const {block}=hiveWorldCells();
   return {isBlocked:(x,y)=> x<0||y<0||x>=MAP||y>=MAP||WORLD.mountain.has(x+','+y)||WORLD.lake.has(x+','+y)||WORLD.building.has(x+','+y)||WORLD.castle.has(x+','+y)||terrain.has(x+','+y)||block.has(x+','+y)};
