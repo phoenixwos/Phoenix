@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Copy-Paste Hub · Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--fire:#ff7a3c;--fire-deep:#e85a18;--gold:#f0b93d;
+    --green:#4ade80;--green-deep:#22c55e;--danger:#ff5a5a;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:60px;}
+  h1,h2,.num{font-family:'Rajdhani',sans-serif;}
+  .wrap{max-width:560px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
+  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  .lead{font-size:.8rem;color:var(--text-dim);line-height:1.5;margin-bottom:16px;}
+  .stat-pill{display:inline-block;background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px;font-size:.72rem;color:var(--ice);margin-bottom:14px;}
+
+  .search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+    background:var(--panel);color:var(--text);font-family:inherit;font-size:.9rem;margin-bottom:12px;outline:none;}
+  .search:focus{border-color:var(--ice);}
+
+  .addbtn{width:100%;border:1.5px dashed var(--fire);background:transparent;color:var(--fire);
+    border-radius:12px;padding:11px;font-weight:700;font-size:.88rem;margin-bottom:18px;cursor:pointer;}
+
+  .cat{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+  .cat-header{width:100%;display:flex;align-items:center;gap:10px;padding:14px;background:none;border:none;
+    cursor:pointer;font-family:inherit;text-align:left;color:var(--text);}
+  .cat-title{font-family:'Rajdhani';font-weight:700;font-size:1rem;flex:1;}
+  .cat-count{background:var(--bg-deep);color:var(--text-dim);font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .chevron{font-size:.8rem;color:var(--text-dim);transition:transform .2s;}
+  .cat.collapsed .chevron{transform:rotate(-90deg);}
+  .cat-body{padding:0 12px 10px;}
+  .cat.collapsed .cat-body{display:none;}
+
+  .msg{border-top:1px solid var(--line);padding:12px 0;}
+  .cat-body .msg:first-child{border-top:none;}
+  .msg-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .msg-label{font-weight:600;font-size:.86rem;color:var(--text);flex:1;}
+  .badge{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .badge.ok{background:rgba(74,222,128,.14);color:var(--green);}
+  .badge.over{background:rgba(255,90,90,.14);color:var(--danger);}
+  .msg-text{font-family:'Inter',ui-monospace,monospace;font-size:.84rem;line-height:1.5;white-space:pre-wrap;
+    word-break:break-word;background:var(--bg-deep);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;color:var(--text);margin-bottom:8px;}
+  .msg-actions{display:flex;gap:6px;}
+  .copy-btn{flex:1;padding:9px;border:none;border-radius:9px;background:linear-gradient(180deg,var(--fire),var(--fire-deep));
+    color:#1a0800;font-family:'Rajdhani';font-weight:700;font-size:.86rem;cursor:pointer;}
+  .copy-btn.copied{background:linear-gradient(180deg,var(--green),var(--green-deep));color:#062;}
+  .icon-btn{padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel-2);
+    color:var(--text-dim);font-size:.86rem;cursor:pointer;}
+  .icon-btn.danger{color:var(--danger);border-color:rgba(255,90,90,.3);}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:.85rem;}
+
+  /* ── Modal (add/edit) ── */
+  .modal-bg{position:fixed;inset:0;background:rgba(4,9,15,.75);display:none;align-items:flex-end;
+    justify-content:center;z-index:500;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;
+    width:100%;max-width:560px;padding:18px 16px 22px;max-height:88vh;overflow-y:auto;}
+  .modal h2{font-size:1.02rem;margin-bottom:14px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--ice-dim);margin-bottom:5px;font-weight:600;}
+  .field input,.field select,.field textarea{width:100%;background:var(--bg-deep);border:1px solid var(--line);
+    border-radius:9px;color:var(--text);font-family:'Inter';font-size:.9rem;padding:10px 11px;outline:none;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ice);}
+  .field textarea{min-height:140px;resize:vertical;font-family:ui-monospace,monospace;font-size:.86rem;line-height:1.5;}
+  .charcount{text-align:right;font-size:.72rem;color:var(--text-dim);margin-top:4px;}
+  .charcount.over{color:var(--danger);font-weight:700;}
+  .modal-actions{display:flex;gap:8px;margin-top:6px;}
+  .btn-save{flex:1;background:linear-gradient(180deg,var(--fire),var(--fire-deep));border:none;border-radius:11px;
+    color:#1a0800;font-family:'Rajdhani';font-weight:700;font-size:.95rem;padding:12px;cursor:pointer;}
+  .btn-cancel{flex:1;background:transparent;border:1px solid var(--line);border-radius:11px;
+    color:var(--text-dim);font-size:.85rem;padding:12px;cursor:pointer;}
+  .modal-err{color:var(--danger);font-size:.8rem;margin-top:8px;display:none;}
+  .newcat-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+  .newcat-row input{flex:1;}
+</style>
+</head>
+<body>
+
+<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
+  <div style="max-width:340px;">
+    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
+    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Checking access…</div>
+    <a href="phoenix-tools.html" style="display:inline-block;margin-top:18px;color:#7fd9ee;font-family:'Rajdhani';font-weight:700;font-size:.85rem;text-decoration:none;">◂ Back to Tools</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  </div>
+  <h1 style="margin-bottom:6px;">📋 Copy-Paste Hub</h1>
+  <p class="lead">Shared alliance messages, ready to paste in chat. Any R4/R5 can add, edit, or remove entries. Chat limit is 512 characters.</p>
+  <div class="stat-pill" id="statPill">Loading…</div>
+
+  <input class="search" id="search" placeholder="🔍 Search message or event…" oninput="filterMsgs(this.value)">
+  <button class="addbtn" id="openAddBtn">＋ Add new copy-paste</button>
+
+  <div id="cats"></div>
+  <div class="empty" id="emptyState" style="display:none;">No results 🔍</div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2 id="modalTitle">＋ New copy-paste</h2>
+    <div class="field">
+      <label>Category</label>
+      <select id="catSelect"></select>
+      <div class="newcat-row" id="newCatRow" style="display:none;">
+        <input id="newCatInput" placeholder="New category name (e.g. 🎯 Events)">
+      </div>
+    </div>
+    <div class="field">
+      <label>Title (short label)</label>
+      <input id="titleInput" placeholder="e.g. Bear Trap Schedule">
+    </div>
+    <div class="field">
+      <label>Message text</label>
+      <textarea id="bodyInput" placeholder="Type the full message…" oninput="updateCharCount()"></textarea>
+      <div class="charcount" id="charCount">0 / 512</div>
+    </div>
+    <div class="modal-err" id="modalErr"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-save" id="saveBtn">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── ACCESS GATE: admin en cualquier estado, o R4/R5 SOLO si su alianza es PXR ─── */
+var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+var sb=null;
+function gmsg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
+function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);loadMessages();}
+function getState(){
+  var q=new URLSearchParams(location.search).get('s');
+  if(q) return q;
+  try{var ls=localStorage.getItem('phx_state'); if(ls) return ls;}catch(e){}
+  return '3139';
+}
+(function(){
+  try{
+    if(!(window.supabase&&window.supabase.createClient)){gmsg('Could not load. Reload the page.');return;}
+    sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    sb.auth.getSession().then(function(r){
+      var s=r&&r.data&&r.data.session;
+      if(!s){gmsg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
+      window.__cpUid=s.user.id;
+      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
+        var rows=res.data||[];
+        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        if(isAdmin){unlock();return;}
+        var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
+        if(!leaderRow){gmsg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
+        sb.from('alliances').select('tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
+          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
+          if(tag.indexOf('PXR')===0){unlock();}
+          else{gmsg('🔒 This tool is only for PXR leaders.');}
+        }).catch(function(){gmsg('Error checking your alliance.');});
+      }).catch(function(){gmsg('Error checking permissions.');});
+    }).catch(function(){gmsg('Session error.');});
+  }catch(e){gmsg('Access error.');}
+})();
+
+/* ── State-aware back link ── */
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+/* ── DATA & RENDER ───────────────────────────────────────────── */
+let allMessages=[];
+let editingId=null;
+
+async function loadMessages(){
+  const{data,error}=await sb.from('copy_pastes').select('*').order('category').order('sort_order');
+  if(error){document.getElementById('cats').innerHTML='<div class="empty">Failed to load: '+error.message+'</div>';return;}
+  allMessages=data||[];
+  renderCats(allMessages);
+  const catCount=new Set(allMessages.map(m=>m.category)).size;
+  document.getElementById('statPill').textContent=`📋 ${allMessages.length} messages · ${catCount} categories`;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function renderCats(list){
+  const wrap=document.getElementById('cats');
+  const byCat={};
+  list.forEach(m=>{(byCat[m.category]=byCat[m.category]||[]).push(m);});
+  const catNames=Object.keys(byCat).sort();
+  if(!catNames.length){wrap.innerHTML='';document.getElementById('emptyState').style.display='block';return;}
+  document.getElementById('emptyState').style.display='none';
+
+  wrap.innerHTML=catNames.map(cat=>{
+    const items=byCat[cat];
+    const msgsHtml=items.map(m=>{
+      const len=(m.body||'').length;
+      const badgeClass=len>512?'over':'ok';
+      return `<div class="msg" data-id="${m.id}">
+        <div class="msg-head">
+          <span class="msg-label">${escapeHtml(m.title)}</span>
+          <span class="badge ${badgeClass}">${len} chars</span>
+        </div>
+        <div class="msg-text">${escapeHtml(m.body)}</div>
+        <div class="msg-actions">
+          <button class="copy-btn" onclick="copyMsg('${m.id}',this)">📋 Copy</button>
+          <button class="icon-btn" onclick="openEdit('${m.id}')">✏️</button>
+          <button class="icon-btn danger" onclick="deleteMsg('${m.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<section class="cat" data-cat="${escapeHtml(cat)}">
+      <button class="cat-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="cat-title">${escapeHtml(cat)}</span>
+        <span class="cat-count">${items.length}</span>
+        <span class="chevron">▾</span>
+      </button>
+      <div class="cat-body">${msgsHtml}</div>
+    </section>`;
+  }).join('');
+}
+
+function filterMsgs(q){
+  q=q.trim().toLowerCase();
+  if(!q){renderCats(allMessages);return;}
+  const filtered=allMessages.filter(m=>
+    (m.title||'').toLowerCase().includes(q) ||
+    (m.body||'').toLowerCase().includes(q) ||
+    (m.category||'').toLowerCase().includes(q)
+  );
+  renderCats(filtered);
+}
+
+async function copyMsg(id,btn){
+  const m=allMessages.find(x=>x.id===id);
+  if(!m)return;
+  try{
+    await navigator.clipboard.writeText(m.body);
+  }catch(e){
+    const ta=document.createElement('textarea');
+    ta.value=m.body;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+  }
+  const orig=btn.textContent;
+  btn.textContent='✅ Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},1400);
+}
+
+/* ── ADD / EDIT MODAL ────────────────────────────────────────── */
+function populateCatSelect(){
+  const sel=document.getElementById('catSelect');
+  const cats=[...new Set(allMessages.map(m=>m.category))].sort();
+  sel.innerHTML=cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
+    + `<option value="__new__">＋ New category…</option>`;
+  sel.onchange=()=>{
+    document.getElementById('newCatRow').style.display = sel.value==='__new__' ? 'flex' : 'none';
+  };
+}
+
+function updateCharCount(){
+  const len=document.getElementById('bodyInput').value.length;
+  const el=document.getElementById('charCount');
+  el.textContent=`${len} / 512`;
+  el.classList.toggle('over', len>512);
+}
+
+function openAdd(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='＋ New copy-paste';
+  populateCatSelect();
+  document.getElementById('newCatRow').style.display='none';
+  document.getElementById('newCatInput').value='';
+  document.getElementById('titleInput').value='';
+  document.getElementById('bodyInput').value='';
+  updateCharCount();
+  document.getElementById('modalErr').style.display='none';
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function openEdit(id){
+  const m=allMessages.find(x=>x.id===id);
+  if(!m)return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='✏️ Edit copy-paste';
+  populateCatSelect();
+  document.getElementById('catSelect').value=m.category;
+  document.getElementById('newCatRow').style.display='none';
+  document.getElementById('newCatInput').value='';
+  document.getElementById('titleInput').value=m.title;
+  document.getElementById('bodyInput').value=m.body;
+  updateCharCount();
+  document.getElementById('modalErr').style.display='none';
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+
+document.getElementById('openAddBtn').onclick=openAdd;
+document.getElementById('cancelBtn').onclick=closeModal;
+document.getElementById('modalBg').onclick=(e)=>{if(e.target.id==='modalBg')closeModal();};
+
+document.getElementById('saveBtn').onclick=async()=>{
+  const errEl=document.getElementById('modalErr');
+  errEl.style.display='none';
+  let category=document.getElementById('catSelect').value;
+  if(category==='__new__'){
+    category=document.getElementById('newCatInput').value.trim();
+  }
+  const title=document.getElementById('titleInput').value.trim();
+  const body=document.getElementById('bodyInput').value;
+  if(!category||!title||!body.trim()){
+    errEl.textContent='Please fill in category, title, and message text.';
+    errEl.style.display='block';
+    return;
+  }
+  const btn=document.getElementById('saveBtn');
+  btn.textContent='Saving…';btn.disabled=true;
+  let error;
+  if(editingId){
+    ({error}=await sb.from('copy_pastes').update({category,title,body,updated_by:window.__cpUid}).eq('id',editingId));
+  }else{
+    const maxSort=Math.max(0,...allMessages.filter(m=>m.category===category).map(m=>m.sort_order||0));
+    ({error}=await sb.from('copy_pastes').insert({category,title,body,sort_order:maxSort+1,created_by:window.__cpUid,updated_by:window.__cpUid}));
+  }
+  btn.textContent='💾 Save';btn.disabled=false;
+  if(error){errEl.textContent='Save failed: '+error.message;errEl.style.display='block';return;}
+  closeModal();
+  loadMessages();
+};
+
+async function deleteMsg(id){
+  const m=allMessages.find(x=>x.id===id);
+  if(!m)return;
+  if(!confirm(`Delete "${m.title}"? This can't be undone.`))return;
+  const{error}=await sb.from('copy_pastes').delete().eq('id',id);
+  if(error){alert('Delete failed: '+error.message);return;}
+  loadMessages();
+}
+</script>
+</body>
+</html>
