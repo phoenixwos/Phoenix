@@ -144,6 +144,16 @@
   <!-- ════ FOR EVERYONE ════ -->
   <div class="grp">🌍 For everyone</div>
 
+  <a class="card gold" id="cardHeroes">
+    <div class="emoji">🦸</div>
+    <div class="body">
+      <h3>Hero Guide</h3>
+      <p>Browse heroes by role with real skill numbers, compare any two, and see Bear Trap teams by generation.</p>
+      <span class="tag everyone">Everyone · shareable</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
   <a class="card" id="cardRatio">
     <div class="emoji">⚖️</div>
     <div class="body">
@@ -191,7 +201,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
+  var dest={cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
