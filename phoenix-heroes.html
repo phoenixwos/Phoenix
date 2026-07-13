@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phoenix — Hero Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;500;600&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#dff0fa; --sky2:#c8e8f8; --ice:#a0d4f0; --ice-deep:#4a9fd4;
+  --panel:#f0f8ff; --panel-edge:#c0dff0; --ink:#1e3a52; --ink-soft:#4a6a86; --muted:#7fa0b8;
+  --gold:#ffb938; --gold-deep:#f59e0b; --green:#56c98a; --green-d:#3da76e;
+  --acc:#ff7a2e; --acc-d:#e85a18; --acc-sh:#c2470f; --white:#fff;
+  --inf:#3d7fc4; --inf-d:#2a5f9c;
+  --lan:#2ba894; --lan-d:#1f7d6d;
+  --mar:#d68e2e; --mar-d:#a86a1a;
+  --gat:#5fae5f; --gat-d:#3f8a3f;
+  --sup:#a45fc9; --sup-d:#7d3fa3;
+  --cardglow-a:#3a6a92; --cardglow-b:#152840;
+}
+body.dark{
+  --sky:#0a1420; --sky2:#0d1b2a; --ice:#1a3a52; --ice-deep:#4fa3d8;
+  --panel:#16263a; --panel-edge:#264866; --ink:#e8f4ff; --ink-soft:#a8c8e0; --muted:#6a8aa8;
+  --white:#16263a;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{
+  margin:0; min-height:100vh; font-family:'Fredoka',sans-serif; color:var(--ink);
+  background:linear-gradient(180deg,var(--sky),var(--sky2) 60%);
+  padding-bottom:40px; transition:background .3s;
+}
+.top{
+  position:sticky; top:0; z-index:20; background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.85));
+  backdrop-filter:blur(8px); border-bottom:2px solid var(--panel-edge); padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+body.dark .top{background:linear-gradient(180deg,rgba(13,27,42,.92),rgba(10,20,32,.85));}
+.top a.back{color:var(--ink-soft); text-decoration:none; font-weight:600; font-size:14px; display:flex; align-items:center; gap:4px;}
+.brand{font-family:'Cinzel',serif; font-weight:700; font-size:17px; letter-spacing:.5px; display:flex; align-items:center; gap:6px;}
+.brand b{color:var(--acc);}
+#themeBtn{border:none; background:var(--panel); color:var(--ink); width:34px; height:34px; border-radius:50%; font-size:16px; cursor:pointer; border:1px solid var(--panel-edge);}
+
+.hero{padding:26px 16px 18px; text-align:center; position:relative; overflow:hidden;}
+.hero h1{
+  font-family:'Baloo 2',cursive; font-weight:800; font-size:26px; margin:0 0 6px;
+  background:linear-gradient(90deg,var(--ice-deep),var(--acc)); -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero p{color:var(--ink-soft); font-size:14px; margin:0 auto; max-width:440px; line-height:1.5;}
+
+.wrap{max-width:720px; margin:0 auto; padding:0 14px;}
+
+.viewTabs{display:flex; gap:8px; margin:14px 0 4px;}
+.viewTab{
+  flex:1; text-align:center; padding:10px; border-radius:12px; border:2px solid var(--panel-edge); background:var(--panel);
+  color:var(--ink-soft); font-weight:700; font-size:13px; cursor:pointer; font-family:'Fredoka';
+}
+.viewTab.on{background:var(--ice-deep); border-color:var(--ice-deep); color:#fff;}
+
+.searchbar{display:flex; gap:8px; margin:14px 0 10px;}
+.searchbar input{
+  flex:1; padding:11px 14px; border-radius:14px; border:2px solid var(--panel-edge); background:var(--white);
+  color:var(--ink); font-family:'Fredoka'; font-size:15px; outline:none;
+}
+.searchbar input:focus{border-color:var(--ice-deep);}
+
+.chips{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:10px;}
+.chip{
+  padding:7px 13px; border-radius:999px; border:2px solid var(--panel-edge); background:var(--panel);
+  color:var(--ink-soft); font-size:12.5px; font-weight:600; cursor:pointer; user-select:none; white-space:nowrap;
+  transition:.15s;
+}
+.chip.on{background:var(--acc); border-color:var(--acc-d); color:#fff; box-shadow:0 2px 8px rgba(200,80,20,.3);}
+.chip.verifyToggle{background:var(--white); border-color:var(--green-d); color:var(--green-d);}
+.chip.verifyToggle.on{background:var(--green-d); border-color:var(--green-d); color:#fff;}
+
+.compareBar{
+  position:sticky; top:58px; z-index:15; background:var(--panel); border:2px solid var(--gold-deep);
+  border-radius:14px; padding:10px 12px; margin-bottom:14px; display:none; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.compareBar.show{display:flex;}
+.compareBar .lbl{font-weight:700; font-size:13px; color:var(--ink);}
+.compareBar .slot{
+  background:var(--white); border:1px solid var(--panel-edge); border-radius:10px; padding:5px 10px; font-size:12.5px;
+  display:flex; align-items:center; gap:6px; font-weight:600;
+}
+.compareBar .slot button{border:none; background:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1;}
+.compareBar .goBtn{
+  margin-left:auto; background:var(--gold-deep); color:#fff; border:none; border-radius:10px; padding:8px 16px;
+  font-weight:700; font-size:13px; cursor:pointer; font-family:'Fredoka';
+}
+
+.grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr;}}
+
+.card{
+  background:radial-gradient(ellipse at 50% -10%, var(--cardglow-a), var(--cardglow-b) 70%);
+  border:2px solid var(--panel-edge); border-radius:18px; padding:14px;
+  position:relative; overflow:hidden; transition:.15s; color:#eaf4ff;
+}
+.card.cmp-on{border-color:var(--gold-deep); box-shadow:0 0 0 3px rgba(245,158,11,.25);}
+.card .head{display:flex; gap:10px; align-items:flex-start;}
+.avatar{
+  width:52px; height:52px; border-radius:14px; flex:none; display:flex; align-items:center; justify-content:center;
+  font-size:24px; color:#fff; position:relative; box-shadow:inset 0 -3px 0 rgba(0,0,0,.15), 0 0 18px rgba(255,255,255,.15);
+}
+.avatar .gen{
+  position:absolute; bottom:-5px; right:-5px; background:#fff; border:2px solid var(--panel-edge);
+  border-radius:8px; font-size:9px; font-weight:800; padding:1px 4px; color:var(--ink-soft); font-family:'Fredoka';
+}
+.cls-inf .avatar{background:linear-gradient(160deg,var(--inf),var(--inf-d));}
+.cls-lan .avatar{background:linear-gradient(160deg,var(--lan),var(--lan-d));}
+.cls-mar .avatar{background:linear-gradient(160deg,var(--mar),var(--mar-d));}
+.cls-gat .avatar{background:linear-gradient(160deg,var(--gat),var(--gat-d));}
+.cls-sup .avatar{background:linear-gradient(160deg,var(--sup),var(--sup-d));}
+
+.card .name{font-family:'Baloo 2',cursive; font-weight:700; font-size:16.5px; color:#fff; margin:0; display:flex; align-items:center; gap:6px;}
+.genpill{background:linear-gradient(90deg,#ffd76b,#ff9a3d); color:#5c3200; font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px;}
+.card .sub{font-size:11.5px; color:#bcd6ec; font-weight:600; margin-top:1px;}
+.rarity{display:inline-block; font-size:10px; font-weight:800; padding:1px 7px; border-radius:6px; margin-top:4px;}
+.r-SSR{background:linear-gradient(90deg,#ffd76b,#ff9a3d); color:#5c3200;}
+.r-SR{background:#d9e8f7; color:#2a5f9c;}
+.r-R{background:#dcefe0; color:#3f8a3f;}
+
+.verifiedTag{
+  display:inline-flex; align-items:center; gap:3px; font-size:9.5px; font-weight:800; color:#7fe0a8;
+  background:rgba(86,201,138,.15); border:1px solid rgba(86,201,138,.4); padding:2px 7px; border-radius:999px; margin-top:4px;
+}
+
+.blurb{font-size:12.5px; color:#cfe4f6; line-height:1.45; margin:10px 0 8px;}
+
+.statChip{
+  display:flex; align-items:center; gap:8px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.12);
+  border-radius:12px; padding:8px 10px; margin-bottom:8px;
+}
+.statChip .ic{font-size:17px; flex:none;}
+.statChip .txt{flex:1; min-width:0;}
+.statChip .lbl{font-size:10px; font-weight:700; color:#a8c8e0; text-transform:uppercase; letter-spacing:.3px;}
+.statChip .val{font-size:14px; font-weight:800; color:#fff;}
+.statChip .note{font-size:10px; color:#9fc2dd; margin-top:1px; line-height:1.3;}
+
+.tags{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;}
+.tag{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:#cfe4f6;}
+.tag.f2p{background:rgba(86,201,138,.18); color:#8ff0b6; border-color:rgba(86,201,138,.4);}
+.tag.p2p{background:rgba(214,142,46,.18); color:#f0c98f; border-color:rgba(214,142,46,.4);}
+.tag.bear{background:rgba(245,158,11,.2); color:#ffcf7f; border-color:rgba(245,158,11,.45);}
+
+.cmpToggle{
+  width:100%; padding:8px; border-radius:10px; border:2px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06);
+  color:#dcecfa; font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Fredoka';
+}
+.cmpToggle.on{background:var(--gold-deep); border-color:var(--gold-deep); color:#fff;}
+
+.empty{text-align:center; padding:40px 20px; color:var(--muted); font-size:14px;}
+
+.modalWrap{position:fixed; inset:0; background:rgba(10,20,32,.6); z-index:50; display:none; align-items:flex-end; justify-content:center;}
+.modalWrap.show{display:flex;}
+.modal{
+  background:var(--sky); width:100%; max-width:560px; max-height:88vh; overflow-y:auto; border-radius:22px 22px 0 0;
+  padding:18px 16px 26px; border-top:3px solid var(--gold-deep);
+}
+.modal h2{font-family:'Baloo 2',cursive; font-size:19px; margin:0 0 4px; text-align:center;}
+.modal .closeM{position:sticky; top:0; float:right; border:none; background:var(--panel); width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; color:var(--ink);}
+.cmpHeads{display:flex; gap:10px; margin:14px 0 8px;}
+.cmpHead{flex:1; text-align:center;}
+.cmpHead .avatar{margin:0 auto 6px;}
+.cmpHead b{display:block; font-size:13.5px; color:var(--ink);}
+.compareNote{font-size:11px; color:var(--muted); text-align:center; padding:2px 10px 10px; line-height:1.4;}
+.statCompareGrid{display:flex; flex-direction:column; gap:12px;}
+.statCompareCard{background:var(--panel); border-radius:14px; padding:12px; border:1px solid var(--panel-edge);}
+.statCompareCard .who{font-size:11px; font-weight:800; color:var(--ink-soft); margin-bottom:4px;}
+.statCompareCard .lab{font-size:11px; font-weight:700; color:var(--ink-soft);}
+.statCompareCard .val{font-size:16px; font-weight:800; color:var(--ink);}
+.statCompareCard .note{font-size:11px; color:var(--muted); margin-top:2px;}
+.barTrack{height:16px; background:var(--panel); border-radius:8px; overflow:hidden; border:1px solid var(--panel-edge); position:relative; margin-top:4px;}
+.barFill{height:100%; border-radius:8px; transition:width .4s;}
+.barVal{font-size:10px; font-weight:700; text-align:right; margin-top:2px; color:var(--ink-soft);}
+
+.genCard{background:var(--panel); border:2px solid var(--panel-edge); border-radius:16px; padding:14px; margin-bottom:12px;}
+.genCard .genTitle{font-family:'Baloo 2',cursive; font-weight:800; font-size:16px; margin:0 0 10px; color:var(--ink); display:flex; align-items:center; gap:6px;}
+.genCard .genTitle span{background:var(--gold-deep); color:#fff; font-size:11px; padding:2px 8px; border-radius:999px; font-family:'Fredoka'; font-weight:700;}
+.compRow{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--panel-edge);}
+.compRow:first-of-type{border-top:none;}
+.compRow .compLabel{width:66px; flex:none; font-size:11px; font-weight:800; color:var(--ink-soft);}
+.compRow .compHeroes{flex:1; font-size:12.5px; color:var(--ink); font-weight:600;}
+.compRow .compFormation{flex:none; font-size:10.5px; color:var(--muted); background:var(--white); border:1px solid var(--panel-edge); border-radius:8px; padding:2px 7px; font-weight:700;}
+.compRow.best .compLabel{color:var(--acc-d);}
+.compRow.f2p .compLabel{color:var(--green-d);}
+.teamsNote{font-size:11px; color:var(--muted); text-align:center; padding:6px 24px 4px; line-height:1.5;}
+.disclaimer{font-size:11px; color:var(--muted); text-align:center; padding:20px 24px 6px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="back" id="backLink" href="phoenix-tools.html">‹ Tools</a>
+  <div class="brand">🦸 <b>Hero</b> Guide</div>
+  <button id="themeBtn">🌙</button>
+</div>
+
+<div class="hero">
+  <h1>Which hero for which job?</h1>
+  <p>Browse heroes by role, see their real in-game skill numbers, and compare any two side by side.</p>
+</div>
+
+<div class="wrap">
+  <div class="viewTabs">
+    <div class="viewTab on" id="tabCards">🦸 Hero Cards</div>
+    <div class="viewTab" id="tabTeams">🐻 Bear Trap Teams by Gen</div>
+  </div>
+
+  <div id="cardsView">
+  <div class="searchbar">
+    <input type="text" id="search" placeholder="Search hero name…">
+  </div>
+  <div class="chips" id="chips"></div>
+
+  <div class="compareBar" id="compareBar">
+    <span class="lbl">Comparing:</span>
+    <div id="cmpSlots" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    <button class="goBtn" id="goCompare">Compare ⚖️</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyMsg" style="display:none;">No heroes match that search or filter.</div>
+
+  <div class="disclaimer">
+    ✓ Verified heroes have their skill numbers pulled directly from in-game screenshots. Unmarked heroes are based on community tier-list guides and may need a closer look. Either way, real performance still depends on your hero level, gear, and pet.
+  </div>
+  </div><!-- /cardsView -->
+
+  <div id="teamsView" style="display:none;">
+    <div id="genCards"></div>
+    <div class="teamsNote">
+      Formation shown as Infantry / Lancer / Marksman troop ratio for that rally. "Best" needs the strongest investment, "Alternative" is a close second, "F2P" works without premium heroes. New generations replace old picks fast — recheck this list once your state unlocks a new hero tier.
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalWrap">
+  <div class="modal">
+    <button class="closeM" id="closeM">✕</button>
+    <h2>Hero Comparison</h2>
+    <div class="cmpHeads" id="cmpHeads"></div>
+    <div id="compareBody"></div>
+  </div>
+</div>
+
+<script>
+function getState(){
+  const p = new URLSearchParams(location.search);
+  return p.get('s') || localStorage.getItem('phx_state') || '';
+}
+(function(){
+  const s = getState();
+  if(s){ document.getElementById('backLink').href = 'phoenix-tools.html?s='+encodeURIComponent(s); }
+})();
+
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(){
+  const dark = localStorage.getItem('phx_heroes_dark') === '1';
+  document.body.classList.toggle('dark', dark);
+  themeBtn.textContent = dark ? '☀️' : '🌙';
+}
+themeBtn.onclick = ()=>{
+  const cur = localStorage.getItem('phx_heroes_dark') === '1';
+  localStorage.setItem('phx_heroes_dark', cur ? '0' : '1');
+  applyTheme();
+};
+applyTheme();
+
+const HEROES = [
+{name:"Jeronimo", gen:1, cls:"inf", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"3-Hit Combo Strike", value:224, unit:"% ATK per hit x3", note:"Launches enemies airborne first"},
+ blurb:"Launches enemies airborne and lands three sword strikes at 224% ATK each. The backbone Infantry rally leader from Gen 1 through Gen 8."},
+{name:"Molly", gen:1, cls:"lan", rarity:"SR", access:"f2p", roles:["bear-trap","arena","exploration"], verified:true,
+ stat:{type:"dmg", label:"Super Snowball", value:252, unit:"% AoE", note:"Also Freezes for 1.5s"},
+ blurb:"Drops a giant snowball for 252% AoE damage and freezes survivors for 1.5s. A reliable AoE + control Lancer pick for Gen 1-2 Bear Trap."},
+{name:"Sergey", gen:1, cls:"inf", rarity:"SR", access:"f2p", roles:["rally-join","bear-trap"], verified:true,
+ stat:{type:"buff", label:"Defender's Edge", value:20, unit:"% less dmg taken (team)", note:"Active: Shield Bash deals 280% AoE + knockback"},
+ blurb:"Passively cuts damage taken by all your troops 20%, and can shield-bash for 280% AoE with knockback. Reliable early frontline pick."},
+{name:"Flint", gen:2, cls:"inf", rarity:"SSR", access:"f2p", roles:["rally-join","bear-trap","arena"], verified:true,
+ stat:{type:"dmg", label:"Vengeful Fire", value:84, unit:"% ATK per 0.5s (DoT)", note:"Target takes +30% more damage for 2s"},
+ blurb:"A flamethrower DoT ticking 84% ATK every 0.5s, and the target takes 30% more damage for 2s. A staple for defense and rallying."},
+{name:"Alonso", gen:2, cls:"mar", rarity:"SSR", access:"p2p", roles:["bear-trap","arena","exploration"], verified:true,
+ stat:{type:"dmg", label:"Trap Net", value:280, unit:"% AoE", note:"Roots enemies for 1.5s"},
+ blurb:"Throws a net for 280% AoE damage and roots enemies for 1.5s. MVP for Bear Trap and Exploration bosses thanks to the lockdown."},
+{name:"Mia", gen:3, cls:"lan", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Fated End", value:378, unit:"% single-target", note:"Random: -20% target ATK (2s) or 1.5s stun"},
+ blurb:"A tarot card throw for 378% single-target damage, with a chance to cut the target's Attack or stun it. Elite Lancer pick since Gen 3."},
+{name:"Logan", gen:3, cls:"inf", rarity:"SSR", access:"f2p", roles:["rally-join","arena","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Fists of Destruction", value:168, unit:"% single-target", note:"-50% target attack speed for 4s"},
+ blurb:"Smashes the ground for 168% damage and slows the target's attack speed 50% for 4s. A real brick wall with actual lockdown."},
+{name:"Gregory", gen:3, cls:"inf", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Virtuoso Gale", value:224, unit:"% AoE", note:"Stuns everyone hit for 2s"},
+ blurb:"Summons a falling cage for 224% AoE damage and stuns everyone caught for 2s. A Gen 3 tanking-and-control leader that still scales well."},
+{name:"Jessie", gen:4, cls:"lan", rarity:"SR", access:"f2p", roles:["rally-join","bear-trap"], verified:true,
+ stat:{type:"buff", label:"Weapons Cache", value:25, unit:"% more damage (all troops)", note:""},
+ blurb:"Passively boosts the damage of every troop type 25%. Every serious rally joiner should have her maxed for Bear Hunts."},
+{name:"Patrick", gen:4, cls:"inf", rarity:"SR", access:"f2p", roles:["rally-join","heal"], verified:true,
+ stat:{type:"heal", label:"BBQ Feast", value:280, unit:"% of ATK healed (all heroes)", note:"Plus +7% Attack for 4s"},
+ blurb:"Instantly restores 280% of Attack as Health to every allied hero, plus a small Attack buff. Best hero for wall/garrison defense."},
+{name:"Bahiti", gen:4, cls:"mar", rarity:"SR", access:"f2p", roles:["rally-join","bear-trap"], verified:true,
+ stat:{type:"buff", label:"Sixth Sense", value:20, unit:"% less dmg taken (team)", note:""},
+ blurb:"Passively reduces damage taken by all your troops 20%. Rounds out Best and F2P Bear Trap comps through Gen 3."},
+{name:"Jasser", gen:5, cls:"mar", rarity:"SR", access:"f2p", roles:["rally-join","bear-trap"], verified:true,
+ stat:{type:"buff", label:"Tactical Genius", value:25, unit:"% more damage (all troops)", note:"Also +15% city Research Speed"},
+ blurb:"Boosts all-troop damage 25% in battle and Research Speed 15% at home. Big value just for joining rallies regularly."},
+{name:"Hector", gen:5, cls:"inf", rarity:"SR", access:"f2p", roles:["rally-join","exploration","bear-trap"], verified:true,
+ stat:{type:"buff", label:"Whirlwind Blade", value:120, unit:"% self Attack Speed", note:"Immune to Freeze/Stun/control for 4s"},
+ blurb:"Buffs his own attack speed 120% and becomes immune to all control for 4s. An unkillable DPS anchor for F2P Bear Trap from Gen 5."},
+{name:"Renee", gen:6, cls:"lan", rarity:"SSR", access:"p2p", roles:["arena","exploration","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Illusion Cloud", value:140, unit:"% AoE", note:"Confuses survivors 1s - they attack anyone nearby"},
+ blurb:"Pops a colorful ball for 140% AoE damage and confuses survivors for 1s. Slots into the Gen 6 F2P Bear Trap comp."},
+{name:"Wu Ming", gen:6, cls:"lan", rarity:"SSR", access:"p2p", roles:["exploration","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Cyclone Barrier", value:140, unit:"% AoE", note:"2s invulnerability while channeling"},
+ blurb:"Spins his staff for 140% AoE damage and goes invulnerable for 2s while doing it. Strong Exploration/Expedition support caster."},
+{name:"Gordon", gen:7, cls:"lan", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:false,
+ stat:{type:"buff", label:"Poison Infusion", value:0, unit:"", note:"Boosts Lancer troop damage - exact % not yet screenshotted"},
+ blurb:"Poison-based Lancer that significantly boosts Lancer troop damage. A strong Bear Hunt rally leader, but hard to unlock F2P."},
+{name:"Bradley", gen:7, cls:"mar", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:false,
+ stat:{type:"buff", label:"Global Attack Boost", value:25, unit:"% Attack (all troops, community-reported)", note:""},
+ blurb:"A global 25% Attack buff that lifts the whole rally. The must-get Marksman of his generation."},
+{name:"Gatot", gen:8, cls:"inf", rarity:"SSR", access:"p2p", roles:["rally-join","arena"], verified:false,
+ stat:{type:"buff", label:"Fortified Stance", value:0, unit:"", note:"Very high survivability - exact % not yet screenshotted"},
+ blurb:"Nearly unkillable. A reliable frontline tank that will carry you for months once built."},
+{name:"Fred", gen:9, cls:"lan", rarity:"SSR", access:"p2p", roles:["rally-join"], verified:false,
+ stat:{type:"buff", label:"Modern Lancer Kit", value:0, unit:"", note:"Exact numbers not yet screenshotted"},
+ blurb:"A modern upgrade for an aging Lancer slot, with damage and utility that keep pace with newer generations."},
+{name:"Magnus", gen:9, cls:"inf", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:false,
+ stat:{type:"buff", label:"Percentage Scaling Kit", value:0, unit:"", note:"Stun+buff+tank kit - exact % not yet screenshotted"},
+ blurb:"Stun, buffs, and tanking, with percentage-based abilities that keep their value across many generations."},
+{name:"Blanchette", gen:10, cls:"mar", rarity:"SSR", access:"f2p", roles:["rally-join","bear-trap","arena"], verified:false,
+ stat:{type:"dmg", label:"F2P Nuke Kit", value:0, unit:"", note:"Exact numbers not yet screenshotted"},
+ blurb:"F2P damage powerhouse available through the Lucky Wheel - stays competitive for 3+ generations."},
+{name:"Freya", gen:10, cls:"lan", rarity:"SSR", access:"p2p", roles:["rally-lead"], verified:false,
+ stat:{type:"buff", label:"Scaling Support Kit", value:0, unit:"", note:"Exact numbers not yet screenshotted"},
+ blurb:"Wild scaling on both damage and support. Excellent, but Hall-of-Heroes investment makes her better suited to spenders."},
+{name:"Eleonora", gen:11, cls:"inf", rarity:"SSR", access:"f2p", roles:["rally-join","bear-trap","arena"], verified:false,
+ stat:{type:"buff", label:"Reflect Shield Kit", value:0, unit:"", note:"Exact numbers not yet screenshotted"},
+ blurb:"Damage-reflecting shield plus a team buff that triggers every 5 infantry attacks. Viable well past Gen 13."},
+{name:"Natalia", gen:2, cls:"lan", rarity:"SR", access:"f2p", roles:["exploration","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Beast Charge", value:224, unit:"% AoE", note:"Stuns for 1s - mounted on her polar bear"},
+ blurb:"Her bear slams the ground for 224% AoE damage and stuns for 1s. Actually out-performs Jeronimo in Gen 3 Bear Trap comps."},
+{name:"Philly", gen:2, cls:"lan", rarity:"SR", access:"p2p", roles:["bear-trap","heal"], verified:true,
+ stat:{type:"buff", label:"First Aid", value:15, unit:"% ATK/DEF (team)", note:"Plus instant heal 280% of ATK to all heroes"},
+ blurb:"Buffs Attack and Defense for every troop, then heals all allied heroes for 280% of Attack. Gen 2's support anchor."},
+{name:"Reina", gen:4, cls:"lan", rarity:"SSR", access:"p2p", roles:["rally-lead","bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Phantom Assault", value:420, unit:"% AoE (ambush from behind)", note:""},
+ blurb:"Conjures an illusion that ambushes the backline for a massive 420% AoE hit - the hardest-hitting Lancer nuke confirmed here."},
+{name:"Gwen", gen:5, cls:"mar", rarity:"SSR", access:"p2p", roles:["bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Barrage", value:252, unit:"% AoE (backline first)", note:"-50% target attack speed for 2s"},
+ blurb:"Rains a barrage on the backline for 252% AoE damage and slows the target's attack speed 50%. The upgrade that retires Alonso."},
+{name:"Wayne", gen:6, cls:"mar", rarity:"SR", access:"f2p", roles:["bear-trap"], verified:true,
+ stat:{type:"dmg", label:"Hurricane Rebound", value:140, unit:"% AoE (there and back)", note:""},
+ blurb:"A boomerang that hits everything in a line, both ways, for 140% AoE. Needs no rally widget yet outperforms peers."},
+{name:"Sonya", gen:8, cls:"lan", rarity:"SSR", access:"p2p", roles:["bear-trap"], verified:false,
+ stat:{type:"buff", label:"Lancer-Only Kit", value:0, unit:"", note:"Exact numbers not yet screenshotted"},
+ blurb:"Lancer alternative to Mia - her kit only benefits Lancer troops, so she fits only heavy-Lancer formations."},
+{name:"Lynn", gen:4, cls:"sup", rarity:"SR", access:"f2p", roles:["bear-trap","heal"], verified:true,
+ stat:{type:"buff", label:"Sidrak's Hymn", value:7, unit:"% Attack (team) + full cleanse", note:"Removes all debuffs, 3-5s control-immunity"},
+ blurb:"Strips every debuff from your troops, grants a few seconds of control-immunity, and adds a small Attack buff. Keeps F2P comps alive Gen 4-6."},
+{name:"Seo-yoon", gen:7, cls:"sup", rarity:"SSR", access:"p2p", roles:["rally-join","bear-trap","heal"], verified:true,
+ stat:{type:"buff", label:"Mobilization Rhythm", value:25, unit:"% Attack (all troops)", note:"Plus +50% infirmary healing speed"},
+ blurb:"Drums up morale for a flat 25% Attack buff to every troop, and speeds hospital healing 50%. A genuinely strong rally-join support."},
+{name:"Ling Xue", gen:9, cls:"lan", rarity:"SR", access:"f2p", roles:["exploration"], verified:true,
+ stat:{type:"econ", label:"Total Control", value:20, unit:"% Training Speed", note:""},
+ blurb:"Not a combat rally pick - her Total Control skill boosts Training Speed 20%, an economy hero rather than a Bear Trap one."},
+{name:"Norah", gen:8, cls:"mar", rarity:"SSR", access:"p2p", roles:["bear-trap","rally-join"], verified:true,
+ stat:{type:"buff", label:"Combined Arms", value:15, unit:"% dmg dealt / less dmg taken", note:"Applies to Infantry and Marksman only"},
+ blurb:"Boosts damage dealt and cuts damage taken 15% for Infantry and Marksman specifically. Great if your comp leans those two troop types."},
+{name:"Zinman", gen:5, cls:"gat", rarity:"SR", access:"f2p", roles:["resource"], verified:true,
+ stat:{type:"econ", label:"Bastion Master", value:15, unit:"% build cost cut / speed", note:""},
+ blurb:"Cuts basic-resource building costs 15% and speeds up building upgrades 15%. A pure economy hero, never a combat pick."},
+{name:"Lumak Bokan", gen:4, cls:"lan", rarity:"SR", access:"f2p", roles:["exploration"], verified:true,
+ stat:{type:"debuff", label:"Tactical Deception", value:20, unit:"% less damage from enemy troops", note:"Plus +100% Hunting march speed"},
+ blurb:"Cuts all incoming enemy troop damage 20% and doubles Hunting march speed. A defensive/exploration specialist, not a Bear Trap nuke."},
+{name:"Ahmose", gen:4, cls:"lan", rarity:"SSR", access:"p2p", roles:["exploration"], verified:true,
+ stat:{type:"buff", label:"Cthugha's Ward", value:50, unit:"% less damage dealt by nearby allies", note:"2s invulnerable + CC-immune while active - a defensive sacrifice skill"},
+ blurb:"Raises an unbreakable shield for 2s, but it cuts nearby allied troops' damage output 50% during that window. A niche defensive tool."},
+{name:"Cloris", gen:1, cls:"gat", rarity:"R", access:"f2p", roles:["resource"], verified:true,
+ stat:{type:"econ", label:"Apex Predator", value:25, unit:"% Meat gathering speed", note:""},
+ blurb:"Dedicated meat gatherer - boosts meat gathering speed 25% and Hunting Cabin output 25%."},
+{name:"Eugene", gen:1, cls:"gat", rarity:"R", access:"f2p", roles:["resource"], verified:true,
+ stat:{type:"econ", label:"Forest Heir", value:25, unit:"% Wood gathering speed", note:""},
+ blurb:"Dedicated wood gatherer - boosts wood gathering speed 25% and Sawmill output 25%."},
+{name:"Charlie", gen:1, cls:"gat", rarity:"R", access:"f2p", roles:["resource"], verified:true,
+ stat:{type:"econ", label:"Coal Digger", value:25, unit:"% Coal gathering speed", note:""},
+ blurb:"Dedicated coal gatherer - boosts coal gathering speed 25% and Coal Mine output 25%."},
+{name:"Smith", gen:1, cls:"gat", rarity:"R", access:"f2p", roles:["resource"], verified:true,
+ stat:{type:"econ", label:"Polished Iron", value:25, unit:"% Iron gathering speed", note:""},
+ blurb:"Dedicated iron gatherer - boosts iron gathering speed 25% and Iron Mine output 25%."},
+{name:"Gina", gen:2, cls:"mar", rarity:"SR", access:"f2p", roles:["exploration"], verified:true,
+ stat:{type:"econ", label:"Endurance Training", value:20, unit:"% less Vigor cost", note:""},
+ blurb:"Cuts the Vigor cost of exploration actions 20%. A quality-of-life economy hero, not a combat pick."},
+];
+
+const CLASS_ICON = {inf:"🛡️", lan:"🔱", mar:"🏹", gat:"⛏️", sup:"🎵"};
+const CLASS_LABEL = {inf:"Infantry", lan:"Lancer", mar:"Marksman", gat:"Gatherer", sup:"Support"};
+const ROLE_LABEL = {
+  "rally-lead":"Rally Lead", "rally-join":"Rally Join", "bear-trap":"Bear Trap",
+  "resource":"Resource", "arena":"Arena", "exploration":"Exploration", "heal":"Healer"
+};
+const STAT_ICON = {dmg:"⚔️", buff:"💪", debuff:"🌀", econ:"⛏️", heal:"➕"};
+const STAT_MAX = {dmg:450, buff:30, debuff:30, econ:30, heal:300};
+const FILTERS = [
+  {key:"all", label:"All"},
+  {key:"rally-lead", label:"🚩 Rally Lead"},
+  {key:"rally-join", label:"⚔️ Rally Join"},
+  {key:"bear-trap", label:"🐻 Bear Trap"},
+  {key:"resource", label:"⛏️ Resource"},
+  {key:"heal", label:"➕ Healer"},
+  {key:"f2p", label:"🆓 F2P Friendly"},
+  {key:"p2p", label:"💎 Premium"},
+];
+
+let activeFilter = "all";
+let searchTerm = "";
+let verifiedOnly = false;
+let compareSet = [];
+
+const chipsEl = document.getElementById('chips');
+FILTERS.forEach(f=>{
+  const c = document.createElement('div');
+  c.className = 'chip' + (f.key===activeFilter ? ' on' : '');
+  c.textContent = f.label;
+  c.dataset.key = f.key;
+  c.onclick = ()=>{ activeFilter = f.key; render(); };
+  chipsEl.appendChild(c);
+});
+const verifyChip = document.createElement('div');
+verifyChip.className = 'chip verifyToggle';
+verifyChip.textContent = 'In-game verified only';
+verifyChip.onclick = ()=>{ verifiedOnly = !verifiedOnly; verifyChip.classList.toggle('on', verifiedOnly); render(); };
+chipsEl.appendChild(verifyChip);
+
+document.getElementById('search').addEventListener('input', e=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  render();
+});
+
+function matches(h){
+  const roleOk = activeFilter==="all" ? true
+    : activeFilter==="f2p" ? h.access==="f2p"
+    : activeFilter==="p2p" ? h.access==="p2p"
+    : h.roles.includes(activeFilter);
+  const searchOk = !searchTerm || h.name.toLowerCase().includes(searchTerm);
+  const verOk = !verifiedOnly || h.verified;
+  return roleOk && searchOk && verOk;
+}
+
+function bearTrapGens(name){
+  const gens = [];
+  BEAR_TEAMS.forEach(g=>{
+    [g.best,g.alt,g.f2p].forEach(v=>{
+      if(v.h.includes(name) && !gens.includes(g.gen)) gens.push(g.gen);
+    });
+  });
+  return gens;
+}
+
+function statChipHTML(stat){
+  if(!stat || !stat.label) return '';
+  const icon = STAT_ICON[stat.type] || '📊';
+  const valTxt = stat.value ? (stat.value + (stat.unit ? ' ' + stat.unit : '')) : (stat.unit || 'See notes');
+  return '<div class="statChip"><div class="ic">'+icon+'</div><div class="txt"><div class="lbl">'+stat.label+'</div><div class="val">'+valTxt+'</div>'+(stat.note ? '<div class="note">'+stat.note+'</div>' : '')+'</div></div>';
+}
+
+function heroCard(h){
+  const div = document.createElement('div');
+  div.className = 'card cls-'+h.cls + (compareSet.includes(h.name)?' cmp-on':'');
+  const roleTags = h.roles.map(r=>'<span class="tag">'+ROLE_LABEL[r]+'</span>').join('');
+  const gens = bearTrapGens(h.name);
+  const bearTag = gens.length ? '<span class="tag bear">Gen '+gens.join(', ')+' Bear Trap pick</span>' : '';
+  div.innerHTML =
+    '<div class="head"><div class="avatar">'+CLASS_ICON[h.cls]+'<span class="gen">G'+h.gen+'</span></div>'+
+    '<div><p class="name">'+h.name+' <span class="genpill">S'+h.gen+'</span></p>'+
+    '<div class="sub">'+CLASS_LABEL[h.cls]+'</div>'+
+    '<span class="rarity r-'+h.rarity+'">'+h.rarity+'</span>'+
+    (h.verified ? '<div class="verifiedTag">Verified in-game</div>' : '')+
+    '</div></div>'+
+    '<div class="blurb">'+h.blurb+'</div>'+
+    statChipHTML(h.stat)+
+    '<div class="tags">'+roleTags+bearTag+'<span class="tag '+h.access+'">'+(h.access==='f2p'?'F2P Friendly':'Premium')+'</span></div>'+
+    '<button class="cmpToggle '+(compareSet.includes(h.name)?'on':'')+'">'+(compareSet.includes(h.name)?'Selected to compare':'+ Add to compare')+'</button>';
+  div.querySelector('.cmpToggle').onclick = ()=> toggleCompare(h.name);
+  return div;
+}
+
+function toggleCompare(name){
+  const idx = compareSet.indexOf(name);
+  if(idx>-1){ compareSet.splice(idx,1); }
+  else{
+    if(compareSet.length>=2) compareSet.shift();
+    compareSet.push(name);
+  }
+  render();
+}
+
+function render(){
+  document.querySelectorAll('.chip:not(.verifyToggle)').forEach(c=>c.classList.toggle('on', c.dataset.key===activeFilter));
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const list = HEROES.filter(matches);
+  document.getElementById('emptyMsg').style.display = list.length ? 'none' : 'block';
+  list.forEach(h=> grid.appendChild(heroCard(h)));
+
+  const bar = document.getElementById('compareBar');
+  const slots = document.getElementById('cmpSlots');
+  if(compareSet.length){
+    bar.classList.add('show');
+    slots.innerHTML = compareSet.map(n=>'<div class="slot">'+n+' <button onclick="toggleCompare(\''+n+'\')">x</button></div>').join('');
+  } else {
+    bar.classList.remove('show');
+  }
+  document.getElementById('goCompare').style.opacity = compareSet.length===2 ? '1' : '.4';
+  document.getElementById('goCompare').style.pointerEvents = compareSet.length===2 ? 'auto' : 'none';
+}
+
+const modalWrap = document.getElementById('modalWrap');
+document.getElementById('closeM').onclick = ()=> modalWrap.classList.remove('show');
+modalWrap.onclick = (e)=>{ if(e.target===modalWrap) modalWrap.classList.remove('show'); };
+
+document.getElementById('goCompare').onclick = ()=>{
+  if(compareSet.length!==2) return;
+  const list = compareSet.map(n=> HEROES.find(h=>h.name===n));
+  openCompare(list[0], list[1]);
+};
+
+function statCard(h){
+  const s = h.stat;
+  const icon = STAT_ICON[s.type] || '📊';
+  const bar = s.value ? '<div class="barTrack"><div class="barFill" style="width:'+Math.min(100, s.value/STAT_MAX[s.type]*100)+'%; background:var(--acc);"></div></div>' : '';
+  return '<div class="statCompareCard"><div class="who">'+h.name+'</div><div class="lab">'+icon+' '+s.label+'</div>'+
+    '<div class="val">'+(s.value ? s.value+' '+s.unit : (s.unit || 'No numeric data yet'))+'</div>'+bar+
+    (s.note ? '<div class="note">'+s.note+'</div>' : '')+'</div>';
+}
+
+function openCompare(a,b){
+  document.getElementById('cmpHeads').innerHTML = [a,b].map(h=>
+    '<div class="cmpHead"><div class="avatar cls-'+h.cls+'" style="margin:0 auto 6px;">'+CLASS_ICON[h.cls]+'<span class="gen">G'+h.gen+'</span></div>'+
+    '<b>'+h.name+'</b><span class="rarity r-'+h.rarity+'">'+h.rarity+'</span></div>').join('');
+
+  const body = document.getElementById('compareBody');
+  let html = '';
+  if(a.stat.type === b.stat.type && a.stat.value && b.stat.value){
+    const max = STAT_MAX[a.stat.type];
+    html += '<div class="compareNote">Both heroes share a comparable skill type - scaled on the same bar for a fair read.</div><div class="statCompareGrid">';
+    [a,b].forEach(h=>{
+      html += '<div class="statCompareCard"><div class="who">'+h.name+' - '+STAT_ICON[h.stat.type]+' '+h.stat.label+'</div>'+
+        '<div class="val">'+h.stat.value+' '+h.stat.unit+'</div>'+
+        '<div class="barTrack"><div class="barFill" style="width:'+Math.min(100,h.stat.value/max*100)+'%; background:var(--acc);"></div></div>'+
+        (h.stat.note ? '<div class="note">'+h.stat.note+'</div>' : '')+'</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="compareNote">These two use different kinds of skills, so a single bar would be misleading - here are both real numbers side by side.</div>';
+    html += '<div class="statCompareGrid">'+statCard(a)+statCard(b)+'</div>';
+  }
+  html += '<div class="compareNote" style="margin-top:10px;">'+a.name+': '+a.blurb+'</div><div class="compareNote">'+b.name+': '+b.blurb+'</div>';
+  body.innerHTML = html;
+
+  modalWrap.classList.add('show');
+}
+
+const BEAR_TEAMS = [
+  {gen:1, best:{h:["Jeronimo","Molly","Bahiti"], f:"3/3/4"}, alt:{h:["Natalia","Molly","Bahiti"], f:"2/4/4"}, f2p:{h:["Sergey","Molly","Bahiti"], f:"3/3/4"}},
+  {gen:2, best:{h:["Jeronimo","Philly","Alonso"], f:"2/3/5"}, alt:{h:["Natalia","Molly","Alonso"], f:"2/3/5"}, f2p:{h:["Flint","Molly","Bahiti"], f:"3/3/4"}},
+  {gen:3, best:{h:["Natalia","Mia","Alonso"], f:"1/2/7"}, alt:{h:["Jeronimo","Mia","Alonso"], f:"2/3/5"}, f2p:{h:["Flint","Mia","Bahiti"], f:"2/4/4"}},
+  {gen:4, best:{h:["Jeronimo","Reina","Alonso"], f:"1/3/6"}, alt:{h:["Jeronimo","Mia","Lynn"], f:"1/1/8"}, f2p:{h:["Flint","Mia","Lynn"], f:"1/1/8"}},
+  {gen:5, best:{h:["Jeronimo","Reina","Gwen"], f:"1/3/6"}, alt:{h:["Hector","Mia","Gwen"], f:"1/3/6"}, f2p:{h:["Hector","Mia","Lynn"], f:"1/1/8"}},
+  {gen:6, best:{h:["Jeronimo","Reina","Wayne"], f:"1/3/6"}, alt:{h:["Jeronimo","Mia","Wayne"], f:"1/1/8"}, f2p:{h:["Hector","Renee","Lynn"], f:"1/2/7"}},
+  {gen:7, best:{h:["Jeronimo","Mia","Bradley"], f:"1/1/8"}, alt:{h:["Jeronimo","Reina","Wayne"], f:"1/3/6"}, f2p:{h:["Hector","Mia","Bradley"], f:"1/1/8"}},
+  {gen:8, best:{h:["Jeronimo","Mia","Bradley"], f:"1/1/8"}, alt:{h:["Jeronimo","Sonya","Bradley"], f:"1/3/6"}, f2p:{h:["Hector","Mia","Bradley"], f:"1/1/8"}},
+];
+
+function renderTeams(){
+  const wrap = document.getElementById('genCards');
+  wrap.innerHTML = BEAR_TEAMS.map(g=>
+    '<div class="genCard"><p class="genTitle">Generation '+g.gen+' <span>Bear Trap start rally</span></p>'+
+    '<div class="compRow best"><div class="compLabel">Best</div><div class="compHeroes">'+g.best.h.join(' + ')+'</div><div class="compFormation">'+g.best.f+'</div></div>'+
+    '<div class="compRow alt"><div class="compLabel">Alternative</div><div class="compHeroes">'+g.alt.h.join(' + ')+'</div><div class="compFormation">'+g.alt.f+'</div></div>'+
+    '<div class="compRow f2p"><div class="compLabel">F2P</div><div class="compHeroes">'+g.f2p.h.join(' + ')+'</div><div class="compFormation">'+g.f2p.f+'</div></div>'+
+    '</div>').join('');
+}
+renderTeams();
+render();
+
+const tabCards = document.getElementById('tabCards');
+const tabTeams = document.getElementById('tabTeams');
+const cardsView = document.getElementById('cardsView');
+const teamsView = document.getElementById('teamsView');
+tabCards.onclick = ()=>{
+  tabCards.classList.add('on'); tabTeams.classList.remove('on');
+  cardsView.style.display=''; teamsView.style.display='none';
+};
+tabTeams.onclick = ()=>{
+  tabTeams.classList.add('on'); tabCards.classList.remove('on');
+  cardsView.style.display='none'; teamsView.style.display='';
+};
+</script>
+</body>
+</html>
