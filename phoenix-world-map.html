@@ -641,11 +641,33 @@ function loadPlan(d){
     clampView(); draw();
   }catch(e){toast('Could not load plan');}
 }
+async function resolveAccessLevel(){
+  const {data:{session}} = await _sb.auth.getSession();
+  if(!session) return {level:'demo', signedIn:false};
+  const {data:rows} = await _sb.from('players').select('role,alliance_id').eq('owner',session.user.id);
+  const isAdmin=(rows||[]).some(p=>p.role==='admin');
+  if(isAdmin) return {level:'full', signedIn:true, user:session.user};
+  const leaderRow=(rows||[]).find(p=>(p.role==='r4'||p.role==='r5')&&p.alliance_id);
+  if(!leaderRow) return {level:'demo', signedIn:true, user:session.user};
+  const {data:al}=await _sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle();
+  const tag=((al&&al.tag)||'').toUpperCase();
+  if(tag.indexOf('PXR')===0) return {level:'full', signedIn:true, user:session.user, tag};
+  const {data:sub}=await _sb.from('alliance_subscriptions').select('paid_through').eq('alliance_id',al.id).maybeSingle();
+  const active = sub && new Date(sub.paid_through) > new Date();
+  return {level: active?'full':'demo', signedIn:true, user:session.user, tag};
+}
+
 async function initPlans(){
   const note=document.getElementById('planAuthNote'), area=document.getElementById('planArea');
   if(!_sb){note.style.display='block';note.textContent='Saving unavailable here.';area.style.display='none';return;}
-  const {data:{session}}=await _sb.auth.getSession();
-  if(!session){note.style.display='block';note.innerHTML='Log in on the Phoenix app to save world plans.';area.style.display='none';return;}
+  const access = await resolveAccessLevel();
+  if(!access.signedIn){note.style.display='block';note.innerHTML='Log in on the Phoenix app to save world plans.';area.style.display='none';return;}
+  if(access.level!=='full'){
+    note.style.display='block';
+    note.innerHTML='🔒 Saving world plans is a PXR feature. Your alliance can unlock it with a <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--ice);font-weight:700;">Ko-fi membership</a> — ask your R4/R5. You can still explore the map freely, it just won\'t be saved.';
+    area.style.display='none';
+    return;
+  }
   note.style.display='none';area.style.display='block'; refreshPlans();
 }
 async function refreshPlans(){

@@ -81,12 +81,10 @@
 </head>
 <body>
 
-<div id="phxGate" style="position:fixed;inset:0;z-index:99999;background:#0a1420;color:#eaf3f9;display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Inter',sans-serif;padding:28px;">
-  <div style="max-width:340px;">
-    <div style="font-size:2.2rem;margin-bottom:12px;">🔒</div>
-    <div id="phxGateMsg" style="font-size:.95rem;line-height:1.55;color:#86a0b7;">Checking access…</div>
-    <a href="phoenix-tools.html" style="display:inline-block;margin-top:18px;color:#7fd9ee;font-family:'Rajdhani';font-weight:700;font-size:.85rem;text-decoration:none;">◂ Back to Tools</a>
-  </div>
+<div id="phxDemoBanner" style="display:none;background:rgba(127,217,238,.08);border:1px solid rgba(127,217,238,.25);
+  color:#7fd9ee;font-size:.78rem;padding:10px 14px;border-radius:10px;margin:0 0 14px;text-align:center;line-height:1.5;">
+  🔒 You're using the free calculator. Sharing a live countdown link with your alliance is a PXR feature —
+  <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">subscribe on Ko-fi</a> to unlock it.
 </div>
 
 <div class="wrap">
@@ -139,13 +137,13 @@
 </div>
 
 <script>
-/* ── ACCESS GATE: admin (Hestelae/TMQ) en cualquier estado,
-   o R4/R5 pero SOLO si su alianza es PXR (la tuya) ─────────────── */
+/* ── ACCESS: everyone can use the calculator (demo). Only PXR, or another
+   alliance's active Ko-fi subscription, unlocks the shareable countdown link
+   (window.__raSb + window.__raUid — saveAndShare() already no-ops without them). ── */
 (function(){
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  function msg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
-  function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);}
+  function showDemoBanner(){var b=document.getElementById('phxDemoBanner');if(b)b.style.display='block';}
   function getState(){
     var q=new URLSearchParams(location.search).get('s');
     if(q) return q;
@@ -153,27 +151,29 @@
     return '3139';
   }
   try{
-    if(!(window.supabase&&window.supabase.createClient)){msg('Could not load. Reload the page.');return;}
+    if(!(window.supabase&&window.supabase.createClient)){showDemoBanner();return;}
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-    window.__raSb=sb; // reused later to save/share the sync
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
-      if(!s){msg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
-      window.__raUid=s.user.id;
+      if(!s){showDemoBanner();return;}
       sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
         var rows=res.data||[];
         var isAdmin=rows.some(function(p){return p.role==='admin';});
-        if(isAdmin){unlock();return;}
+        function grant(){ window.__raSb=sb; window.__raUid=s.user.id; }
+        if(isAdmin){ grant(); return; }
         var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
-        if(!leaderRow){msg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
-        sb.from('alliances').select('tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
+        if(!leaderRow){ showDemoBanner(); return; } // regular members: demo only
+        sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
           var tag=(ar.data&&ar.data.tag||'').toUpperCase();
-          if(tag.indexOf('PXR')===0){unlock();}
-          else{msg('🔒 This tool is only for PXR leaders.');}
-        }).catch(function(){msg('Error checking your alliance.');});
-      }).catch(function(){msg('Error checking permissions.');});
-    }).catch(function(){msg('Session error.');});
-  }catch(e){msg('Access error.');}
+          if(tag.indexOf('PXR')===0){ grant(); return; }
+          sb.from('alliance_subscriptions').select('paid_through').eq('alliance_id',ar.data.id).maybeSingle().then(function(sr){
+            var active = sr.data && new Date(sr.data.paid_through) > new Date();
+            if(active){ grant(); } else { showDemoBanner(); }
+          }).catch(function(){ showDemoBanner(); });
+        }).catch(function(){ showDemoBanner(); });
+      }).catch(function(){ showDemoBanner(); });
+    }).catch(function(){ showDemoBanner(); });
+  }catch(e){ showDemoBanner(); }
 })();
 
 /* ── State-aware back link ───────────────────────────────────── */

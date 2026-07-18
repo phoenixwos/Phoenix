@@ -198,6 +198,12 @@ body{padding-bottom:72px !important;}
       <div class="admin-stat"><div class="n" id="ovPending">–</div><div class="l">⏳ Pending</div></div>
     </div>
 
+    <!-- KO-FI SUBSCRIPTIONS NEEDING MANUAL MATCH (full admins only) -->
+    <div id="subReviewBox" style="display:none;margin-bottom:14px;padding:14px;background:linear-gradient(180deg,#fff,#fef6ea);border:2px solid var(--panel-edge);border-radius:14px;">
+      <div style="font-family:'Baloo 2';font-weight:800;font-size:.95rem;color:#c2470f;margin-bottom:8px;">☕ Ko-fi payments awaiting a match</div>
+      <div id="subReviewList" style="font-size:.82rem;color:var(--ink-soft);">Loading…</div>
+    </div>
+
     <!-- EDITOR TABS -->
     <div class="etabbar">
       <span class="etab-group" id="grpAlliance">🏰 ALLIANCE</span>
@@ -1133,6 +1139,45 @@ async function refreshPlatformOverview(){
     $('#ovRegistered').textContent=reg??'–';
     $('#ovPending').textContent=pend??'–';
   }catch(e){console.warn('platformOverview failed:',e);}
+  refreshSubReview();
+}
+
+// ── KO-FI: payments the webhook couldn't auto-match to an alliance tag ──
+async function refreshSubReview(){
+  const box=$('#subReviewBox'), list=$('#subReviewList');
+  if(!box||!isStateAdmin)return;
+  box.style.display='block';
+  const {data,error}=await sb.from('subscription_review_needed').select('*').eq('resolved',false).order('created_at',{ascending:false});
+  if(error){list.textContent='Could not load.';return;}
+  if(!data||!data.length){list.innerHTML='Nothing waiting — all Ko-fi payments matched automatically. 🎉';return;}
+  const {data:allAlliances}=await sb.from('alliances').select('id,tag,name').eq('state_id',(window.__ADMIN_STATE||'3139')).order('tag');
+  list.innerHTML='';
+  data.forEach(row=>{
+    const d=document.createElement('div');
+    d.style.cssText='padding:9px 0;border-top:1px solid var(--panel-edge);';
+    const opts=(allAlliances||[]).map(a=>`<option value="${a.id}">[${a.tag}] ${a.name}</option>`).join('');
+    d.innerHTML=`
+      <div style="font-weight:700;color:var(--ink);">${row.tier_name||'Membership'} — ${row.amount||''} ${row.payer_email?('· '+row.payer_email):''}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin:2px 0 6px;">Message: "${(row.kofi_message||'(none)').replace(/</g,'&lt;')}"</div>
+      <div style="display:flex;gap:6px;">
+        <select class="srAlliance" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--panel-edge);font-size:.78rem;"><option value="">Assign to alliance…</option>${opts}</select>
+        <button class="btn btn-fire srAssign" style="width:auto;padding:7px 12px;font-size:.78rem;">✓</button>
+      </div>`;
+    d.querySelector('.srAssign').addEventListener('click',async()=>{
+      const allianceId=d.querySelector('.srAlliance').value;
+      if(!allianceId){toast('Pick an alliance first');return;}
+      const paidThrough=new Date(Date.now()+35*24*60*60*1000).toISOString();
+      const {error:e1}=await sb.from('alliance_subscriptions').upsert({
+        alliance_id:allianceId, tier_name:row.tier_name||null, paid_through:paidThrough,
+        last_payer_email:row.payer_email||null, last_payment_at:new Date().toISOString()
+      },{onConflict:'alliance_id'});
+      if(e1){toast('Failed: '+e1.message);return;}
+      await sb.from('subscription_review_needed').update({resolved:true}).eq('id',row.id);
+      toast('Access granted ✓');
+      refreshSubReview();
+    });
+    list.appendChild(d);
+  });
 }
 
 // ── LOAD ALLIANCE INTO EDITOR ─────────────────────────────────
