@@ -98,6 +98,16 @@
     <div class="arr">›</div>
   </a>
 
+  <a class="card gold" id="cardTrackers" style="display:none;">
+    <div class="emoji">📊</div>
+    <div class="body">
+      <h3>Attendance Trackers</h3>
+      <p>Bear Trap damage &amp; attendance, plus Foundry/Canyon participation — see who shows up at a glance.</p>
+      <span class="tag leaders">PXR · R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
   <a class="card gold" id="cardCopyPaste" style="display:none;">
     <div class="emoji">📋</div>
     <div class="body">
@@ -201,7 +211,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
+  var dest={cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -224,7 +234,7 @@
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
   function show(ids){ ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; }); }
   function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem']); }        // any R4/R5/admin
-  function revealPXR(){ show(['grpPXR','cardHive','cardWorld','cardRally','cardCopyPaste']); }  // admin OR R4/R5 of PXR
+  function revealPXR(){ show(['grpPXR','cardHive','cardWorld','cardRally','cardCopyPaste','cardTrackers']); }  // admin OR R4/R5 of PXR
   try{
     if(!(window.supabase&&window.supabase.createClient)) return;
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);

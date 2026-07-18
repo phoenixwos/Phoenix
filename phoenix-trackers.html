@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Trackers — Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;
+    --good:#22c55e;--mid:#eab308;--bad:#ef4444;--fire:#ff7a2e;}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.35rem;margin:0 0 4px;}
+  .wrap{max-width:600px;margin:0 auto;}
+  header{text-align:center;margin-bottom:12px;}
+  .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
+  p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:10px;font-weight:600;}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .tab{flex:1;padding:10px 4px;border-radius:11px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.8rem;font-weight:700;cursor:pointer;text-align:center;}
+  .tab.on{border-color:var(--fire);color:var(--fire);background:rgba(255,122,60,.1);}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
+    border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .btn.fire{background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;}
+  input,select{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:9px;font-size:.85rem;width:100%;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:.74rem;color:var(--text-dim);margin-bottom:5px;}
+
+  .sumRow{display:flex;align-items:center;gap:8px;padding:9px 4px;border-top:1px solid var(--line);}
+  .sumRow:first-child{border-top:none;}
+  .sumName{flex:1;font-size:.85rem;font-weight:600;color:var(--text);}
+  .sumPct{width:52px;text-align:right;font-weight:800;font-size:.85rem;}
+  .barTrack{flex:1.4;height:8px;background:var(--bg-deep);border-radius:99px;overflow:hidden;}
+  .barFill{height:100%;border-radius:99px;}
+  .good{color:var(--good);} .mid{color:var(--mid);} .bad{color:var(--bad);}
+  .bgGood{background:var(--good);} .bgMid{background:var(--mid);} .bgBad{background:var(--bad);}
+  .sumDmg{width:78px;text-align:right;font-size:.72rem;color:var(--text-dim);}
+
+  .sessList{margin-top:6px;}
+  .sessItem{display:flex;align-items:center;gap:8px;padding:9px 4px;border-top:1px solid var(--line);font-size:.82rem;}
+  .sessItem:first-child{border-top:none;}
+  .sessItem b{color:var(--text);}
+  .sessItem .sp{flex:1;color:var(--text-dim);}
+  .sessItem button{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:7px;
+    padding:5px 9px;font-size:.72rem;cursor:pointer;}
+
+  .rosterRow{display:flex;align-items:center;gap:8px;padding:8px 2px;border-top:1px solid var(--line);}
+  .rosterRow:first-child{border-top:none;}
+  .rosterName{flex:1;font-size:.83rem;color:var(--text);}
+  .rosterRow input[type=checkbox]{width:19px;height:19px;flex:none;accent-color:var(--fire);}
+  .rosterRow input[type=number]{width:74px;flex:none;padding:6px 8px;font-size:.8rem;}
+  .rosterChk{display:flex;align-items:center;gap:4px;font-size:.68rem;color:var(--text-dim);flex:none;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d1b2a;
+    color:#fff;padding:10px 20px;border-radius:14px;font-weight:600;font-size:.85rem;opacity:0;transition:.25s;z-index:99;border:1px solid var(--line);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .instructions{font-size:.78rem;color:var(--text-dim);line-height:1.5;}
+
+  /* GATE */
+  #phxGate{position:fixed;inset:0;background:var(--bg-deep);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;}
+  #phxGateMsg{max-width:320px;text-align:center;color:var(--text-dim);font-size:.9rem;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="phxGate"><div id="phxGateMsg">Checking access…</div></div>
+
+<div class="wrap">
+  <a class="back" id="backLink" href="phoenix-tools.html">‹ Tools</a>
+  <header>
+    <div class="eyebrow">Phoenix · PXR</div>
+    <h1>📊 Attendance Trackers</h1>
+    <p class="sub">Bear Trap damage &amp; Foundry/Canyon participation — R4/R5 only</p>
+  </header>
+
+  <div class="tabs">
+    <div class="tab on" data-t="bt">🐻 Bear Trap</div>
+    <div class="tab" data-t="foundry">🏭 Foundry</div>
+    <div class="tab" data-t="canyon">🏞️ Canyon</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" id="summaryTitle">Attendance summary</div>
+    <div id="summaryBox" class="instructions">Loading…</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Sessions</div>
+    <div class="row" style="margin-bottom:4px;">
+      <button class="btn fire" id="newSessionBtn" style="flex:1;">＋ New session</button>
+    </div>
+    <div id="sessList" class="sessList"></div>
+  </div>
+</div>
+
+<!-- NEW / EDIT SESSION -->
+<div class="wrap" id="entryScreen" style="display:none;">
+  <a class="back" id="entryBack" href="#">‹ Back to summary</a>
+  <div class="panel">
+    <div class="panel-title" id="entryTitle">New session</div>
+    <div class="field"><label>Date</label><input type="date" id="fDate"></div>
+    <div class="field"><label>Label (optional — e.g. "BT2", "Foundry vs SNO")</label><input id="fLabel" placeholder="Optional"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title" id="rosterTitle">Roster</div>
+    <input id="rosterSearch" placeholder="🔍 Filter roster…" style="margin-bottom:8px;">
+    <div id="rosterList"></div>
+  </div>
+  <div class="row">
+    <button class="btn fire" id="saveSessionBtn" style="flex:1;">💾 Save session</button>
+    <button class="btn" id="deleteSessionBtn" style="display:none;">🗑 Delete</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── ACCESS GATE: admin anywhere, or R4/R5 ONLY if their alliance is PXR ── */
+var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+var sb=null, PXR_ALLIANCE_ID=null;
+function gmsg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
+function unlock(allianceId){
+  PXR_ALLIANCE_ID=allianceId;
+  var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);
+  boot();
+}
+function getState(){
+  var q=new URLSearchParams(location.search).get('s');
+  if(q) return q;
+  try{var ls=localStorage.getItem('phx_state'); if(ls) return ls;}catch(e){}
+  return '3139';
+}
+(function(){
+  try{
+    if(!(window.supabase&&window.supabase.createClient)){gmsg('Could not load. Reload the page.');return;}
+    sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    sb.auth.getSession().then(function(r){
+      var s=r&&r.data&&r.data.session;
+      if(!s){gmsg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
+      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
+        var rows=res.data||[];
+        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
+        function findPXR(cb){
+          sb.from('alliances').select('id,tag').eq('state_id',getState()).then(function(ar){
+            var pxr=(ar.data||[]).find(function(a){return (a.tag||'').toUpperCase().indexOf('PXR')===0;});
+            cb(pxr);
+          });
+        }
+        if(isAdmin){ findPXR(function(pxr){ if(pxr) unlock(pxr.id); else gmsg('No PXR alliance found in this state.'); }); return; }
+        if(!leaderRow){gmsg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
+        sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
+          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
+          if(tag.indexOf('PXR')===0){unlock(ar.data.id);}
+          else{gmsg('🔒 This tool is only for PXR leaders.');}
+        }).catch(function(){gmsg('Error checking your alliance.');});
+      }).catch(function(){gmsg('Error checking permissions.');});
+    }).catch(function(){gmsg('Session error.');});
+  }catch(e){gmsg('Access error.');}
+})();
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+/* ── STATE ─────────────────────────────────────────────────────── */
+var currentTab='bt'; // bt | foundry | canyon
+var roster=[];        // [{id,name}]
+var editingSessionId=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
+function sessTable(){return currentTab==='bt'?'bt_sessions':'event_sessions';}
+function entryTable(){return currentTab==='bt'?'bt_entries':'event_entries';}
+function tabLabel(){return currentTab==='bt'?'Bear Trap':(currentTab==='foundry'?'Foundry':'Canyon');}
+
+async function boot(){
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on'); currentTab=t.dataset.t;
+      showSummaryScreen();
+    });
+  });
+  document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
+  document.getElementById('entryBack').addEventListener('click',function(e){e.preventDefault();showSummaryScreen();});
+  document.getElementById('saveSessionBtn').addEventListener('click',saveSession);
+  document.getElementById('deleteSessionBtn').addEventListener('click',deleteSession);
+  document.getElementById('rosterSearch').addEventListener('input',function(){renderRoster(this.value);});
+
+  await loadRoster();
+  showSummaryScreen();
+}
+
+async function loadRoster(){
+  var {data,error}=await sb.from('players').select('id,name').eq('alliance_id',PXR_ALLIANCE_ID).order('name');
+  roster=(data||[]).filter(function(p){return p.name;});
+}
+
+/* ── SUMMARY SCREEN ───────────────────────────────────────────── */
+async function showSummaryScreen(){
+  document.getElementById('entryScreen').style.display='none';
+  document.querySelector('.wrap').style.display='';
+  document.getElementById('summaryTitle').textContent=tabLabel()+' — attendance summary';
+  document.getElementById('rosterTitle');
+  await Promise.all([renderSummary(), renderSessionsList()]);
+}
+
+async function renderSummary(){
+  var box=document.getElementById('summaryBox');
+  box.innerHTML='Loading…';
+  var sessQ=await sb.from(sessTable()).select('id').eq('alliance_id',PXR_ALLIANCE_ID)
+    .then(function(r){return currentTab==='bt'?r:{data:(r.data||[])};});
+  var sessRows;
+  if(currentTab==='bt'){
+    var r=await sb.from('bt_sessions').select('id').eq('alliance_id',PXR_ALLIANCE_ID);
+    sessRows=r.data||[];
+  }else{
+    var r=await sb.from('event_sessions').select('id').eq('alliance_id',PXR_ALLIANCE_ID).eq('event_type',currentTab);
+    sessRows=r.data||[];
+  }
+  var totalSessions=sessRows.length;
+  if(!totalSessions){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var entries;
+  if(currentTab==='bt'){
+    var er=await sb.from('bt_entries').select('player_id,player_name,attended,damage').in('session_id',sessIds);
+    entries=er.data||[];
+  }else{
+    var er=await sb.from('event_entries').select('player_id,player_name,requested,attended').in('session_id',sessIds);
+    entries=er.data||[];
+  }
+
+  var byPlayer={};
+  entries.forEach(function(e){
+    var key=e.player_id||('name:'+e.player_name);
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,attended:0,requested:0,damage:0};
+    if(e.attended){ byPlayer[key].attended++; byPlayer[key].damage+=(e.damage||0); }
+    if(e.requested) byPlayer[key].requested++;
+  });
+  var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  list.forEach(function(p){ p.pct=totalSessions?Math.round(p.attended/totalSessions*100):0; });
+  list.sort(function(a,b){return a.pct-b.pct;}); // worst attendance first — easiest to spot who's slacking
+
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+totalSessions+' session'+(totalSessions===1?'':'s')+' logged.</div>';
+  var wrap=document.createElement('div');
+  list.forEach(function(p){
+    var cls = p.pct>=80?'good':(p.pct>=50?'mid':'bad');
+    var bg = p.pct>=80?'bgGood':(p.pct>=50?'bgMid':'bgBad');
+    var extra = currentTab==='bt'
+      ? '<div class="sumDmg">'+fmtNum(p.damage)+' dmg</div>'
+      : '<div class="sumDmg">'+p.requested+' req.</div>';
+    var row=document.createElement('div');
+    row.className='sumRow';
+    row.innerHTML=
+      '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
+      '<div class="barTrack"><div class="barFill '+bg+'" style="width:'+p.pct+'%"></div></div>'+
+      '<div class="sumPct '+cls+'">'+p.pct+'%</div>'+extra;
+    wrap.appendChild(row);
+  });
+  box.appendChild(wrap);
+}
+function fmtNum(n){ n=n||0; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+/* ── SESSIONS LIST ─────────────────────────────────────────────── */
+async function renderSessionsList(){
+  var box=document.getElementById('sessList');
+  box.innerHTML='Loading…';
+  var rows;
+  if(currentTab==='bt'){
+    var r=await sb.from('bt_sessions').select('id,session_date,label').eq('alliance_id',PXR_ALLIANCE_ID).order('session_date',{ascending:false});
+    rows=r.data||[];
+  }else{
+    var r=await sb.from('event_sessions').select('id,session_date,label').eq('alliance_id',PXR_ALLIANCE_ID).eq('event_type',currentTab).order('session_date',{ascending:false});
+    rows=r.data||[];
+  }
+  if(!rows.length){box.innerHTML='<div class="instructions">No sessions yet.</div>';return;}
+  box.innerHTML='';
+  rows.forEach(function(s){
+    var d=document.createElement('div');
+    d.className='sessItem';
+    d.innerHTML='<b>'+s.session_date+'</b><span class="sp">'+(s.label?escapeHtml(s.label):'')+'</span><button>Edit</button>';
+    d.querySelector('button').addEventListener('click',function(){openEntry(s.id);});
+    box.appendChild(d);
+  });
+}
+
+/* ── NEW / EDIT SESSION ───────────────────────────────────────── */
+var currentEntries={}; // player_id or name -> {attended,requested,damage}
+async function openEntry(sessionId){
+  editingSessionId=sessionId;
+  document.querySelector('.wrap').style.display='none';
+  document.getElementById('entryScreen').style.display='';
+  document.getElementById('entryTitle').textContent=(sessionId?'Edit ':'New ')+tabLabel()+' session';
+  document.getElementById('deleteSessionBtn').style.display=sessionId?'':'none';
+  currentEntries={};
+
+  if(sessionId){
+    var sRow, eRows;
+    if(currentTab==='bt'){
+      sRow=(await sb.from('bt_sessions').select('*').eq('id',sessionId).maybeSingle()).data;
+      eRows=(await sb.from('bt_entries').select('*').eq('session_id',sessionId)).data||[];
+    }else{
+      sRow=(await sb.from('event_sessions').select('*').eq('id',sessionId).maybeSingle()).data;
+      eRows=(await sb.from('event_entries').select('*').eq('session_id',sessionId)).data||[];
+    }
+    document.getElementById('fDate').value=sRow?sRow.session_date:'';
+    document.getElementById('fLabel').value=sRow?(sRow.label||''):'';
+    eRows.forEach(function(e){
+      var key=e.player_id||('name:'+e.player_name);
+      currentEntries[key]={attended:!!e.attended,requested:!!e.requested,damage:e.damage||0,name:e.player_name};
+    });
+  }else{
+    document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
+    document.getElementById('fLabel').value='';
+  }
+  document.getElementById('rosterSearch').value='';
+  renderRoster('');
+}
+
+function renderRoster(filter){
+  var box=document.getElementById('rosterList');
+  box.innerHTML='';
+  var f=(filter||'').toLowerCase();
+  roster.filter(function(p){return !f||p.name.toLowerCase().indexOf(f)>=0;}).forEach(function(p){
+    var e=currentEntries[p.id]||{attended:false,requested:false,damage:0};
+    var row=document.createElement('div');
+    row.className='rosterRow';
+    if(currentTab==='bt'){
+      row.innerHTML=
+        '<div class="rosterName">'+escapeHtml(p.name)+'</div>'+
+        '<label class="rosterChk"><input type="checkbox" class="rAttended" '+(e.attended?'checked':'')+'> Attended</label>'+
+        '<input type="number" class="rDamage" placeholder="Damage" value="'+(e.damage||'')+'" inputmode="numeric">';
+    }else{
+      row.innerHTML=
+        '<div class="rosterName">'+escapeHtml(p.name)+'</div>'+
+        '<label class="rosterChk"><input type="checkbox" class="rRequested" '+(e.requested?'checked':'')+'> Requested</label>'+
+        '<label class="rosterChk"><input type="checkbox" class="rAttended" '+(e.attended?'checked':'')+'> Attended</label>';
+    }
+    row.dataset.pid=p.id; row.dataset.pname=p.name;
+    box.appendChild(row);
+  });
+}
+
+async function saveSession(){
+  var date=document.getElementById('fDate').value;
+  if(!date){toast('Pick a date');return;}
+  var label=document.getElementById('fLabel').value.trim()||null;
+  var btn=document.getElementById('saveSessionBtn'); btn.textContent='Saving…'; btn.disabled=true;
+
+  try{
+    var sessionId=editingSessionId;
+    if(currentTab==='bt'){
+      if(sessionId){
+        await sb.from('bt_sessions').update({session_date:date,label:label}).eq('id',sessionId);
+        await sb.from('bt_entries').delete().eq('session_id',sessionId);
+      }else{
+        var ins=await sb.from('bt_sessions').insert({alliance_id:PXR_ALLIANCE_ID,session_date:date,label:label}).select('id').single();
+        sessionId=ins.data.id;
+      }
+      var rows=[];
+      document.querySelectorAll('#rosterList .rosterRow').forEach(function(row){
+        var attended=row.querySelector('.rAttended').checked;
+        var damage=parseInt(row.querySelector('.rDamage').value,10)||0;
+        if(attended||damage>0){
+          rows.push({session_id:sessionId,player_id:row.dataset.pid,player_name:row.dataset.pname,attended:attended,damage:damage});
+        }
+      });
+      if(rows.length) await sb.from('bt_entries').insert(rows);
+    }else{
+      if(sessionId){
+        await sb.from('event_sessions').update({session_date:date,label:label}).eq('id',sessionId);
+        await sb.from('event_entries').delete().eq('session_id',sessionId);
+      }else{
+        var ins=await sb.from('event_sessions').insert({alliance_id:PXR_ALLIANCE_ID,event_type:currentTab,session_date:date,label:label}).select('id').single();
+        sessionId=ins.data.id;
+      }
+      var rows=[];
+      document.querySelectorAll('#rosterList .rosterRow').forEach(function(row){
+        var requested=row.querySelector('.rRequested').checked;
+        var attended=row.querySelector('.rAttended').checked;
+        if(requested||attended){
+          rows.push({session_id:sessionId,player_id:row.dataset.pid,player_name:row.dataset.pname,requested:requested,attended:attended});
+        }
+      });
+      if(rows.length) await sb.from('event_entries').insert(rows);
+    }
+    toast('Session saved ✓');
+    showSummaryScreen();
+  }catch(e){ console.error(e); toast('Save failed: '+e.message); }
+  btn.textContent='💾 Save session'; btn.disabled=false;
+}
+
+async function deleteSession(){
+  if(!editingSessionId) return;
+  if(!confirm('Delete this session and all its entries?')) return;
+  try{
+    if(currentTab==='bt') await sb.from('bt_sessions').delete().eq('id',editingSessionId);
+    else await sb.from('event_sessions').delete().eq('id',editingSessionId);
+    toast('Deleted');
+    showSummaryScreen();
+  }catch(e){ toast('Delete failed: '+e.message); }
+}
+</script>
+</body>
+</html>
