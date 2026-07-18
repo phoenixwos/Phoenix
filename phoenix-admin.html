@@ -1155,13 +1155,11 @@ async function refreshPlatformOverview(){
   if(outer)outer.style.display='block';
   box.style.display='flex';
   try{
-    const[{count:reg},{count:pend}]=await Promise.all([
-      sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null),
-      sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null)
-        .or('alliance_confirmed.is.null,alliance_confirmed.eq.false')
-    ]);
-    $('#ovRegistered').textContent=reg??'–';
-    $('#ovPending').textContent=pend??'–';
+    const {data}=await sb.from('players').select('id,owner,alliance_confirmed').not('owner','is',null);
+    const reg=data?.length??0;
+    const pend=data?.filter(p=>!p.alliance_confirmed)?.length??0;
+    $('#ovRegistered').textContent=reg;
+    $('#ovPending').textContent=pend;
   }catch(e){console.warn('platformOverview failed:',e);}
   refreshSubReview();
 }
@@ -1175,14 +1173,15 @@ async function togglePendingDrilldown(){
   if(!_pendingDrilldownOpen){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
   box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Loading…</p>';
-  const {data,error}=await sb.from('players').select('id,name,alliance_id,state_id')
-    .not('owner','is',null).or('alliance_confirmed.is.null,alliance_confirmed.eq.false');
+  const {data,error}=await sb.from('players').select('id,name,alliance_id,state_id,alliance_confirmed')
+    .not('owner','is',null);
   if(error||!data||!data.length){ box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Nobody pending anywhere right now. 🎉</p>'; return; }
-  const allianceIds=[...new Set(data.map(p=>p.alliance_id).filter(Boolean))];
+  const data_filtered=data.filter(p=>!p.alliance_confirmed);
+  const allianceIds=[...new Set(data_filtered.map(p=>p.alliance_id).filter(Boolean))];
   const {data:als}=await sb.from('alliances').select('id,tag,name,state_id').in('id',allianceIds.length?allianceIds:['00000000-0000-0000-0000-000000000000']);
   const byId={}; (als||[]).forEach(a=>byId[a.id]=a);
   box.innerHTML='';
-  data.forEach(p=>{
+  data_filtered.forEach(p=>{
     const al=byId[p.alliance_id];
     const row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #cfe4f2;border-radius:9px;padding:8px 10px;margin-bottom:6px;';
