@@ -193,6 +193,7 @@ body{padding-bottom:72px !important;}
     </div>
 
     <!-- PLATFORM OVERVIEW (full admins only: you + TMQ) -->
+    <div class="instructions" id="platformOverviewLabel" style="font-size:.7rem;color:var(--muted);margin:0 0 4px;display:none;">🌍 Whole platform (every alliance, every state) — not just this one</div>
     <div id="platformOverview" class="admin-overview" style="display:none;">
       <div class="admin-stat"><div class="n" id="ovRegistered">–</div><div class="l">✅ Registered</div></div>
       <div class="admin-stat"><div class="n" id="ovPending">–</div><div class="l">⏳ Pending</div></div>
@@ -450,7 +451,23 @@ body{padding-bottom:72px !important;}
           <div id="pendingList"></div>
         </div>
         <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:6px;">Manage your roster. Registered players appear automatically; you can also add members manually.</p>
-        <p style="font-size:.76rem;color:var(--muted);margin-bottom:14px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
+        <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
+        <!-- Live counts — computed from the exact same list below, so they can never disagree with what you see -->
+        <div id="rosterCounts" style="display:flex;gap:8px;margin-bottom:10px;">
+          <div style="flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
+            <div id="cntTotal" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#2d7a4e;">–</div>
+            <div style="font-size:.66rem;color:#4a8a68;font-weight:600;">Total</div>
+          </div>
+          <div style="flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
+            <div id="cntConfirmed" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#2d7a4e;">–</div>
+            <div style="font-size:.66rem;color:#4a8a68;font-weight:600;">✓ Confirmed</div>
+          </div>
+          <div style="flex:1;text-align:center;background:#fff4d6;border:1.5px solid #ffcc4d;border-radius:10px;padding:7px 4px;">
+            <div id="cntPending" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#a06a00;">–</div>
+            <div style="font-size:.66rem;color:#8a6a2a;font-weight:600;">⏳ Pending</div>
+          </div>
+        </div>
+        <input id="memberSearch" placeholder="🔍 Search by name…" style="width:100%;padding:10px 12px;border:2px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.86rem;margin-bottom:10px;">
         <div id="memberRows" class="dlist"></div>
         <button class="add-btn" id="addMemberBtn">+ Add member manually</button>
         <div class="errmsg" id="memberErr" style="margin-top:10px;"></div>
@@ -1127,9 +1144,9 @@ async function refreshMembersBadge(allianceId){
   }catch(e){console.warn('membersBadge failed:',e);}
 }
 async function refreshPlatformOverview(){
-  const box=$('#platformOverview');
+  const box=$('#platformOverview'), lbl=$('#platformOverviewLabel');
   if(!box||!isStateAdmin)return;
-  box.style.display='flex';
+  box.style.display='flex'; if(lbl)lbl.style.display='block';
   try{
     const[{count:reg},{count:pend}]=await Promise.all([
       sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null),
@@ -1379,31 +1396,71 @@ let memberCache=[];
 function memberRowHTML(i,m={}){
   const isManual=!m.owner;
   const conf=m.alliance_confirmed;
-  return `<div class="ditem" data-i="${i}" data-id="${m.id||''}" data-owner="${m.owner||''}">
-    <div class="ditem-header">
-      <span class="dtag">${isManual?'✋ Manual':'🔗 Registered'}</span>
-      <span style="font-size:.72rem;color:${conf?'#3da76e':'#d99514'};">${conf?'✓ confirmed':'⏳ pending'}</span>
-      <button class="del-btn" onclick="delMember(${i})">✕</button>
+  return `<div class="ditem" data-id="${m.id||''}" data-owner="${m.owner||''}">
+    <div class="ditem-header" onclick="toggleMemberRow(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+      <span style="flex:1;font-family:'Fredoka';font-weight:700;color:var(--ink);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(m.name||'(no name)').replace(/</g,'&lt;')}</span>
+      <span class="dtag" style="font-size:.66rem;">${isManual?'✋':'🔗'}</span>
+      <span style="font-size:.72rem;font-weight:700;color:${conf?'#3da76e':'#d99514'};">${conf?'✓':'⏳'}</span>
+      ${m.game_rank?`<span style="font-size:.68rem;color:var(--muted);">${m.game_rank}</span>`:''}
+      <span class="mChevron" style="font-size:.72rem;color:var(--muted);display:inline-block;transition:transform .15s;">▾</span>
+      <button class="del-btn" onclick="event.stopPropagation();delMember(this)">✕</button>
     </div>
-    <input placeholder="In-game name" class="m-name" value="${(m.name||'').replace(/"/g,'&quot;')}">
-    <div class="row2">
-      <input placeholder="Governor ID" class="m-gid" value="${m.governor_id||''}">
-      <select class="m-conf"><option value="false" ${!conf?'selected':''}>⏳ Pending</option><option value="true" ${conf?'selected':''}>✓ Confirmed</option></select>
-    </div>
-    <div class="row2" style="margin-top:6px;">
-      <select class="m-rank" style="flex:1;padding:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
-        <option value="" ${!m.game_rank?'selected':''}>— No rank —</option>
-        <option value="R3" ${m.game_rank==='R3'?'selected':''}>R3</option>
-        <option value="R4" ${m.game_rank==='R4'?'selected':''}>R4 🥇</option>
-        <option value="R5" ${m.game_rank==='R5'?'selected':''}>R5 🔥</option>
-      </select>
-    </div>
-    <div style="position:relative;">
-      <input placeholder="✨ Nickname (e.g. La Jefa)" class="m-nick" value="${(m.nickname||'').replace(/"/g,'&quot;')}" style="padding-right:${m.nickname_suggested&&!m.nickname?'90px':'12px'};">
-      ${m.nickname_suggested&&!m.nickname?`<button type="button" onclick="acceptNick(this,'${(m.nickname_suggested||'').replace(/'/g,"\\'")}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:.7rem;background:#eafaf0;border:1.5px solid #3da76e;border-radius:8px;color:#2d7a4e;font-family:'Fredoka';cursor:pointer;">Use: ${m.nickname_suggested}</button>`:''}
+    <div class="ditem-body" style="display:none;padding-top:8px;">
+      <input placeholder="In-game name" class="m-name" value="${(m.name||'').replace(/"/g,'&quot;')}">
+      <div class="row2">
+        <input placeholder="Governor ID" class="m-gid" value="${m.governor_id||''}">
+        <select class="m-conf"><option value="false" ${!conf?'selected':''}>⏳ Pending</option><option value="true" ${conf?'selected':''}>✓ Confirmed</option></select>
+      </div>
+      <div class="row2" style="margin-top:6px;">
+        <select class="m-rank" style="flex:1;padding:8px;border:1.5px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.85rem;color:var(--ink);">
+          <option value="" ${!m.game_rank?'selected':''}>— No rank —</option>
+          <option value="R3" ${m.game_rank==='R3'?'selected':''}>R3</option>
+          <option value="R4" ${m.game_rank==='R4'?'selected':''}>R4 🥇</option>
+          <option value="R5" ${m.game_rank==='R5'?'selected':''}>R5 🔥</option>
+        </select>
+      </div>
+      <div style="position:relative;margin-top:6px;">
+        <input placeholder="✨ Nickname (e.g. La Jefa)" class="m-nick" value="${(m.nickname||'').replace(/"/g,'&quot;')}" style="padding-right:${m.nickname_suggested&&!m.nickname?'90px':'12px'};">
+        ${m.nickname_suggested&&!m.nickname?`<button type="button" onclick="event.stopPropagation();acceptNick(this,'${(m.nickname_suggested||'').replace(/'/g,"\\'")}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:.7rem;background:#eafaf0;border:1.5px solid #3da76e;border-radius:8px;color:#2d7a4e;font-family:'Fredoka';cursor:pointer;">Use: ${m.nickname_suggested}</button>`:''}
+      </div>
     </div>
   </div>`;
 }
+function toggleMemberRow(headerEl){
+  const row=headerEl.closest('.ditem');
+  const body=row.querySelector('.ditem-body');
+  const chev=headerEl.querySelector('.mChevron');
+  const opening = body.style.display==='none';
+  body.style.display = opening?'block':'none';
+  if(chev) chev.style.transform = opening?'rotate(-90deg)':'';
+}
+let memberSearchQuery='';
+function updateRosterCounts(list){
+  const total=list.length;
+  const confirmed=list.filter(m=>!!m.alliance_confirmed).length;
+  const $t=$('#cntTotal'),$c=$('#cntConfirmed'),$p=$('#cntPending');
+  if($t)$t.textContent=total;
+  if($c)$c.textContent=confirmed;
+  if($p)$p.textContent=total-confirmed;
+}
+function renderMemberList(){
+  const wrap=$('#memberRows');
+  const q=(memberSearchQuery||'').trim().toLowerCase();
+  const filtered = q ? memberCache.filter(m=>(m.name||'').toLowerCase().includes(q)) : memberCache;
+  wrap.innerHTML='';
+  filtered.forEach((m)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(0,m);wrap.appendChild(d.firstElementChild);});
+  if(!filtered.length){
+    wrap.innerHTML = memberCache.length
+      ? '<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members match "'+ (memberSearchQuery||'') +'".</p>'
+      : '<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
+  }
+  updateRosterCounts(memberCache); // always the FULL roster count, independent of any active search filter
+}
+const memberSearchBox=document.getElementById('memberSearch');
+if(memberSearchBox){
+  memberSearchBox.addEventListener('input',function(){ memberSearchQuery=this.value; renderMemberList(); });
+}
+
 async function loadMembersEditor(){
   if(!editingAlliance)return;
   const wrap=$('#memberRows');
@@ -1417,9 +1474,8 @@ async function loadMembersEditor(){
     return (a.name||'').localeCompare(b.name||'',undefined,{sensitivity:'base'});
   });
   memberCache=sorted;
-  wrap.innerHTML='';
-  memberCache.forEach((m,i)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(i,m);wrap.appendChild(d.firstElementChild);});
-  if(memberCache.length===0)wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
+  if(memberSearchBox) memberSearchBox.value=memberSearchQuery='';
+  renderMemberList();
 
   // ── PENDING BANNER: players who created their own page but aren't confirmed yet ──
   const pending=(data||[]).filter(m=>m.owner && !m.alliance_confirmed);
@@ -1448,8 +1504,8 @@ async function approveMember(id){
   toast('Approved ✓');
   loadMembersEditor();
 }
-function delMember(i){
-  const row=$('#memberRows').children[i];
+function delMember(btn){
+  const row=btn.closest('.ditem');
   if(!row)return;
   const id=row.dataset.id;
   if(id){if(!confirm('Delete this member permanently?'))return;row.dataset.del='1';row.style.display='none';}
@@ -1458,8 +1514,12 @@ function delMember(i){
 $('#addMemberBtn').onclick=()=>{
   const wrap=$('#memberRows');
   if(wrap.querySelector('p'))wrap.innerHTML='';
-  const i=wrap.children.length;
-  const d=document.createElement('div');d.innerHTML=memberRowHTML(i,{});wrap.appendChild(d.firstElementChild);
+  const d=document.createElement('div');d.innerHTML=memberRowHTML(0,{});
+  const newRow=d.firstElementChild;
+  wrap.appendChild(newRow);
+  // open it right away and clear any active search so it's visible
+  if(memberSearchBox){memberSearchBox.value='';memberSearchQuery='';}
+  toggleMemberRow(newRow.querySelector('.ditem-header'));
 };
 
 function acceptNick(btn, suggested){
