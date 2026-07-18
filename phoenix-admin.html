@@ -192,17 +192,24 @@ body{padding-bottom:72px !important;}
       <select id="switchAllianceSel" style="width:100%;padding:11px 14px;border:2px solid var(--panel-edge);border-radius:12px;background:#fff;color:var(--ink);font-size:.9rem;font-family:'Fredoka';font-weight:600;outline:none;"></select>
     </div>
 
-    <!-- PLATFORM OVERVIEW (full admins only: you + TMQ) -->
-    <div class="instructions" id="platformOverviewLabel" style="font-size:.7rem;color:var(--muted);margin:0 0 4px;display:none;">🌍 Whole platform (every alliance, every state) — not just this one</div>
-    <div id="platformOverview" class="admin-overview" style="display:none;">
-      <div class="admin-stat"><div class="n" id="ovRegistered">–</div><div class="l">✅ Registered</div></div>
-      <div class="admin-stat"><div class="n" id="ovPending">–</div><div class="l">⏳ Pending</div></div>
-    </div>
+    <!-- ═══ CROSS-ALLIANCE ADMIN TOOLS (full admins only: you + TMQ) ═══
+         Deliberately boxed off with its own header so it never reads as
+         part of the [TAG] alliance you're currently editing below. -->
+    <div id="crossAllianceBox" style="display:none;background:#eef6fb;border:2px dashed #9cc9e6;border-radius:16px;padding:14px;margin-bottom:16px;">
+      <div style="font-family:'Baloo 2';font-weight:800;font-size:.85rem;color:#2a6a94;margin-bottom:10px;">👑 Admin overview — across every alliance &amp; state, not just the one below</div>
 
-    <!-- KO-FI SUBSCRIPTIONS NEEDING MANUAL MATCH (full admins only) -->
-    <div id="subReviewBox" style="display:none;margin-bottom:14px;padding:14px;background:linear-gradient(180deg,#fff,#fef6ea);border:2px solid var(--panel-edge);border-radius:14px;">
-      <div style="font-family:'Baloo 2';font-weight:800;font-size:.95rem;color:#c2470f;margin-bottom:8px;">☕ Ko-fi payments awaiting a match</div>
-      <div id="subReviewList" style="font-size:.82rem;color:var(--ink-soft);">Loading…</div>
+      <div id="platformOverview" class="admin-overview" style="margin-bottom:6px;">
+        <div class="admin-stat"><div class="n" id="ovRegistered">–</div><div class="l">✅ Registered</div></div>
+        <div class="admin-stat" id="ovPendingBox" style="cursor:pointer;"><div class="n" id="ovPending">–</div><div class="l">⏳ Pending — tap to see who</div></div>
+      </div>
+      <div id="pendingDrilldown" style="display:none;margin-bottom:10px;"></div>
+
+      <!-- KO-FI SUBSCRIPTIONS NEEDING MANUAL MATCH -->
+      <div id="subReviewBox" style="display:none;margin-top:10px;padding:12px;background:#fff;border:2px solid var(--panel-edge);border-radius:14px;">
+        <div style="font-family:'Baloo 2';font-weight:800;font-size:.9rem;color:#c2470f;margin-bottom:4px;">☕ Ko-fi payments awaiting a match</div>
+        <p style="font-size:.74rem;color:var(--muted);margin:0 0 8px;">Only Ko-fi <b>memberships</b> (recurring, for tool access) land here when we can't auto-match the alliance tag. One-time tips/donations never need matching and won't appear in this box at all.</p>
+        <div id="subReviewList" style="font-size:.82rem;color:var(--ink-soft);">Loading…</div>
+      </div>
     </div>
 
     <!-- EDITOR TABS -->
@@ -454,19 +461,20 @@ body{padding-bottom:72px !important;}
         <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px;">✓ confirmed = verified in-game · ⏳ pending = needs your confirmation</p>
         <!-- Live counts — computed from the exact same list below, so they can never disagree with what you see -->
         <div id="rosterCounts" style="display:flex;gap:8px;margin-bottom:10px;">
-          <div style="flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
+          <div class="rcBox" data-filter="all" style="cursor:pointer;flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
             <div id="cntTotal" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#2d7a4e;">–</div>
             <div style="font-size:.66rem;color:#4a8a68;font-weight:600;">Total</div>
           </div>
-          <div style="flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
+          <div class="rcBox" data-filter="confirmed" style="cursor:pointer;flex:1;text-align:center;background:#eafaf0;border:1.5px solid #b8e8cc;border-radius:10px;padding:7px 4px;">
             <div id="cntConfirmed" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#2d7a4e;">–</div>
             <div style="font-size:.66rem;color:#4a8a68;font-weight:600;">✓ Confirmed</div>
           </div>
-          <div style="flex:1;text-align:center;background:#fff4d6;border:1.5px solid #ffcc4d;border-radius:10px;padding:7px 4px;">
+          <div class="rcBox" data-filter="pending" style="cursor:pointer;flex:1;text-align:center;background:#fff4d6;border:1.5px solid #ffcc4d;border-radius:10px;padding:7px 4px;">
             <div id="cntPending" style="font-family:'Baloo 2';font-weight:800;font-size:1.05rem;color:#a06a00;">–</div>
-            <div style="font-size:.66rem;color:#8a6a2a;font-weight:600;">⏳ Pending</div>
+            <div style="font-size:.66rem;color:#8a6a2a;font-weight:600;">⏳ Pending — tap</div>
           </div>
         </div>
+        <div id="rosterFilterNote" style="display:none;font-size:.74rem;color:var(--acc-d);font-weight:600;margin-bottom:8px;"></div>
         <input id="memberSearch" placeholder="🔍 Search by name…" style="width:100%;padding:10px 12px;border:2px solid var(--panel-edge);border-radius:10px;font-family:'Fredoka';font-size:.86rem;margin-bottom:10px;">
         <div id="memberRows" class="dlist"></div>
         <button class="add-btn" id="addMemberBtn">+ Add member manually</button>
@@ -868,21 +876,19 @@ $('#fTag').addEventListener('input',updateSwatches);
 $('#fName').addEventListener('input',updateSwatches);
 
 // ── EDITOR TABS ───────────────────────────────────────────────
-document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x===t));
-  const sec=t.dataset.sec;
+function switchSection(sec){
+  document.querySelectorAll('.etab').forEach(x=>x.classList.toggle('active',x.dataset.sec===sec));
   document.querySelectorAll('.esec').forEach(s=>s.classList.toggle('active',s.id==='sec-'+sec));
-  // Members, Ranking and Access have their own controls — hide the main save button
   const mainBar=document.getElementById('mainSaveBar');
   if(mainBar)mainBar.style.display=(sec==='members'||sec==='ranking'||sec==='access'||sec==='nap')?'none':'';
-  // Lazy-load data for these tabs
   if(sec==='members')loadMembersEditor();
   if(sec==='ranking')loadRankingEditor();
   if(sec==='access')loadAccessAlliances();
   if(sec==='nap')loadNapEditor();
   if(sec==='search')initMgmtSearch();
   if(sec==='frames'){document.getElementById('framesSearch').value='';document.getElementById('framesResults').innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Escribe al menos 2 caracteres…</p>';document.getElementById('framesMsg').textContent='';}
-});
+}
+document.querySelectorAll('.etab').forEach(t=>t.onclick=()=>switchSection(t.dataset.sec));
 
 // ── DYNAMIC LIST HELPERS ──────────────────────────────────────
 function leaderHTML(i,l={}){
@@ -1144,9 +1150,10 @@ async function refreshMembersBadge(allianceId){
   }catch(e){console.warn('membersBadge failed:',e);}
 }
 async function refreshPlatformOverview(){
-  const box=$('#platformOverview'), lbl=$('#platformOverviewLabel');
+  const outer=$('#crossAllianceBox'), box=$('#platformOverview');
   if(!box||!isStateAdmin)return;
-  box.style.display='flex'; if(lbl)lbl.style.display='block';
+  if(outer)outer.style.display='block';
+  box.style.display='flex';
   try{
     const[{count:reg},{count:pend}]=await Promise.all([
       sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null),
@@ -1158,6 +1165,49 @@ async function refreshPlatformOverview(){
   }catch(e){console.warn('platformOverview failed:',e);}
   refreshSubReview();
 }
+
+// ── Tap "Pending" → list exactly WHO, in WHICH alliance, with a jump-to button ──
+let _pendingDrilldownOpen=false;
+async function togglePendingDrilldown(){
+  const box=$('#pendingDrilldown');
+  if(!box)return;
+  _pendingDrilldownOpen=!_pendingDrilldownOpen;
+  if(!_pendingDrilldownOpen){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Loading…</p>';
+  const {data,error}=await sb.from('players').select('id,name,alliance_id,state_id')
+    .not('owner','is',null).or('alliance_confirmed.is.null,alliance_confirmed.eq.false');
+  if(error||!data||!data.length){ box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Nobody pending anywhere right now. 🎉</p>'; return; }
+  const allianceIds=[...new Set(data.map(p=>p.alliance_id).filter(Boolean))];
+  const {data:als}=await sb.from('alliances').select('id,tag,name,state_id').in('id',allianceIds.length?allianceIds:['00000000-0000-0000-0000-000000000000']);
+  const byId={}; (als||[]).forEach(a=>byId[a.id]=a);
+  box.innerHTML='';
+  data.forEach(p=>{
+    const al=byId[p.alliance_id];
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #cfe4f2;border-radius:9px;padding:8px 10px;margin-bottom:6px;';
+    row.innerHTML=`<span style="flex:1;font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.84rem;">${(p.name||'—').replace(/</g,'&lt;')}</span>
+      <span style="font-size:.72rem;color:var(--muted);">${al?('['+al.tag+'] · state '+al.state_id):'no alliance'}</span>
+      ${al?'<button class="btn btn-fire" style="padding:5px 10px;font-size:.72rem;">Go</button>':''}`;
+    if(al){
+      row.querySelector('button').addEventListener('click',()=>jumpToAllianceMember(al,p.name));
+    }
+    box.appendChild(row);
+  });
+}
+async function jumpToAllianceMember(alliance,name){
+  // switch into that alliance's editor, land on Members, and pre-filter to this person
+  const{data:fullAl}=await sb.from('alliances').select('*').eq('id',alliance.id).maybeSingle();
+  if(!fullAl){toast('Could not open that alliance');return;}
+  loadEditor(fullAl);
+  switchSection('members');
+  setTimeout(()=>{
+    const box=document.getElementById('memberSearch');
+    if(box){ box.value=name||''; memberSearchQuery=name||''; renderMemberList(); }
+  },600); // give loadMembersEditor a moment to finish its fetch
+}
+const ovPendingBox=document.getElementById('ovPendingBox');
+if(ovPendingBox) ovPendingBox.addEventListener('click',togglePendingDrilldown);
 
 // ── KO-FI: payments the webhook couldn't auto-match to an alliance tag ──
 async function refreshSubReview(){
@@ -1435,6 +1485,7 @@ function toggleMemberRow(headerEl){
   if(chev) chev.style.transform = opening?'rotate(-90deg)':'';
 }
 let memberSearchQuery='';
+let memberStatusFilter='all'; // 'all' | 'confirmed' | 'pending'
 function updateRosterCounts(list){
   const total=list.length;
   const confirmed=list.filter(m=>!!m.alliance_confirmed).length;
@@ -1446,16 +1497,33 @@ function updateRosterCounts(list){
 function renderMemberList(){
   const wrap=$('#memberRows');
   const q=(memberSearchQuery||'').trim().toLowerCase();
-  const filtered = q ? memberCache.filter(m=>(m.name||'').toLowerCase().includes(q)) : memberCache;
+  let base=memberCache;
+  if(memberStatusFilter==='confirmed') base=base.filter(m=>!!m.alliance_confirmed);
+  if(memberStatusFilter==='pending') base=base.filter(m=>!m.alliance_confirmed);
+  const filtered = q ? base.filter(m=>(m.name||'').toLowerCase().includes(q)) : base;
+
+  const note=$('#rosterFilterNote');
+  if(note){
+    if(memberStatusFilter!=='all'){
+      note.style.display='block';
+      note.innerHTML='Showing only '+(memberStatusFilter==='pending'?'⏳ pending':'✓ confirmed')+' members — <span id="rfShowAll" style="text-decoration:underline;cursor:pointer;">show all</span>';
+      const showAllBtn=document.getElementById('rfShowAll');
+      if(showAllBtn) showAllBtn.addEventListener('click',()=>setRosterFilter('all'));
+    }else{ note.style.display='none'; }
+  }
+
   wrap.innerHTML='';
   filtered.forEach((m)=>{const d=document.createElement('div');d.innerHTML=memberRowHTML(0,m);wrap.appendChild(d.firstElementChild);});
   if(!filtered.length){
     wrap.innerHTML = memberCache.length
-      ? '<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members match "'+ (memberSearchQuery||'') +'".</p>'
+      ? '<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members match this filter'+(q?' / search "'+memberSearchQuery+'"':'')+'.</p>'
       : '<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No members yet. Add one below.</p>';
   }
-  updateRosterCounts(memberCache); // always the FULL roster count, independent of any active search filter
+  updateRosterCounts(memberCache); // always the FULL roster count, independent of any active search/status filter
+  document.querySelectorAll('.rcBox').forEach(b=>b.style.outline=(b.dataset.filter===memberStatusFilter)?'2px solid var(--acc)':'none');
 }
+function setRosterFilter(f){ memberStatusFilter=f; renderMemberList(); }
+document.querySelectorAll('.rcBox').forEach(b=>b.addEventListener('click',()=>setRosterFilter(b.dataset.filter)));
 const memberSearchBox=document.getElementById('memberSearch');
 if(memberSearchBox){
   memberSearchBox.addEventListener('input',function(){ memberSearchQuery=this.value; renderMemberList(); });
@@ -1475,6 +1543,7 @@ async function loadMembersEditor(){
   });
   memberCache=sorted;
   if(memberSearchBox) memberSearchBox.value=memberSearchQuery='';
+  memberStatusFilter='all';
   renderMemberList();
 
   // ── PENDING BANNER: players who created their own page but aren't confirmed yet ──
