@@ -136,8 +136,17 @@ body{padding-bottom:72px !important;}
   <div class="brand">
     <b>Phoenix <em>Admin</em></b>
   </div>
-  <span class="badge-admin">🔐 R4/R5</span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button id="recentBellBtn" style="position:relative;background:none;border:none;font-size:1.15rem;cursor:pointer;padding:4px;display:none;" title="Recent registrations">
+      🔔<span id="recentBellBadge" style="position:absolute;top:-2px;right:-4px;background:#ff5b3d;color:#fff;font-family:Fredoka;font-weight:700;font-size:.6rem;min-width:15px;height:15px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;">0</span>
+    </button>
+    <span class="badge-admin">🔐 R4/R5</span>
+  </div>
 </div></div>
+<div id="recentBellPanel" style="display:none;position:fixed;top:52px;right:10px;left:10px;max-width:420px;margin:0 auto;background:#fff;border:2px solid #cfe4f2;border-radius:14px;padding:10px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:70vh;overflow-y:auto;">
+  <div style="font-family:Baloo 2;font-weight:800;font-size:.9rem;color:var(--ink);margin-bottom:8px;">🔔 Recent registrations — state <span id="recentBellState"></span></div>
+  <div id="recentBellList"></div>
+</div>
 
 <div class="shell">
 
@@ -583,7 +592,11 @@ TEK"></textarea>
         <p style="font-size:.76rem;color:var(--muted);margin-bottom:12px;">⚡ Only you and TMQ can assign roles. A leader must create their account (log in once) before they appear here.</p>
         <div class="field">
           <label>Search player by name or Governor ID</label>
-          <input id="accessSearch" placeholder="Type a name or ID…">
+          <input id="accessSearch" placeholder="Type a name or ID… or browse below">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:4px;">
+          <button type="button" class="access-chip btn btn-ghost" data-mode="recent" style="flex:1;font-size:.78rem;padding:8px;">🕐 Recent registrations</button>
+          <button type="button" class="access-chip btn btn-ghost" data-mode="pending" style="flex:1;font-size:.78rem;padding:8px;">⏳ Pending</button>
         </div>
         <div id="accessResults" class="dlist" style="margin-top:10px;"></div>
         <div class="errmsg" id="accessErr" style="margin-top:10px;"></div>
@@ -1149,18 +1162,67 @@ async function refreshMembersBadge(allianceId){
     el.style.display='inline-flex';
   }catch(e){console.warn('membersBadge failed:',e);}
 }
+// ── 🔔 Recent registrations bell — shows ONLY the count of latest signups (not pending logic) ──
+async function refreshRecentBadge(){
+  const btn=$('#recentBellBtn');
+  if(!btn||!isStateAdmin)return;
+  btn.style.display='inline-flex';
+  const S=(window.__ADMIN_STATE)||getState();
+  const since=new Date(Date.now()-7*24*60*60*1000).toISOString();
+  try{
+    const{count}=await sb.from('players').select('id',{count:'exact',head:true})
+      .not('owner','is',null).eq('state_id',S).gte('created_at',since);
+    const b=$('#recentBellBadge');
+    if(count>0){ b.textContent=count>99?'99+':String(count); b.style.display='flex'; }
+    else{ b.style.display='none'; }
+  }catch(e){console.warn('recentBadge failed:',e);}
+}
+let _recentBellOpen=false;
+async function toggleRecentBellPanel(){
+  const panel=$('#recentBellPanel');
+  if(!panel)return;
+  _recentBellOpen=!_recentBellOpen;
+  if(!_recentBellOpen){ panel.style.display='none'; return; }
+  const S=(window.__ADMIN_STATE)||getState();
+  $('#recentBellState').textContent=S;
+  panel.style.display='block';
+  const list=$('#recentBellList');
+  list.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Loading…</p>';
+  const{data,error}=await sb.from('players').select('id,name,alliance_id,alliance_confirmed,created_at')
+    .not('owner','is',null).eq('state_id',S).order('created_at',{ascending:false}).limit(15);
+  if(error||!data||!data.length){ list.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">No registrations yet.</p>'; return; }
+  const allianceIds=[...new Set(data.map(p=>p.alliance_id).filter(Boolean))];
+  const{data:als}=await sb.from('alliances').select('id,tag').in('id',allianceIds.length?allianceIds:['00000000-0000-0000-0000-000000000000']);
+  const byId={};(als||[]).forEach(a=>byId[a.id]=a);
+  list.innerHTML='';
+  data.forEach(p=>{
+    const al=byId[p.alliance_id];
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;background:#f8fbfd;border:1px solid #e3eef4;border-radius:9px;padding:7px 9px;margin-bottom:6px;';
+    row.innerHTML=`<span style="flex:1;font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.82rem;">${(p.name||'—').replace(/</g,'&lt;')}</span>
+      <span style="font-size:.68rem;color:${p.alliance_confirmed?'#3da76e':'#d99514'};">${p.alliance_confirmed?'✓ confirmed':'⏳ pending'}</span>
+      <span style="font-size:.68rem;color:var(--muted);">${al?('['+al.tag+']'):'no alliance'}</span>
+      ${al?'<button class="btn btn-fire" style="padding:4px 8px;font-size:.68rem;">Go</button>':''}`;
+    if(al) row.querySelector('button').addEventListener('click',()=>{toggleRecentBellPanel();jumpToAllianceMember(al,p.name);});
+    list.appendChild(row);
+  });
+}
+document.getElementById('recentBellBtn')?.addEventListener('click',toggleRecentBellPanel);
+
 async function refreshPlatformOverview(){
   const outer=$('#crossAllianceBox'), box=$('#platformOverview');
   if(!box||!isStateAdmin)return;
   if(outer)outer.style.display='block';
   box.style.display='flex';
+  const S=(window.__ADMIN_STATE)||getState();
   try{
-    const {data}=await sb.from('players').select('id,owner,alliance_confirmed').not('owner','is',null);
+    const {data}=await sb.from('players').select('id,owner,alliance_confirmed').not('owner','is',null).eq('state_id',S);
     const reg=data?.length??0;
     const pend=data?.filter(p=>!p.alliance_confirmed)?.length??0;
     $('#ovRegistered').textContent=reg;
     $('#ovPending').textContent=pend;
   }catch(e){console.warn('platformOverview failed:',e);}
+  refreshRecentBadge();
   refreshSubReview();
 }
 
@@ -1173,10 +1235,12 @@ async function togglePendingDrilldown(){
   if(!_pendingDrilldownOpen){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
   box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Loading…</p>';
+  const S=(window.__ADMIN_STATE)||getState();
   const {data,error}=await sb.from('players').select('id,name,alliance_id,state_id,alliance_confirmed')
-    .not('owner','is',null);
+    .not('owner','is',null).eq('state_id',S);
   if(error||!data||!data.length){ box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Nobody pending anywhere right now. 🎉</p>'; return; }
   const data_filtered=data.filter(p=>!p.alliance_confirmed);
+  if(!data_filtered.length){ box.innerHTML='<p style="font-size:.8rem;color:var(--muted);padding:6px;">Nobody pending anywhere right now. 🎉</p>'; return; }
   const allianceIds=[...new Set(data_filtered.map(p=>p.alliance_id).filter(Boolean))];
   const {data:als}=await sb.from('alliances').select('id,tag,name,state_id').in('id',allianceIds.length?allianceIds:['00000000-0000-0000-0000-000000000000']);
   const byId={}; (als||[]).forEach(a=>byId[a.id]=a);
@@ -1187,10 +1251,19 @@ async function togglePendingDrilldown(){
     row.style.cssText='display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #cfe4f2;border-radius:9px;padding:8px 10px;margin-bottom:6px;';
     row.innerHTML=`<span style="flex:1;font-family:Fredoka;font-weight:600;color:var(--ink);font-size:.84rem;">${(p.name||'—').replace(/</g,'&lt;')}</span>
       <span style="font-size:.72rem;color:var(--muted);">${al?('['+al.tag+'] · state '+al.state_id):'no alliance'}</span>
-      ${al?'<button class="btn btn-fire" style="padding:5px 10px;font-size:.72rem;">Go</button>':''}`;
+      ${al?'<button class="btn btn-fire" style="padding:5px 10px;font-size:.72rem;">Go</button>':''}
+      <button class="del-tiny" style="padding:5px 8px;font-size:.72rem;background:#fff0f0;border:1px solid #ffd0d0;border-radius:7px;color:#c23;">✕</button>`;
     if(al){
-      row.querySelector('button').addEventListener('click',()=>jumpToAllianceMember(al,p.name));
+      row.querySelector('.btn-fire').addEventListener('click',()=>jumpToAllianceMember(al,p.name));
     }
+    row.querySelector('.del-tiny').addEventListener('click',async()=>{
+      if(!window.confirm(`Delete "${p.name||'this entry'}"? This removes the player record entirely (use for test/ghost accounts).`))return;
+      const{error}=await sb.from('players').delete().eq('id',p.id);
+      if(error){toast('Delete failed: '+error.message);return;}
+      toast('Deleted ✓');
+      row.remove();
+      refreshPlatformOverview();
+    });
     box.appendChild(row);
   });
 }
@@ -2339,13 +2412,88 @@ function accessRowHTML(p){
   </div>`;
 }
 
+function renderAccessPlayerList(list){
+  const results=$('#accessResults');
+  const registered=(list||[]).filter(p=>p.owner);
+  if(!registered.length){
+    results.innerHTML='<p style="color:var(--muted);font-size:.82rem;padding:8px;">No registered players match. They must create an account (log in once) first.</p>';
+    return;
+  }
+  results.innerHTML='';
+  registered.forEach(p=>{
+    const d=document.createElement('div');
+    d.innerHTML=accessRowHTML(p);
+    const node=d.firstElementChild;
+    node.querySelector('.ac-save').onclick=async()=>{
+      const role=node.querySelector('.ac-role').value;
+      const allianceId=node.querySelector('.ac-alliance').value;
+      const btn=node.querySelector('.ac-save');
+      // Full admin can only be granted from the web if explicitly enabled.
+      if(role==='admin' && !ALLOW_ADMIN_GRANT){
+        showErr('#accessErr','Full admin can only be granted via SQL in Supabase (most secure). To enable it here, set ALLOW_ADMIN_GRANT = true in the code.');
+        return;
+      }
+      // Extra confirmation for full admin — this grants control over EVERYTHING.
+      if(role==='admin'){
+        const ok=window.confirm(
+          `⚠️ FULL ADMIN ACCESS\n\nYou are about to give "${p.name||'this player'}" complete control over the entire platform — every alliance, every state, and the power to change other people's roles.\n\nThis should only ever be you and TMQ.\n\nAre you absolutely sure?`
+        );
+        if(!ok) return;
+        // Second, deliberate confirmation: type the player name
+        const typed=window.prompt(
+          `To confirm, type the player's name exactly:\n\n${p.name||''}`
+        );
+        if(typed===null) return;
+        if((typed||'').trim()!==(p.name||'').trim()){
+          showErr('#accessErr','Name did not match — admin access NOT granted.');
+          return;
+        }
+      }
+      btn.textContent='Saving…';btn.disabled=true;
+      // For admin role, alliance_id is optional (they manage all). For r4/r5, it's required.
+      const payload={role};
+      if(role==='r4'||role==='r5'){ payload.alliance_id=allianceId; }
+      const{error}=await sb.from('players').update(payload).eq('id',p.id);
+      btn.textContent='💾 Apply';btn.disabled=false;
+      if(error){showErr('#accessErr','Save failed: '+error.message);}
+      else{
+        const msg=$('#accessMsg');msg.style.color='#1a7a3a';
+        const al=accessAlliances.find(a=>a.id===allianceId);
+        msg.textContent=`✓ ${p.name||'Player'} is now ${role}${(role==='r4'||role==='r5')&&al?' of ['+al.tag+']':''}.`;
+        toast('Access updated ✓');
+      }
+    };
+    results.appendChild(node);
+  });
+}
+
+let accessBrowseMode='none'; // 'none' | 'recent' | 'pending'
+async function runAccessBrowse(mode){
+  accessBrowseMode=mode;
+  document.querySelectorAll('.access-chip').forEach(c=>c.style.outline=(c.dataset.mode===mode)?'2px solid var(--acc)':'none');
+  const results=$('#accessResults');
+  $('#accessMsg').textContent='';
+  hideErr('#accessErr');
+  results.innerHTML='<p style="color:var(--muted);font-size:.82rem;padding:8px;">Loading…</p>';
+  if(!accessAlliances.length) await loadAccessAlliances();
+  const S=(window.__ADMIN_STATE)||getState();
+  let q=sb.from('players').select('id,name,governor_id,role,alliance_id,owner,alliance_confirmed,created_at')
+    .not('owner','is',null).eq('state_id',S).order('created_at',{ascending:false}).limit(20);
+  const{data,error}=await q;
+  if(error){showErr('#accessErr','Load failed: '+error.message);results.innerHTML='';return;}
+  let list=data||[];
+  if(mode==='pending') list=list.filter(p=>!p.alliance_confirmed);
+  renderAccessPlayerList(list);
+}
+
 let accessSearchTimer=null;
 $('#accessSearch').addEventListener('input', (e)=>{
   clearTimeout(accessSearchTimer);
   const q=e.target.value.trim();
   const results=$('#accessResults');
   $('#accessMsg').textContent='';
-  if(q.length<2){ results.innerHTML='<p style="color:var(--muted);font-size:.8rem;padding:8px;">Type at least 2 characters…</p>'; return; }
+  document.querySelectorAll('.access-chip').forEach(c=>c.style.outline='none');
+  if(q.length<2){ if(accessBrowseMode==='none') results.innerHTML=''; else runAccessBrowse(accessBrowseMode); return; }
   accessSearchTimer=setTimeout(async()=>{
     hideErr('#accessErr');
     results.innerHTML='<p style="color:var(--muted);font-size:.82rem;padding:8px;">Searching…</p>';
@@ -2356,59 +2504,10 @@ $('#accessSearch').addEventListener('input', (e)=>{
       .or(`name.ilike.%${q}%,governor_id.ilike.%${q}%`)
       .limit(20);
     if(error){showErr('#accessErr','Search failed: '+error.message);results.innerHTML='';return;}
-    const registered=(data||[]).filter(p=>p.owner); // must have an account
-    if(!registered.length){
-      results.innerHTML='<p style="color:var(--muted);font-size:.82rem;padding:8px;">No registered players match. They must create an account (log in once) first.</p>';
-      return;
-    }
-    results.innerHTML='';
-    registered.forEach(p=>{
-      const d=document.createElement('div');
-      d.innerHTML=accessRowHTML(p);
-      const node=d.firstElementChild;
-      node.querySelector('.ac-save').onclick=async()=>{
-        const role=node.querySelector('.ac-role').value;
-        const allianceId=node.querySelector('.ac-alliance').value;
-        const btn=node.querySelector('.ac-save');
-        // Full admin can only be granted from the web if explicitly enabled.
-        if(role==='admin' && !ALLOW_ADMIN_GRANT){
-          showErr('#accessErr','Full admin can only be granted via SQL in Supabase (most secure). To enable it here, set ALLOW_ADMIN_GRANT = true in the code.');
-          return;
-        }
-        // Extra confirmation for full admin — this grants control over EVERYTHING.
-        if(role==='admin'){
-          const ok=window.confirm(
-            `⚠️ FULL ADMIN ACCESS\n\nYou are about to give "${p.name||'this player'}" complete control over the entire platform — every alliance, every state, and the power to change other people's roles.\n\nThis should only ever be you and TMQ.\n\nAre you absolutely sure?`
-          );
-          if(!ok) return;
-          // Second, deliberate confirmation: type the player name
-          const typed=window.prompt(
-            `To confirm, type the player's name exactly:\n\n${p.name||''}`
-          );
-          if(typed===null) return;
-          if((typed||'').trim()!==(p.name||'').trim()){
-            showErr('#accessErr','Name did not match — admin access NOT granted.');
-            return;
-          }
-        }
-        btn.textContent='Saving…';btn.disabled=true;
-        // For admin role, alliance_id is optional (they manage all). For r4/r5, it's required.
-        const payload={role};
-        if(role==='r4'||role==='r5'){ payload.alliance_id=allianceId; }
-        const{error}=await sb.from('players').update(payload).eq('id',p.id);
-        btn.textContent='💾 Apply';btn.disabled=false;
-        if(error){showErr('#accessErr','Save failed: '+error.message);}
-        else{
-          const msg=$('#accessMsg');msg.style.color='#1a7a3a';
-          const al=accessAlliances.find(a=>a.id===allianceId);
-          msg.textContent=`✓ ${p.name||'Player'} is now ${role}${(role==='r4'||role==='r5')&&al?' of ['+al.tag+']':''}.`;
-          toast('Access updated ✓');
-        }
-      };
-      results.appendChild(node);
-    });
+    renderAccessPlayerList(data);
   }, 350);
 });
+document.querySelectorAll('.access-chip').forEach(c=>c.addEventListener('click',()=>runAccessBrowse(c.dataset.mode)));
 
 // ── FRAMES MANAGEMENT ────────────────────────────────────────
 const ALL_FRAMES = [
