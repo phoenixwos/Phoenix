@@ -114,6 +114,11 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .etab-group:first-child{margin-left:0;}
 .etabbar::-webkit-scrollbar{display:none;}
 .etab{flex:none;font-family:'Fredoka';font-weight:600;font-size:.78rem;padding:8px 14px;border-radius:11px;border:2px solid var(--panel-edge);background:#fff;color:var(--ink-soft);white-space:nowrap;box-shadow:0 2px 0 var(--panel-edge);}
+.pending-badge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#e5484d;color:#fff;font-size:.68rem;font-weight:800;margin-left:4px;vertical-align:middle;}
+.admin-overview{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
+.admin-stat{flex:1;min-width:110px;background:linear-gradient(180deg,#fff,#fef6ea);border:2px solid var(--panel-edge);border-radius:14px;padding:10px 12px;text-align:center;}
+.admin-stat .n{font-family:'Baloo 2';font-weight:800;font-size:1.35rem;color:#c2470f;line-height:1;}
+.admin-stat .l{font-size:.68rem;color:var(--muted);margin-top:3px;font-weight:600;}
 .etab.active{background:linear-gradient(180deg,#ff9248,var(--fire-deep));color:#fff;border-color:var(--fire-deep);box-shadow:0 2px 0 #c2470f;}
 .esec{display:none;}.esec.active{display:block;}
 
@@ -187,13 +192,19 @@ body{padding-bottom:72px !important;}
       <select id="switchAllianceSel" style="width:100%;padding:11px 14px;border:2px solid var(--panel-edge);border-radius:12px;background:#fff;color:var(--ink);font-size:.9rem;font-family:'Fredoka';font-weight:600;outline:none;"></select>
     </div>
 
+    <!-- PLATFORM OVERVIEW (full admins only: you + TMQ) -->
+    <div id="platformOverview" class="admin-overview" style="display:none;">
+      <div class="admin-stat"><div class="n" id="ovRegistered">–</div><div class="l">✅ Registered</div></div>
+      <div class="admin-stat"><div class="n" id="ovPending">–</div><div class="l">⏳ Pending</div></div>
+    </div>
+
     <!-- EDITOR TABS -->
     <div class="etabbar">
       <span class="etab-group" id="grpAlliance">🏰 ALLIANCE</span>
       <button class="etab active" data-sec="identity">🏷️ Identity</button>
       <button class="etab" data-sec="style">🎨 Style</button>
       <button class="etab" data-sec="leaders">👥 Leaders</button>
-      <button class="etab" data-sec="members">📋 Members</button>
+      <button class="etab" data-sec="members">📋 Members <span id="membersBadge" class="pending-badge" style="display:none;">0</span></button>
       <button class="etab" data-sec="events">📅 Events</button>
       <button class="etab" data-sec="rules">📜 Rules</button>
       <button class="etab" data-sec="news">📢 News</button>
@@ -1072,9 +1083,63 @@ function readNews(){
     msg:el.querySelector('.n-msg').value.trim()
   })).filter(n=>n.msg);}
 
+// ── LIVE UPDATES: badge/summary refresh the instant someone registers ──
+// (no page reload needed while an admin/R4/R5 has this page open)
+let regChannel=null;
+function subscribeRegistrationUpdates(player){
+  if(regChannel){ try{sb.removeChannel(regChannel);}catch(e){} }
+  const isAdmin=player.role==='admin';
+  const filter = isAdmin ? undefined : `alliance_id=eq.${player.alliance_id}`;
+  regChannel = sb.channel('players-registrations')
+    .on('postgres_changes',
+      {event:'INSERT', schema:'public', table:'players', ...(filter?{filter}:{})},
+      ()=>{
+        if(editingAlliance) refreshMembersBadge(editingAlliance.id);
+        refreshPlatformOverview();
+        toast('🔔 New registration!');
+      })
+    .on('postgres_changes',
+      {event:'UPDATE', schema:'public', table:'players', ...(filter?{filter}:{})},
+      ()=>{
+        if(editingAlliance) refreshMembersBadge(editingAlliance.id);
+        refreshPlatformOverview();
+      })
+    .subscribe();
+}
+
+// ── PENDING REGISTRATION BADGES ────────────────────────────────
+async function refreshMembersBadge(allianceId){
+  try{
+    const{count,error}=await sb.from('players').select('id',{count:'exact',head:true})
+      .eq('alliance_id',allianceId).not('owner','is',null)
+      .or('alliance_confirmed.is.null,alliance_confirmed.eq.false');
+    const el=$('#membersBadge');
+    if(!el)return;
+    if(error||!count){el.style.display='none';return;}
+    el.textContent=count>99?'99+':String(count);
+    el.style.display='inline-flex';
+  }catch(e){console.warn('membersBadge failed:',e);}
+}
+async function refreshPlatformOverview(){
+  const box=$('#platformOverview');
+  if(!box||!isStateAdmin)return;
+  box.style.display='flex';
+  try{
+    const[{count:reg},{count:pend}]=await Promise.all([
+      sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null),
+      sb.from('players').select('id',{count:'exact',head:true}).not('owner','is',null)
+        .or('alliance_confirmed.is.null,alliance_confirmed.eq.false')
+    ]);
+    $('#ovRegistered').textContent=reg??'–';
+    $('#ovPending').textContent=pend??'–';
+  }catch(e){console.warn('platformOverview failed:',e);}
+}
+
 // ── LOAD ALLIANCE INTO EDITOR ─────────────────────────────────
 function loadEditor(al){
   editingAlliance=al;
+  refreshMembersBadge(al.id);
+  refreshPlatformOverview();
   // Keep the shared state in sync with the alliance being edited, so the
   // bottom-nav label and preview links reflect the right state (fixes admin
   // showing 3139 while editing a 4501 alliance).
@@ -1383,7 +1448,7 @@ $('#saveMembersBtn').onclick=async()=>{
   }
   btn.textContent='💾 Save member changes';btn.disabled=false;
   if(errors.length){showErr('#memberErr','Some saves failed: '+errors[0]);}
-  else{toast('Members saved ✓');loadMembersEditor();}
+  else{toast('Members saved ✓');loadMembersEditor();refreshMembersBadge(editingAlliance.id);refreshPlatformOverview();}
 };
 
 // ── IMPORT / EXPORT MEMBERS ───────────────────────────────────
@@ -2303,6 +2368,7 @@ async function checkAccess(user){
 
   currentPlayer=player;
   isStateAdmin=(player.role==='admin'); // only full admins (you + TMQ) edit the state ranking
+  subscribeRegistrationUpdates(player);
   if(isStateAdmin){
     const rt=document.getElementById('rankingTab');if(rt)rt.style.display='';
     const at=document.getElementById('accessTab');if(at)at.style.display='';
