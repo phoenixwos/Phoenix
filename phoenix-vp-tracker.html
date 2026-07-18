@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>VP Applications — Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;
+    --good:#22c55e;--mid:#eab308;--bad:#ef4444;--fire:#ff7a2e;}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.35rem;margin:0 0 4px;}
+  .wrap{max-width:600px;margin:0 auto;}
+  header{text-align:center;margin-bottom:12px;}
+  .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
+  p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:10px;font-weight:600;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
+    border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .btn.fire{background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;}
+  input,select,textarea{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:9px;font-size:.85rem;width:100%;font-family:inherit;}
+  textarea{resize:vertical;min-height:70px;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:.74rem;color:var(--text-dim);margin-bottom:5px;}
+
+  .reqRow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);}
+  .reqRow:first-child{border-top:none;}
+  .reqRow span{flex:1;font-size:.84rem;}
+  .reqRow button{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:7px;padding:4px 8px;font-size:.72rem;cursor:pointer;}
+
+  .candCard{padding:11px 4px;border-top:1px solid var(--line);}
+  .candCard:first-child{border-top:none;}
+  .candHead{display:flex;align-items:center;gap:8px;}
+  .candName{flex:1;font-weight:700;font-size:.92rem;}
+  .candStatus{font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px;}
+  .stGood{background:rgba(34,197,94,.15);color:var(--good);}
+  .stMid{background:rgba(234,179,8,.15);color:var(--mid);}
+  .candMeta{font-size:.74rem;color:var(--text-dim);margin-top:3px;}
+  .candActions{display:flex;gap:6px;margin-top:8px;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d1b2a;
+    color:#fff;padding:10px 20px;border-radius:14px;font-weight:600;font-size:.85rem;opacity:0;transition:.25s;z-index:99;border:1px solid var(--line);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .instructions{font-size:.78rem;color:var(--text-dim);line-height:1.5;}
+
+  #phxGate{position:fixed;inset:0;background:var(--bg-deep);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;}
+  #phxGateMsg{max-width:320px;text-align:center;color:var(--text-dim);font-size:.9rem;line-height:1.6;}
+
+  #entryScreen{display:none;}
+  .checkRow{display:flex;align-items:center;gap:9px;padding:8px 2px;border-top:1px solid var(--line);}
+  .checkRow:first-child{border-top:none;}
+  .checkRow input[type=checkbox]{width:19px;height:19px;flex:none;accent-color:var(--fire);}
+  .checkRow span{flex:1;font-size:.84rem;}
+  #pasteBox{white-space:pre-wrap;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;
+    padding:11px;font-size:.78rem;color:var(--text);line-height:1.5;margin-top:8px;display:none;}
+</style>
+</head>
+<body>
+
+<div id="phxGate"><div id="phxGateMsg">Checking access…</div></div>
+
+<div class="wrap" id="mainScreen">
+  <a class="back" id="backLink" href="phoenix-tools.html">‹ Tools</a>
+  <header>
+    <div class="eyebrow">Phoenix · PXR</div>
+    <h1>🎖️ VP Applications</h1>
+    <p class="sub">Track candidates against your requirements — R4/R5 only</p>
+  </header>
+
+  <div class="panel">
+    <div class="panel-title">Requirements checklist</div>
+    <div class="instructions" style="margin-bottom:8px;">Define what a candidate needs before you'll consider them. Applies to every candidate below.</div>
+    <div id="reqList"></div>
+    <div class="row" style="margin-top:10px;">
+      <input id="newReqInput" placeholder="Add a requirement…" style="flex:1;">
+      <button class="btn" id="addReqBtn">＋ Add</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Candidates</div>
+    <button class="btn fire" id="newCandBtn" style="width:100%;margin-bottom:6px;">＋ New candidate</button>
+    <div id="candList"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Share</div>
+    <button class="btn" id="genListBtn" style="width:100%;">📋 Generate summary for all candidates</button>
+    <div id="pasteBox"></div>
+    <button class="btn" id="copyPasteBtn" style="display:none;width:100%;margin-top:8px;">📋 Copy to clipboard</button>
+  </div>
+</div>
+
+<!-- CANDIDATE DETAIL -->
+<div class="wrap" id="entryScreen">
+  <a class="back" id="entryBack" href="#">‹ Back</a>
+  <div class="panel">
+    <div class="panel-title" id="entryTitle">New candidate</div>
+    <div class="field"><label>Player name</label><input id="fName" placeholder="In-game name"></div>
+    <div class="field"><label>Assigned to (reviewer / mentor)</label><input id="fAssigned" placeholder="Optional"></div>
+    <div class="field"><label>Hours in 30-min farms</label><input id="fHours" type="number" step="0.5" placeholder="0"></div>
+    <div class="field"><label>Notes</label><textarea id="fNotes" placeholder="Optional"></textarea></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Requirements met</div>
+    <div id="checkList"></div>
+  </div>
+  <div class="row">
+    <button class="btn fire" id="saveCandBtn" style="flex:1;">💾 Save candidate</button>
+    <button class="btn" id="pasteOneBtn">📋 Copy-paste</button>
+    <button class="btn" id="deleteCandBtn" style="display:none;">🗑</button>
+  </div>
+  <div id="pasteOneBox"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── ACCESS GATE: admin anywhere, or R4/R5 ONLY if their alliance is PXR ── */
+var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+var sb=null, PXR_ALLIANCE_ID=null;
+function gmsg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
+function unlock(allianceId){PXR_ALLIANCE_ID=allianceId;var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);boot();}
+function getState(){var q=new URLSearchParams(location.search).get('s');if(q)return q;try{var ls=localStorage.getItem('phx_state');if(ls)return ls;}catch(e){}return '3139';}
+(function(){
+  try{
+    if(!(window.supabase&&window.supabase.createClient)){gmsg('Could not load. Reload the page.');return;}
+    sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    sb.auth.getSession().then(function(r){
+      var s=r&&r.data&&r.data.session;
+      if(!s){gmsg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
+      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
+        var rows=res.data||[];
+        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
+        function findPXR(cb){
+          sb.from('alliances').select('id,tag').eq('state_id',getState()).then(function(ar){
+            var pxr=(ar.data||[]).find(function(a){return (a.tag||'').toUpperCase().indexOf('PXR')===0;});
+            cb(pxr);
+          });
+        }
+        if(isAdmin){ findPXR(function(pxr){ if(pxr) unlock(pxr.id); else gmsg('No PXR alliance found in this state.'); }); return; }
+        if(!leaderRow){gmsg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
+        sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
+          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
+          if(tag.indexOf('PXR')===0){unlock(ar.data.id);}
+          else{gmsg('🔒 This tool is only for PXR leaders.');}
+        }).catch(function(){gmsg('Error checking your alliance.');});
+      }).catch(function(){gmsg('Error checking permissions.');});
+    }).catch(function(){gmsg('Session error.');});
+  }catch(e){gmsg('Access error.');}
+})();
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+/* ── STATE ─────────────────────────────────────────────────────── */
+var requirements=[]; // [{id,text}]
+var candidates=[];   // [{id,player_name,assigned_to,farm_hours,checks,notes}]
+var editingId=null;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+async function boot(){
+  document.getElementById('addReqBtn').addEventListener('click',addRequirement);
+  document.getElementById('newCandBtn').addEventListener('click',function(){openEntry(null);});
+  document.getElementById('entryBack').addEventListener('click',function(e){e.preventDefault();showMain();});
+  document.getElementById('saveCandBtn').addEventListener('click',saveCandidate);
+  document.getElementById('deleteCandBtn').addEventListener('click',deleteCandidate);
+  document.getElementById('genListBtn').addEventListener('click',generateListPaste);
+  document.getElementById('pasteOneBtn').addEventListener('click',generateOnePaste);
+  document.getElementById('copyPasteBtn').addEventListener('click',function(){copyText(document.getElementById('pasteBox').textContent);});
+  await loadRequirements();
+  await loadCandidates();
+  renderRequirements();
+  renderCandidates();
+}
+
+function showMain(){ document.getElementById('entryScreen').style.display='none'; document.getElementById('mainScreen').style.display=''; }
+
+/* ── REQUIREMENTS ─────────────────────────────────────────────── */
+async function loadRequirements(){
+  var {data}=await sb.from('vp_requirements').select('*').eq('alliance_id',PXR_ALLIANCE_ID).order('sort_order');
+  requirements=data||[];
+}
+function renderRequirements(){
+  var box=document.getElementById('reqList');
+  box.innerHTML='';
+  if(!requirements.length){box.innerHTML='<div class="instructions">No requirements yet — add your first one below.</div>';return;}
+  requirements.forEach(function(r){
+    var d=document.createElement('div');
+    d.className='reqRow';
+    d.innerHTML='<span>'+escapeHtml(r.text)+'</span><button>Remove</button>';
+    d.querySelector('button').addEventListener('click',async function(){
+      if(!confirm('Remove this requirement? (existing candidate checkmarks for it stay saved but hidden)'))return;
+      await sb.from('vp_requirements').delete().eq('id',r.id);
+      await loadRequirements(); renderRequirements();
+    });
+    box.appendChild(d);
+  });
+}
+async function addRequirement(){
+  var input=document.getElementById('newReqInput');
+  var text=input.value.trim();
+  if(!text){toast('Type a requirement first');return;}
+  await sb.from('vp_requirements').insert({alliance_id:PXR_ALLIANCE_ID,text:text,sort_order:requirements.length});
+  input.value='';
+  await loadRequirements(); renderRequirements();
+}
+
+/* ── CANDIDATES ───────────────────────────────────────────────── */
+async function loadCandidates(){
+  var {data}=await sb.from('vp_candidates').select('*').eq('alliance_id',PXR_ALLIANCE_ID).order('created_at',{ascending:false});
+  candidates=data||[];
+}
+function metCount(cand){
+  var n=0;
+  requirements.forEach(function(r){ if(cand.checks && cand.checks[r.id]) n++; });
+  return n;
+}
+function renderCandidates(){
+  var box=document.getElementById('candList');
+  box.innerHTML='';
+  if(!candidates.length){box.innerHTML='<div class="instructions">No candidates yet.</div>';return;}
+  candidates.forEach(function(c){
+    var met=metCount(c), total=requirements.length;
+    var complete=total>0 && met===total;
+    var card=document.createElement('div');
+    card.className='candCard';
+    card.innerHTML=
+      '<div class="candHead"><div class="candName">'+escapeHtml(c.player_name)+'</div>'+
+      '<div class="candStatus '+(complete?'stGood':'stMid')+'">'+met+'/'+total+' met</div></div>'+
+      '<div class="candMeta">'+(c.assigned_to?('Assigned: '+escapeHtml(c.assigned_to)+' · '):'')+(c.farm_hours||0)+'h in 30-min farms</div>'+
+      '<div class="candActions"><button class="btn" data-a="edit">Edit</button></div>';
+    card.querySelector('[data-a="edit"]').addEventListener('click',function(){openEntry(c.id);});
+    box.appendChild(card);
+  });
+}
+
+/* ── CANDIDATE DETAIL ─────────────────────────────────────────── */
+async function openEntry(id){
+  editingId=id;
+  document.getElementById('mainScreen').style.display='none';
+  document.getElementById('entryScreen').style.display='';
+  document.getElementById('pasteOneBox').innerHTML='';
+  document.getElementById('deleteCandBtn').style.display=id?'':'none';
+  var cand=id?candidates.find(function(c){return c.id===id;}):null;
+  document.getElementById('entryTitle').textContent=id?'Edit candidate':'New candidate';
+  document.getElementById('fName').value=cand?cand.player_name:'';
+  document.getElementById('fAssigned').value=cand?(cand.assigned_to||''):'';
+  document.getElementById('fHours').value=cand?(cand.farm_hours||0):'';
+  document.getElementById('fNotes').value=cand?(cand.notes||''):'';
+  renderCheckList(cand?cand.checks||{}:{});
+}
+function renderCheckList(checks){
+  var box=document.getElementById('checkList');
+  box.innerHTML='';
+  if(!requirements.length){box.innerHTML='<div class="instructions">Add requirements on the main screen first.</div>';return;}
+  requirements.forEach(function(r){
+    var row=document.createElement('div');
+    row.className='checkRow';
+    row.innerHTML='<input type="checkbox" data-rid="'+r.id+'" '+(checks[r.id]?'checked':'')+'><span>'+escapeHtml(r.text)+'</span>';
+    box.appendChild(row);
+  });
+}
+async function saveCandidate(){
+  var name=document.getElementById('fName').value.trim();
+  if(!name){toast('Enter a player name');return;}
+  var checks={};
+  document.querySelectorAll('#checkList input[type=checkbox]').forEach(function(cb){ checks[cb.dataset.rid]=cb.checked; });
+  var payload={
+    alliance_id:PXR_ALLIANCE_ID, player_name:name,
+    assigned_to:document.getElementById('fAssigned').value.trim()||null,
+    farm_hours:parseFloat(document.getElementById('fHours').value)||0,
+    notes:document.getElementById('fNotes').value.trim()||null,
+    checks:checks, updated_at:new Date().toISOString()
+  };
+  var btn=document.getElementById('saveCandBtn'); btn.textContent='Saving…'; btn.disabled=true;
+  try{
+    if(editingId) await sb.from('vp_candidates').update(payload).eq('id',editingId);
+    else await sb.from('vp_candidates').insert(payload);
+    toast('Saved ✓');
+    await loadCandidates(); renderCandidates(); showMain();
+  }catch(e){ toast('Save failed: '+e.message); }
+  btn.textContent='💾 Save candidate'; btn.disabled=false;
+}
+async function deleteCandidate(){
+  if(!editingId) return;
+  if(!confirm('Delete this candidate?')) return;
+  await sb.from('vp_candidates').delete().eq('id',editingId);
+  toast('Deleted');
+  await loadCandidates(); renderCandidates(); showMain();
+}
+
+/* ── COPY-PASTE GENERATION ───────────────────────────────────── */
+function copyText(t){
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){toast('Copied ✓');});}
+  else{toast('Select and copy manually');}
+}
+function generateOnePaste(){
+  var name=document.getElementById('fName').value.trim()||'Candidate';
+  var hours=document.getElementById('fHours').value||0;
+  var assigned=document.getElementById('fAssigned').value.trim();
+  var checks={};
+  document.querySelectorAll('#checkList input[type=checkbox]').forEach(function(cb){ checks[cb.dataset.rid]=cb.checked; });
+  var lines=['🎖️ VP APPLICATION — '+name, hours+'h in 30-min farms'+(assigned?(' · Assigned to: '+assigned):''), ''];
+  requirements.forEach(function(r){ lines.push((checks[r.id]?'✅':'⬜')+' '+r.text); });
+  var met=requirements.filter(function(r){return checks[r.id];}).length;
+  lines.push(''); lines.push(met===requirements.length&&requirements.length>0?'Status: READY ✅':'Status: '+met+'/'+requirements.length+' requirements met');
+  var text=lines.join('\n');
+  var box=document.getElementById('pasteOneBox');
+  box.innerHTML='<div id="pasteOneText" style="white-space:pre-wrap;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;padding:11px;font-size:.78rem;line-height:1.5;margin-top:8px;">'+escapeHtml(text)+'</div><button class="btn" style="width:100%;margin-top:8px;" id="copyOneBtn2">📋 Copy to clipboard</button>';
+  document.getElementById('copyOneBtn2').addEventListener('click',function(){copyText(text);});
+}
+function generateListPaste(){
+  var lines=['🎖️ VP APPLICATIONS — PXR', ''];
+  if(!candidates.length){ lines.push('No candidates yet.'); }
+  candidates.forEach(function(c){
+    var met=metCount(c), total=requirements.length;
+    var mark=(total>0&&met===total)?'✅':'⏳';
+    lines.push(mark+' '+c.player_name+' — '+met+'/'+total+' requirements · '+(c.farm_hours||0)+'h farms'+(c.assigned_to?(' · '+c.assigned_to):''));
+  });
+  var text=lines.join('\n');
+  var box=document.getElementById('pasteBox');
+  box.textContent=text; box.style.display='block';
+  document.getElementById('copyPasteBtn').style.display='block';
+}
+</script>
+</body>
+</html>

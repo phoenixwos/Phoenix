@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phoenix — Beginner Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;500;600&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#dff0fa; --sky2:#c8e8f8; --ice:#a0d4f0; --ice-deep:#4a9fd4;
+  --panel:#f0f8ff; --panel-edge:#c0dff0; --ink:#1e3a52; --ink-soft:#4a6a86; --muted:#7fa0b8;
+  --gold:#ffb938; --gold-deep:#f59e0b; --green:#56c98a; --green-d:#3da76e;
+  --acc:#ff7a2e; --acc-d:#e85a18; --acc-sh:#c2470f; --white:#fff;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{
+  margin:0; min-height:100vh; font-family:'Fredoka',sans-serif; color:var(--ink);
+  background:linear-gradient(180deg,var(--sky),var(--sky2) 60%);
+  padding-bottom:40px;
+}
+.top{
+  position:sticky; top:0; z-index:20; background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.85));
+  backdrop-filter:blur(8px); border-bottom:2px solid var(--panel-edge); padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.top a.back{color:var(--ink-soft); text-decoration:none; font-weight:600; font-size:14px;}
+.brand{font-family:'Cinzel',serif; font-weight:700; font-size:17px;}
+.brand b{color:var(--acc);}
+
+.hero{padding:26px 16px 18px; text-align:center;}
+.hero h1{font-family:'Baloo 2',cursive; font-weight:800; font-size:25px; margin:0 0 6px;
+  background:linear-gradient(90deg,var(--ice-deep),var(--acc)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.hero p{color:var(--ink-soft); font-size:14px; margin:0 auto; max-width:440px; line-height:1.5;}
+
+.wrap{max-width:640px; margin:0 auto; padding:0 14px;}
+
+.cta{max-width:480px;margin:0 auto 10px;padding:0 16px;}
+.cta a{display:block;text-align:center;background:linear-gradient(90deg,var(--acc),var(--gold-deep));color:#fff;
+  font-weight:800;text-decoration:none;padding:11px 14px;border-radius:12px;box-shadow:0 4px 0 var(--acc-sh);font-size:13.5px;font-family:'Fredoka';}
+
+.tabs{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0;}
+.tab{padding:8px 13px; border-radius:999px; border:2px solid var(--panel-edge); background:var(--panel);
+  color:var(--ink-soft); font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Fredoka';}
+.tab.on{background:var(--ice-deep); border-color:var(--ice-deep); color:#fff;}
+
+.pane{display:none;}
+.pane.on{display:block;}
+
+.gSection{background:var(--panel); border:2px solid var(--panel-edge); border-radius:16px; padding:16px 17px; margin-bottom:14px;}
+.gSection h3{font-family:'Baloo 2';font-size:16px; color:var(--ink); margin:0 0 8px;}
+.gSection p{font-size:13.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 9px;}
+.gSection p:last-child{margin-bottom:0;}
+.gSection ul{margin:0 0 9px; padding-left:19px;}
+.gSection li{font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:5px;}
+.gSection b{color:var(--ink);}
+.gSection a.inline{color:var(--acc-d); font-weight:700; text-decoration:none;}
+.gStep{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+.gStep:last-child{margin-bottom:0;}
+.gNum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--ice-deep);color:#fff;font-weight:800;
+  font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka';}
+.gCredit{font-size:11px; color:var(--muted); text-align:center; background:transparent; border-style:dashed;}
+.linkCard{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(255,122,46,.08),rgba(255,185,56,.08));
+  border:2px solid var(--gold-deep);border-radius:14px;padding:13px 15px;text-decoration:none;margin-bottom:14px;}
+.linkCard .em{font-size:26px;}
+.linkCard .tx b{display:block;color:var(--ink);font-size:14.5px;font-family:'Baloo 2';font-weight:700;}
+.linkCard .tx span{color:var(--ink-soft);font-size:12px;}
+.linkCard .go{margin-left:auto;color:var(--acc-d);font-size:20px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="back" href="phoenix-tools.html">‹ Tools</a>
+  <div class="brand">🔥 <b>Beginner's</b> Guide</div>
+  <span></span>
+</div>
+
+<div class="hero">
+  <h1>New to the ice? Start here.</h1>
+  <p>The tricks that actually move the needle early — furnace focus, island buffs, construction speed stacking, and how to not waste your first SvS.</p>
+</div>
+
+<div class="cta"><a href="index.html">✨ Free to browse — sign up for more Phoenix tools →</a></div>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab on" data-t="furnace">🔥 Furnace</div>
+    <div class="tab" data-t="build">🏗️ Build faster</div>
+    <div class="tab" data-t="orders">🏛️ Chief Orders</div>
+    <div class="tab" data-t="buffs">💰 Buy before you use</div>
+    <div class="tab" data-t="island">🏝️ Island</div>
+    <div class="tab" data-t="svs">⚔️ SvS savings</div>
+    <div class="tab" data-t="calendar">📅 Calendar</div>
+  </div>
+
+  <!-- FURNACE -->
+  <div class="pane on" id="p-furnace">
+    <div class="gSection">
+      <h3>🔥 Focus your Furnace, not everything at once</h3>
+      <p>Your Furnace level is the single biggest gate in the game — it caps almost everything else (buildings, troop tiers, hero levels, island access). New players often spread resources thin upgrading random buildings. Don't. The fastest way to grow is:</p>
+      <div class="gStep"><div class="gNum">1</div><div>Rush the Furnace itself first, whenever you have the resources for it.</div></div>
+      <div class="gStep"><div class="gNum">2</div><div>Only upgrade other buildings when the game blocks your Furnace upgrade and demands it (a required building level).</div></div>
+      <div class="gStep"><div class="gNum">3</div><div>Keep march queues, gathering, and Chief Orders running constantly — idle time is wasted growth, even if you're not actively upgrading.</div></div>
+      <p>Every Furnace level also unlocks new buildings and features (Drill Camp for hero leveling at 13, the Dock and Daybreak Island at 19, and so on) — so rushing it isn't just about combat power, it's what unlocks the rest of this guide.</p>
+    </div>
+  </div>
+
+  <!-- BUILD FASTER -->
+  <div class="pane" id="p-build">
+    <div class="gSection">
+      <h3>🏗️ Stack your speed buffs — in the right order</h3>
+      <p>Construction speed bonuses stack, but only if you activate them <b>before</b> you start the upgrade — none of them apply retroactively. The order that gets you the biggest discount:</p>
+      <div class="gStep"><div class="gNum">1</div><div><b>Activate your Cave Hyena pet skill</b> (Builder's Aid, +15% for 5 minutes) — you have a short window to start the upgrade after activating it.</div></div>
+      <div class="gStep"><div class="gNum">2</div><div><b>Enact "Double Time"</b> from the Chief's House (+20%, needs Contentment) at the same time.</div></div>
+      <div class="gStep"><div class="gNum">3</div><div>If the state President has an active <b>Mercantilism</b> buff (+10% construction) or similar, that stacks too — worth timing big upgrades around it.</div></div>
+      <div class="gStep"><div class="gNum">4</div><div>Then start the upgrade, and only <i>after</i> that spend Speedup items if you need to close the gap instantly.</div></div>
+      <p>Pet + Double Time alone is roughly a third off the timer for free — don't skip it on anything that takes more than a few minutes.</p>
+    </div>
+  </div>
+
+  <!-- CHIEF ORDERS -->
+  <div class="pane" id="p-orders">
+    <div class="gSection">
+      <h3>🏛️ The Chief's House (Governor's Orders)</h3>
+      <p>Unlocked at Furnace 6. It runs on <b>Contentment</b> (earned passively as your survivors work — upgrade resource buildings to earn it faster, or buy some with gems if you're in a hurry). There are 6 orders, each with its own cooldown, and you can run several at once. The two worth knowing from day one:</p>
+      <ul>
+        <li><b>Double Time</b> — cuts a new upgrade's time by 20%. Only works if enacted <i>before</i> you start that upgrade.</li>
+        <li><b>Overdrive</b> — forces all worksites to produce 48 hours of resources instantly, at the cost of -10 mood for a while. Great when you're resource-starved before a push.</li>
+      </ul>
+      <p>General rule for the order to request them in: enact <b>Double Time</b> right before any big construction push, save <b>Overdrive</b> for when you're about to dump a lot of resources into upgrades or troop training, and don't let Contentment sit unused — if you're capped and not about to build, spend it rather than waste the trickle.</p>
+    </div>
+  </div>
+
+  <!-- BUY BEFORE YOU USE -->
+  <div class="pane" id="p-buffs">
+    <div class="gSection">
+      <h3>💰 Buy the city buff <i>before</i> you gather or train</h3>
+      <p>The shop sells timed buffs (gathering speed, resource boosts, troop training speed, etc.) that run for a fixed number of hours from the moment you buy them. The mistake almost everyone makes early on: buying the buff <i>after</i> queuing a long gather or a big training batch, wasting most of the window.</p>
+      <ul>
+        <li>Buy the buff <b>first</b>, then send your march or start training — that way the entire action happens inside the boosted window.</li>
+        <li>Match the buff's duration to what you're about to do. A 24h gathering boost is wasted on a 2-hour march; save it for a long-haul gather instead.</li>
+        <li>Same logic applies to VIP time, Musk Ox pet (instant-completes a gather), and any alliance-wide buffs the President activates — check what's active before you commit resources or troops.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ISLAND -->
+  <div class="pane" id="p-island">
+    <div class="gSection">
+      <h3>🏝️ Daybreak Island</h3>
+      <p>Unlocked once your Furnace hits <b>level 19</b> (via the Dock building). Your survivors sail off and find it after about 3 days. It starts as forest around the Tree of Life — you build two Lumber Camps to clear it, and clearing trees has a chance to drop chests with Life Essence, hero shards, and gear.</p>
+      <p><b>Life Essence</b> is the island's main currency — you earn it from clearing wood (roughly 1 per 720 wood cleared) and spend it on buildings and decorations. Everything you place on the island adds to a <b>Prosperity Bonus</b>, which levels up the Tree of Life — that's what actually grants you stat bonuses back in your city, similar to how the Furnace works for your base.</p>
+      <p>Buildings/decorations fall into 4 types: <b>Basic</b> (pure decoration, no bonus), <b>Vegetation</b> (mostly decorative, a few give bonus — check before buying), <b>Others</b> (cost Life Essence, give Prosperity Bonus, each has its own placement limit), and <b>Limited</b> (seasonal, usually free, and give a big bonus when available). Prioritize Prosperity-Bonus buildings over pure decoration early on — you can always make it pretty later.</p>
+    </div>
+  </div>
+
+  <!-- SVS SAVINGS -->
+  <div class="pane" id="p-svs">
+    <div class="gSection">
+      <h3>⚔️ Why saving for SvS matters</h3>
+      <p>State vs State (SvS) is a multi-day event where each day scores a different kind of activity — construction, research, beast hunts, troop training, gear upgrades. The trick is that most of what you'd normally use whenever you feel like it (speedups, Fire Crystals, Mithril, Wild Marks, hero shards, gems) scores far more points if you save it and spend it on the <i>matching</i> day instead of burning it early.</p>
+      <p>Someone who dumps a big pile of speedups on a random Tuesday gets a faster city. Someone who saves the same pile for SvS gets a faster city <i>and</i> a pile of alliance points. Same resources, very different outcome — so once your alliance calls "saving mode," it's worth actually following it.</p>
+      <p>Your alliance keeps a running list of exactly what to save and which day to use it on — check the <b>Copy-Paste Hub</b> in Tools for the day-by-day breakdown once you're in.</p>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="pane" id="p-calendar">
+    <div class="gSection">
+      <h3>📅 Keeping track of the state calendar</h3>
+      <p>Between Bear Trap, Foundry, Canyon, Crazy Joe, SvS phases, and whatever seasonal event is running, it's easy to lose track of what's happening when. Two habits that help:</p>
+      <ul>
+        <li>Check your alliance's <b>Events</b> tab in Phoenix regularly — leaders post the week's schedule there.</li>
+        <li>In-game, the calendar icon shows upcoming scheduled events with countdowns — glance at it each login so nothing catches you off guard.</li>
+      </ul>
+      <p>If something looks unclear or the schedule conflicts with what you were told in chat, ask an R4/R5 rather than guessing — timing mistakes (like using savings a day early) are the easiest ones to avoid.</p>
+    </div>
+  </div>
+
+  <a class="linkCard" href="phoenix-heroes.html">
+    <div class="em">🦸</div>
+    <div class="tx"><b>Next: the Hero Guide</b><span>Skills, shards, gear priorities &amp; the rally leader/joiner rule</span></div>
+    <div class="go">›</div>
+  </a>
+
+  <div class="gSection gCredit">
+    Compiled from community guides across the Whiteout Survival fan wiki, Mobi.gg, OneChilledGamer, AllClash, LDCloud and wostools.net, plus in-alliance experience. Game mechanics can change with updates — treat this as a solid starting point, not gospel.
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById('p-'+t.dataset.t).classList.add('on');
+  });
+});
+</script>
+</body>
+</html>
