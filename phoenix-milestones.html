@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Milestones — Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;
+    --hero:#e8a33d;--pet:#4fa8e8;--sys:#8fd6a8;--fire:#ff7a2e;--bad:#ef4444;}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.35rem;margin:0 0 4px;}
+  .wrap{max-width:600px;margin:0 auto;}
+  header{text-align:center;margin-bottom:12px;}
+  .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
+  p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-bottom:14px;}
+  .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
+    border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .btn.fire{background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;}
+  input{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:9px;font-size:.85rem;width:100%;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:.74rem;color:var(--text-dim);margin-bottom:5px;}
+
+  .dayHero{text-align:center;padding:6px 0 2px;}
+  .dayHero .n{font-family:'Rajdhani';font-weight:700;font-size:2.1rem;color:var(--fire);line-height:1;}
+  .dayHero .l{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+
+  .filters{display:flex;gap:6px;margin-bottom:12px;}
+  .chip{flex:1;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.74rem;font-weight:700;cursor:pointer;text-align:center;}
+  .chip.on{border-color:var(--fire);color:var(--fire);background:rgba(255,122,60,.1);}
+
+  .mRow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid var(--line);border-left:3px solid transparent;padding-left:9px;}
+  .mRow:first-child{border-top:none;}
+  .mRow.hero{border-left-color:var(--hero);}
+  .mRow.pet{border-left-color:var(--pet);}
+  .mRow.sys{border-left-color:var(--sys);}
+  .mRow.past{opacity:.4;}
+  .mIco{font-size:1.1rem;width:24px;text-align:center;flex:none;}
+  .mBody{flex:1;min-width:0;}
+  .mName{font-size:.86rem;font-weight:600;color:var(--text);}
+  .mDate{font-size:.72rem;color:var(--text-dim);}
+  .mWhen{font-size:.76rem;font-weight:700;text-align:right;flex:none;min-width:64px;}
+  .mWhen.soon{color:var(--fire);}
+  .mWhen.today{color:#22c55e;}
+  .mWhen.past{color:var(--text-dim);}
+
+  .setupBox{text-align:center;padding:20px 10px;}
+  .setupBox p{font-size:.85rem;color:var(--text-dim);margin:8px 0 16px;}
+  .gate{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:.9rem;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e2718;color:#8ff0b0;
+    border:1px solid #1f5a3a;padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:600;
+    opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  <header>
+    <div class="eyebrow">Phoenix · Leaders</div>
+    <h1>📅 Milestones</h1>
+    <p class="sub">What's arriving, and when — hero/pet generations & system unlocks for this state.</p>
+  </header>
+
+  <div id="app"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function getState(){
+  const q=new URLSearchParams(location.search).get('s');
+  if(q&&/^\d{3,5}$/.test(q)){ try{localStorage.setItem('phx_state',q);}catch(e){} return q; }
+  try{ const ls=localStorage.getItem('phx_state'); if(ls&&/^\d{3,5}$/.test(ls)) return ls; }catch(e){}
+  return '3139';
+}
+const S=getState();
+(function(){
+  const bl=document.getElementById('backLink');
+  if(bl && S && S!=='3139') bl.href='phoenix-tools.html?s='+S;
+})();
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── Fixed game-content schedule: offset in days from server start (day 0) ──
+// Source: community roadmap tracker, cross-checked against TMQ's data.
+const MILESTONES=[
+  {d:0,   n:'Hero Generation 1 (Natalia, Jeronimo, Molly, Zinman)', t:'hero', i:'🦸'},
+  {d:40,  n:'Hero Generation 2 (Flint, Philly, Alonso)', t:'hero', i:'🦸'},
+  {d:40,  n:'Legendary Hero Gear Unlocks', t:'sys', i:'🛡️'},
+  {d:53,  n:'Sunfire Castle Event', t:'sys', i:'🏰'},
+  {d:54,  n:'Pet Generation 1 (Cave Hyena, Arctic Wolf, Musk Ox)', t:'pet', i:'🐾'},
+  {d:60,  n:'Fire Crystal Age Begins ("Road to Recovery")', t:'sys', i:'🔥'},
+  {d:80,  n:'SvS & King of the Ice unlock (schedule-based)', t:'sys', i:'⚔️'},
+  {d:90,  n:'Pet Generation 2 (Titan Roc, Giant Tapir)', t:'pet', i:'🐾'},
+  {d:120, n:'Hero Generation 3 (Logan, Mia, Greg)', t:'hero', i:'🦸'},
+  {d:120, n:'Vision of Dawn Update', t:'sys', i:'✨'},
+  {d:120, n:'Fortress Event Rewards (Fire Crystals & Pets)', t:'sys', i:'🏯'},
+  {d:120, n:'VIP Prestige Shop Unlocks', t:'sys', i:'💎'},
+  {d:140, n:'Pet Generation 3 (Snow Leopard, Giant Elk)', t:'pet', i:'🐾'},
+  {d:150, n:'Fire Crystal 5 + Laboratory Unlocks', t:'sys', i:'🔥'},
+  {d:169, n:'Legendary Chief Gear Unlocks', t:'sys', i:'🛡️'},
+  {d:190, n:'Hero Generation 4 (Ahmose, Reina, Lynn)', t:'hero', i:'🦸'},
+  {d:190, n:'Pet Generation 4 (Cave Lion, Snow Ape)', t:'pet', i:'🐾'},
+  {d:195, n:'Fortress Rewards Update (→ Philly & Flint shards)', t:'sys', i:'🏯'},
+  {d:195, n:"Gina's Revenge → Hero's Mission Unlocks", t:'sys', i:'🎯'},
+  {d:195, n:'Hero Hall (Keys Recruitment) Update', t:'sys', i:'🗝️'},
+  {d:195, n:'Intel Missions Update', t:'sys', i:'📡'},
+  {d:210, n:'War Academy Unlocks', t:'sys', i:'🎓'},
+  {d:210, n:'Fire Crystal Lab 5 Unlocks', t:'sys', i:'🔥'},
+  {d:270, n:'Hero Generation 5 (Hector, Nora, Gwen)', t:'hero', i:'🦸'},
+  {d:280, n:'Pet Generation 5 (Iron Rhino, Saber-tooth)', t:'pet', i:'🐾'},
+  {d:315, n:'Fire Crystal 8 Unlocks', t:'sys', i:'🔥'},
+  {d:315, n:'Daily Missions Update (more Fire Crystal rewards)', t:'sys', i:'📋'},
+  {d:315, n:'Fire Crystal Lab 6 Unlocks', t:'sys', i:'🔥'},
+  {d:360, n:'Hero Generation 6 (Wu Ming, Renee, Wayne)', t:'hero', i:'🦸'},
+  {d:440, n:'Hero Generation 7 (Edith, Gordon, Bradley)', t:'hero', i:'🦸'},
+  {d:500, n:'Fire Crystal 10 Unlocks', t:'sys', i:'🔥'},
+  {d:520, n:'Hero Generation 8 (Gatot, Sonya, Hendrik)', t:'hero', i:'🦸'},
+  {d:600, n:'Hero Generation 9 (Magnus, Fred, Xura)', t:'hero', i:'🦸'},
+];
+
+let startDate=null, isLeader=false, showPast=false, filterType='all';
+
+function fmtDate(dt){
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function dayNumber(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const sd=new Date(startDate+'T00:00:00');
+  return Math.floor((today-sd)/86400000);
+}
+function render(){
+  const app=document.getElementById('app');
+  const curDay=dayNumber();
+  let html=`<div class="panel dayHero"><div class="n">Day ${curDay}</div><div class="l">of this server</div></div>`;
+  html+=`<div class="filters">
+    <div class="chip ${filterType==='all'?'on':''}" data-f="all">All</div>
+    <div class="chip ${filterType==='hero'?'on':''}" data-f="hero">🦸 Heroes</div>
+    <div class="chip ${filterType==='pet'?'on':''}" data-f="pet">🐾 Pets</div>
+    <div class="chip ${filterType==='sys'?'on':''}" data-f="sys">✨ Systems</div>
+  </div>`;
+  html+=`<div class="panel" id="mList"></div>`;
+  if(isLeader){
+    html+=`<div class="panel">
+      <div class="field"><label>Server start date (day 0)</label><input type="date" id="startInput" value="${startDate||''}"></div>
+      <button class="btn fire" id="saveStartBtn" style="width:100%;">💾 Save start date</button>
+    </div>`;
+  }
+  app.innerHTML=html;
+
+  const sd=new Date(startDate+'T00:00:00');
+  const list=document.getElementById('mList');
+  let rows=MILESTONES.filter(m=>filterType==='all'||m.t===filterType);
+  if(!showPast) rows=rows.filter(m=>(m.d-curDay)>=-1);
+  if(!rows.length){ list.innerHTML='<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">Nothing upcoming in this filter. <span id="showPastLink" style="text-decoration:underline;cursor:pointer;color:var(--ice-dim);">Show past</span></p>'; }
+  else{
+    list.innerHTML=rows.map(m=>{
+      const diff=m.d-curDay;
+      const evDate=new Date(sd.getTime()+m.d*86400000);
+      let whenTxt, whenCls;
+      if(diff===0){whenTxt='Today';whenCls='today';}
+      else if(diff<0){whenTxt=Math.abs(diff)+'d ago';whenCls='past';}
+      else if(diff<=14){whenTxt='in '+diff+'d';whenCls='soon';}
+      else{whenTxt='in '+diff+'d';whenCls='';}
+      return `<div class="mRow ${m.t} ${diff<0?'past':''}">
+        <div class="mIco">${m.i}</div>
+        <div class="mBody"><div class="mName">${m.n}</div><div class="mDate">${fmtDate(evDate)}</div></div>
+        <div class="mWhen ${whenCls}">${whenTxt}</div>
+      </div>`;
+    }).join('');
+  }
+  document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filterType=c.dataset.f;render();});
+  const spl=document.getElementById('showPastLink'); if(spl) spl.onclick=()=>{showPast=true;render();};
+  const sb2=document.getElementById('saveStartBtn');
+  if(sb2) sb2.onclick=async()=>{
+    const v=document.getElementById('startInput').value;
+    if(!v){toast('Pick a date first');return;}
+    sb2.textContent='Saving…';sb2.disabled=true;
+    const{error}=await sb.from('states').update({server_start_date:v}).eq('id',S);
+    sb2.textContent='💾 Save start date';sb2.disabled=false;
+    if(error){toast('Failed: '+error.message);return;}
+    startDate=v; toast('Saved ✓'); render();
+  };
+}
+
+function renderSetup(){
+  document.getElementById('app').innerHTML=`<div class="panel setupBox">
+    <div style="font-size:2rem;">📅</div>
+    <p>This state doesn't have a start date set yet. Set it once and every milestone below calculates itself.</p>
+    <div class="field" style="text-align:left;"><label>Server start date (day 0)</label><input type="date" id="startInput2"></div>
+    <button class="btn fire" id="saveStartBtn2" style="width:100%;margin-top:8px;">💾 Save & calculate</button>
+  </div>`;
+  document.getElementById('saveStartBtn2').onclick=async()=>{
+    const v=document.getElementById('startInput2').value;
+    if(!v){toast('Pick a date first');return;}
+    const{error}=await sb.from('states').update({server_start_date:v}).eq('id',S);
+    if(error){toast('Failed: '+error.message);return;}
+    startDate=v; render();
+  };
+}
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){
+    const{data:rows}=await sb.from('players').select('role,alliance_id,state_id').eq('owner',session.user.id);
+    isLeader=(rows||[]).some(p=>p.role==='admin'||((p.role==='r4'||p.role==='r5')&&p.state_id===S));
+  }
+  const{data:st}=await sb.from('states').select('server_start_date').eq('id',S).maybeSingle();
+  startDate=st&&st.server_start_date;
+  if(!startDate){
+    if(isLeader) renderSetup();
+    else document.getElementById('app').innerHTML='<div class="gate">This state hasn\'t set its server start date yet. Ask a leader to set it up.</div>';
+    return;
+  }
+  render();
+}
+init();
+</script>
+</body>
+</html>

@@ -161,6 +161,26 @@
     <div class="arr">›</div>
   </a>
 
+  <a class="card" id="cardMilestones" style="display:none;">
+    <div class="emoji">📅</div>
+    <div class="body">
+      <h3>Milestones</h3>
+      <p>Hero &amp; pet generations, system unlocks — calculated from your server's start date.</p>
+      <span class="tag leaders">R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card blue" id="cardWeekly" style="display:none;">
+    <div class="emoji">🗓️</div>
+    <div class="body">
+      <h3>Weekly Events</h3>
+      <p>Fort sign-ups, Castle event, SvS — the recurring schedule, so nobody misses the window.</p>
+      <span class="tag leaders">R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
   <!-- ════ FOR EVERYONE ════ -->
   <div class="grp">🌍 For everyone</div>
 
@@ -231,7 +251,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html'};
+  var dest={cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardWeekly:'phoenix-weekly-events.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -253,7 +273,7 @@
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
   function show(ids){ ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; }); }
-  function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem']); }        // any R4/R5/admin
+  function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem','cardMilestones','cardWeekly']); }        // any R4/R5/admin
   function revealPXR(){ show(['grpPXR','cardHive','cardWorld','cardRally','cardCopyPaste','cardTrackers','cardVP']); }  // admin OR R4/R5 of PXR
   try{
     if(!(window.supabase&&window.supabase.createClient)) return;

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Weekly Events — Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--text:#eaf3f9;--text-dim:#86a0b7;--fire:#ff7a2e;--bad:#ef4444;--good:#22c55e;}
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.35rem;margin:0 0 4px;}
+  .wrap{max-width:600px;margin:0 auto;}
+  header{text-align:center;margin-bottom:12px;}
+  .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
+  p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:14px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:10px;font-weight:600;}
+  .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
+    border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .btn.fire{background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;}
+  .btn.small{padding:6px 10px;font-size:.72rem;}
+  input,select{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
+    padding:9px 11px;border-radius:9px;font-size:.85rem;width:100%;}
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:.74rem;color:var(--text-dim);margin-bottom:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+  .eRow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid var(--line);}
+  .eRow:first-child{border-top:none;}
+  .eBody{flex:1;min-width:0;}
+  .eName{font-size:.87rem;font-weight:700;color:var(--text);}
+  .eTime{font-size:.76rem;color:var(--text-dim);}
+  .eNext{font-size:.72rem;font-weight:700;color:var(--fire);text-align:right;flex:none;min-width:70px;}
+  .eDel{background:none;border:none;color:var(--bad);font-size:.9rem;cursor:pointer;padding:4px 6px;flex:none;}
+
+  .quickRow{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .qbtn{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-deep);
+    color:var(--text-dim);font-size:.72rem;cursor:pointer;}
+  .qbtn.on{border-color:var(--fire);color:var(--fire);}
+
+  .gate{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:.9rem;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e2718;color:#8ff0b0;
+    border:1px solid #1f5a3a;padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:600;
+    opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  <header>
+    <div class="eyebrow">Phoenix · Leaders</div>
+    <h1>🗓️ Weekly Events</h1>
+    <p class="sub">Fort sign-ups, Castle event, SvS — the recurring stuff, so nobody misses the window.</p>
+  </header>
+
+  <div id="app"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function getState(){
+  const q=new URLSearchParams(location.search).get('s');
+  if(q&&/^\d{3,5}$/.test(q)){ try{localStorage.setItem('phx_state',q);}catch(e){} return q; }
+  try{ const ls=localStorage.getItem('phx_state'); if(ls&&/^\d{3,5}$/.test(ls)) return ls; }catch(e){}
+  return '3139';
+}
+const S=getState();
+(function(){
+  const bl=document.getElementById('backLink');
+  if(bl && S && S!=='3139') bl.href='phoenix-tools.html?s='+S;
+})();
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const PRESETS=[
+  {n:'Fort Sign-up', i:'🏯'},
+  {n:'Fort Battle', i:'⚔️'},
+  {n:'Castle Event', i:'🏰'},
+  {n:'State vs State (SvS)', i:'🔥'},
+  {n:'Canyon Clash', i:'🏞️'},
+  {n:'Foundry Battle', i:'🏭'},
+  {n:'Bear Trap', i:'🐻'},
+];
+
+let isLeader=false, events=[];
+
+function nextOccurrence(dow,hour){
+  const now=new Date();
+  const nowUTCday=now.getUTCDay(), nowUTCh=now.getUTCHours(), nowUTCm=now.getUTCMinutes();
+  let diffDays=(dow-nowUTCday+7)%7;
+  let target=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+diffDays,hour,0,0));
+  if(target<=now) target=new Date(target.getTime()+7*86400000);
+  const msLeft=target-now;
+  const h=Math.floor(msLeft/3600000), m=Math.floor((msLeft%3600000)/60000);
+  if(h<24) return `in ${h}h ${m}m`;
+  const d=Math.floor(h/24);
+  return `in ${d}d ${h%24}h`;
+}
+
+async function loadEvents(){
+  const{data}=await sb.from('weekly_events').select('*').eq('state_id',S).order('day_of_week').order('hour_utc');
+  events=data||[];
+}
+
+function render(){
+  const app=document.getElementById('app');
+  let html='';
+  html+='<div class="panel"><div class="panel-title">📋 Schedule</div><div id="eList"></div></div>';
+  if(isLeader){
+    html+=`<div class="panel">
+      <div class="panel-title">＋ Add event</div>
+      <div class="field"><label>Event</label>
+        <select id="evName">${PRESETS.map(p=>`<option value="${p.n}">${p.i} ${p.n}</option>`).join('')}<option value="__custom">✏️ Custom…</option></select>
+      </div>
+      <div class="field" id="customWrap" style="display:none;"><label>Custom name</label><input id="evCustom" placeholder="Event name…"></div>
+      <div class="row2">
+        <div class="field"><label>Day (server/UTC)</label>
+          <select id="evDay">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Hour (UTC)</label>
+          <select id="evHour">${Array.from({length:24},(_,h)=>`<option value="${h}">${String(h).padStart(2,'0')}:00</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="quickRow" id="hourQuick">
+        <div class="qbtn" data-h="13">13:00 UTC</div>
+        <div class="qbtn" data-h="14">14:00 UTC</div>
+        <div class="qbtn" data-h="17">17:00 UTC</div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>Note (optional)</label><input id="evNote" placeholder="e.g. lasts 24h, sign up before battle…"></div>
+      <button class="btn fire" id="addBtn" style="width:100%;margin-top:6px;">💾 Add to schedule</button>
+    </div>`;
+  }
+  app.innerHTML=html;
+  renderList();
+  if(isLeader) wireForm();
+}
+
+function renderList(){
+  const list=document.getElementById('eList');
+  if(!events.length){ list.innerHTML='<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">No recurring events set up yet.'+(isLeader?' Add one below.':' Ask a leader to add them.')+'</p>'; return; }
+  list.innerHTML=events.map(e=>{
+    const preset=PRESETS.find(p=>p.n===e.name);
+    const icon=preset?preset.i:'📌';
+    return `<div class="eRow" data-id="${e.id}">
+      <div style="font-size:1.1rem;width:22px;text-align:center;">${icon}</div>
+      <div class="eBody">
+        <div class="eName">${e.name}</div>
+        <div class="eTime">${DAYS[e.day_of_week]} · ${String(e.hour_utc).padStart(2,'0')}:00 UTC${e.note?' · '+e.note:''}</div>
+      </div>
+      <div class="eNext">${nextOccurrence(e.day_of_week,e.hour_utc)}</div>
+      ${isLeader?`<button class="eDel" data-del="${e.id}">✕</button>`:''}
+    </div>`;
+  }).join('');
+  if(isLeader){
+    list.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
+      if(!confirm('Remove this event from the schedule?'))return;
+      const id=b.dataset.del;
+      const{error}=await sb.from('weekly_events').delete().eq('id',id);
+      if(error){toast('Failed: '+error.message);return;}
+      events=events.filter(e=>e.id!==id); renderList(); toast('Removed ✓');
+    });
+  }
+}
+
+function wireForm(){
+  const nameSel=document.getElementById('evName'), customWrap=document.getElementById('customWrap');
+  nameSel.onchange=()=>{ customWrap.style.display=(nameSel.value==='__custom')?'block':'none'; };
+  document.querySelectorAll('#hourQuick .qbtn').forEach(b=>b.onclick=()=>{
+    document.getElementById('evHour').value=b.dataset.h;
+    document.querySelectorAll('#hourQuick .qbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  });
+  document.getElementById('addBtn').onclick=async()=>{
+    const name=(nameSel.value==='__custom')?document.getElementById('evCustom').value.trim():nameSel.value;
+    if(!name){toast('Name the event first');return;}
+    const day=Number(document.getElementById('evDay').value);
+    const hour=Number(document.getElementById('evHour').value);
+    const note=document.getElementById('evNote').value.trim();
+    const btn=document.getElementById('addBtn');
+    btn.textContent='Saving…';btn.disabled=true;
+    const{data,error}=await sb.from('weekly_events').insert({state_id:S,name,day_of_week:day,hour_utc:hour,note:note||null}).select().single();
+    btn.textContent='💾 Add to schedule';btn.disabled=false;
+    if(error){toast('Failed: '+error.message);return;}
+    events.push(data);
+    events.sort((a,b)=>a.day_of_week-b.day_of_week||a.hour_utc-b.hour_utc);
+    renderList(); toast('Added ✓');
+    document.getElementById('evNote').value='';
+    if(nameSel.value==='__custom') document.getElementById('evCustom').value='';
+  };
+}
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){
+    const{data:rows}=await sb.from('players').select('role,state_id').eq('owner',session.user.id);
+    isLeader=(rows||[]).some(p=>p.role==='admin'||((p.role==='r4'||p.role==='r5')&&p.state_id===S));
+  }
+  await loadEvents();
+  render();
+  setInterval(()=>{ if(events.length) renderList(); },60000);
+}
+init();
+</script>
+</body>
+</html>
