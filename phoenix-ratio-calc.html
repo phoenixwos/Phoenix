@@ -18,9 +18,9 @@
     min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:40px;}
   h1,h2,.num{font-family:'Rajdhani',sans-serif;}
   .wrap{max-width:480px;margin:0 auto;padding:16px;}
-  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;justify-content:space-between;}
   .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
-  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  h1{font-size:1.15rem;font-weight:700;}
   .lead{font-size:.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
 
   .totalbox{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
@@ -60,26 +60,42 @@
 
   .total-check{text-align:center;font-size:.76rem;color:var(--text-dim);margin-top:10px;}
   .total-check b{color:var(--green);}
+
+  .lang-box{position:relative;}
+  .lang-btn{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text-dim);font-family:'Inter';font-weight:600;font-size:.74rem;padding:6px 11px;border-radius:13px;cursor:pointer;}
+  .lang-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:8px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:250px;
+    max-height:60vh;overflow-y:auto;box-shadow:0 16px 40px -8px rgba(0,0,0,.5);z-index:60;}
+  .lang-menu.open{display:grid;}
+  .lang-menu button{background:none;border:none;color:var(--text-dim);text-align:left;font-family:'Inter';
+    font-weight:500;font-size:.8rem;padding:8px 9px;border-radius:9px;cursor:pointer;}
+  .lang-menu button:hover{background:var(--panel-2);color:var(--text);}
+  .lang-menu button.active{color:var(--fire);font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
-    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+    <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="back">◂ Tools</a>
+    <div class="lang-box" id="langBox">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
   </div>
-  <h1 style="margin-bottom:6px;">⚖️ Troop Ratio Calculator</h1>
-  <p class="lead">Enter your total troops, pick a ratio, and see exactly how many of each type to bring.</p>
+  <h1 style="margin-bottom:6px;" data-i18n="title">⚖️ Troop Ratio Calculator</h1>
+  <p class="lead" data-i18n="lead">Enter your total troops, pick a ratio, and see exactly how many of each type to bring.</p>
 
   <div class="totalbox">
-    <label>Total troops</label>
-    <input type="text" id="totalInput" placeholder="e.g. 100k or 100000" inputmode="numeric">
-    <div class="hint">You can type "100k" for 100,000 — it's read automatically.</div>
+    <label data-i18n="totalLabel">Total troops</label>
+    <input type="text" id="totalInput" data-i18n-ph="totalPh" placeholder="e.g. 100k or 100000" inputmode="numeric">
+    <div class="hint" data-i18n="hint">You can type "100k" for 100,000 — it's read automatically.</div>
   </div>
 
   <div class="presets" id="presets"></div>
 
   <div class="custom-box" id="customBox">
-    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ice-dim);font-weight:600;">Custom ratio</div>
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ice-dim);font-weight:600;" data-i18n="customRatio">Custom ratio</div>
     <div class="custom-row">
       <input type="number" id="c1" min="0" placeholder="0">
       <span>:</span>
@@ -93,6 +109,7 @@
   <div class="total-check" id="totalCheck"></div>
 </div>
 
+<script src="phx-i18n.js"></script>
 <script>
 /* ── State-aware back link (no login required for this tool) ─── */
 (function(){
@@ -102,31 +119,48 @@
   if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
 })();
 
-const TYPES=['Infantry','Lancer','Marksman'];
-const COLORS=['#ff7a3c','#7fd9ee','#f0b93d'];
+const DICT={
+en:{back:"◂ Tools",title:"⚖️ Troop Ratio Calculator",lead:"Enter your total troops, pick a ratio, and see exactly how many of each type to bring.",totalLabel:"Total troops",totalPh:"e.g. 100k or 100000",hint:"You can type \"100k\" for 100,000 — it's read automatically.",customRatio:"Custom ratio",setOwn:"⚙️ set your own",totalCheck:"Total: {n} troops",presetBearTrap:"Bear Trap",presetDefense:"Defense",presetBasic:"Basic",presetCustom:"Custom",typeInfantry:"Infantry",typeLancer:"Lancer",typeMarksman:"Marksman"},
+es:{back:"◂ Herramientas",title:"⚖️ Calculadora de ratio de tropas",lead:"Introduce tu total de tropas, elige un ratio y mira exactamente cuántas de cada tipo llevar.",totalLabel:"Total de tropas",totalPh:"ej. 100k o 100000",hint:"Puedes escribir \"100k\" para 100.000 — se interpreta solo.",customRatio:"Ratio personalizado",setOwn:"⚙️ ponlo tú",totalCheck:"Total: {n} tropas",presetBearTrap:"Trampa del Oso",presetDefense:"Defensa",presetBasic:"Básico",presetCustom:"Personalizado",typeInfantry:"Infantería",typeLancer:"Lancero",typeMarksman:"Tirador"},
+ko:{back:"◂ 도구",title:"⚖️ 병력 비율 계산기",lead:"총 병력을 입력하고 비율을 선택하면 각 병종을 몇 명씩 데려가야 하는지 정확히 알 수 있습니다.",totalLabel:"총 병력",totalPh:"예: 100k 또는 100000",hint:"\"100k\"라고 입력하면 100,000으로 자동 인식됩니다.",customRatio:"사용자 지정 비율",setOwn:"⚙️ 직접 설정",totalCheck:"합계: {n} 병력",presetBearTrap:"곰덫",presetDefense:"방어",presetBasic:"기본",presetCustom:"사용자 지정",typeInfantry:"보병",typeLancer:"창병",typeMarksman:"궁병"},
+ja:{back:"◂ ツール",title:"⚖️ 兵力比率計算機",lead:"総兵力を入力し、比率を選ぶと、各兵種を何人連れて行けばいいか正確にわかります。",totalLabel:"総兵力",totalPh:"例: 100k または 100000",hint:"「100k」と入力すると100,000として自動的に読み取られます。",customRatio:"カスタム比率",setOwn:"⚙️ 自分で設定",totalCheck:"合計: {n} 兵力",presetBearTrap:"熊の罠",presetDefense:"防御",presetBasic:"基本",presetCustom:"カスタム",typeInfantry:"歩兵",typeLancer:"槍兵",typeMarksman:"弓兵"},
+de:{back:"◂ Werkzeuge",title:"⚖️ Truppenverhältnis-Rechner",lead:"Gib deine Gesamttruppenzahl ein, wähle ein Verhältnis und sieh genau, wie viele von jedem Typ du mitnehmen sollst.",totalLabel:"Truppen gesamt",totalPh:"z. B. 100k oder 100000",hint:"Du kannst „100k\" für 100.000 eingeben — wird automatisch erkannt.",customRatio:"Eigenes Verhältnis",setOwn:"⚙️ selbst festlegen",totalCheck:"Gesamt: {n} Truppen",presetBearTrap:"Bärenfalle",presetDefense:"Verteidigung",presetBasic:"Basis",presetCustom:"Benutzerdefiniert",typeInfantry:"Infanterie",typeLancer:"Lanzenreiter",typeMarksman:"Schütze"},
+fr:{back:"◂ Outils",title:"⚖️ Calculateur de ratio de troupes",lead:"Entrez votre total de troupes, choisissez un ratio, et voyez exactement combien de chaque type emmener.",totalLabel:"Total des troupes",totalPh:"ex. 100k ou 100000",hint:"Vous pouvez taper « 100k » pour 100 000 — c'est lu automatiquement.",customRatio:"Ratio personnalisé",setOwn:"⚙️ définir le vôtre",totalCheck:"Total : {n} troupes",presetBearTrap:"Piège à Ours",presetDefense:"Défense",presetBasic:"Basique",presetCustom:"Personnalisé",typeInfantry:"Infanterie",typeLancer:"Lancier",typeMarksman:"Tireur"},
+ar:{back:"◂ الأدوات",title:"⚖️ حاسبة نسبة القوات",lead:"أدخل إجمالي قواتك، اختر نسبة، وشاهد بالضبط كم عدد كل نوع يجب إحضاره.",totalLabel:"إجمالي القوات",totalPh:"مثال: 100k أو 100000",hint:"يمكنك كتابة \"100k\" لتعني 100,000 — تُقرأ تلقائيًا.",customRatio:"نسبة مخصصة",setOwn:"⚙️ حدد بنفسك",totalCheck:"الإجمالي: {n} قوات",presetBearTrap:"فخ الدب",presetDefense:"دفاع",presetBasic:"أساسي",presetCustom:"مخصص",typeInfantry:"مشاة",typeLancer:"رماحون",typeMarksman:"قناصة"},
+ru:{back:"◂ Инструменты",title:"⚖️ Калькулятор соотношения войск",lead:"Введите общее число войск, выберите соотношение и узнайте, сколько именно войск каждого типа взять.",totalLabel:"Всего войск",totalPh:"напр. 100k или 100000",hint:"Можно ввести «100k» вместо 100 000 — распознаётся автоматически.",customRatio:"Своё соотношение",setOwn:"⚙️ задать своё",totalCheck:"Всего: {n} войск",presetBearTrap:"Медвежий капкан",presetDefense:"Оборона",presetBasic:"Базовое",presetCustom:"Своё",typeInfantry:"Пехота",typeLancer:"Копейщики",typeMarksman:"Стрелки"},
+tr:{back:"◂ Araçlar",title:"⚖️ Asker Oranı Hesaplayıcı",lead:"Toplam asker sayınızı girin, bir oran seçin ve her türden tam olarak kaç asker götürmeniz gerektiğini görün.",totalLabel:"Toplam asker",totalPh:"örn. 100k veya 100000",hint:"\"100k\" yazarak 100.000 girebilirsiniz — otomatik algılanır.",customRatio:"Özel oran",setOwn:"⚙️ kendin ayarla",totalCheck:"Toplam: {n} asker",presetBearTrap:"Ayı Tuzağı",presetDefense:"Savunma",presetBasic:"Temel",presetCustom:"Özel",typeInfantry:"Piyade",typeLancer:"Mızrakçı",typeMarksman:"Nişancı"},
+it:{back:"◂ Strumenti",title:"⚖️ Calcolatore rapporto truppe",lead:"Inserisci il totale delle truppe, scegli un rapporto e vedi esattamente quante di ogni tipo portare.",totalLabel:"Totale truppe",totalPh:"es. 100k o 100000",hint:"Puoi digitare \"100k\" per 100.000 — viene letto automaticamente.",customRatio:"Rapporto personalizzato",setOwn:"⚙️ imposta il tuo",totalCheck:"Totale: {n} truppe",presetBearTrap:"Trappola per Orsi",presetDefense:"Difesa",presetBasic:"Base",presetCustom:"Personalizzato",typeInfantry:"Fanteria",typeLancer:"Lancieri",typeMarksman:"Tiratori"},
+pl:{back:"◂ Narzędzia",title:"⚖️ Kalkulator proporcji wojsk",lead:"Wpisz łączną liczbę wojsk, wybierz proporcję i zobacz dokładnie, ile zabrać każdego typu.",totalLabel:"Łącznie wojsk",totalPh:"np. 100k lub 100000",hint:"Możesz wpisać „100k\" zamiast 100 000 — jest odczytywane automatycznie.",customRatio:"Własna proporcja",setOwn:"⚙️ ustaw własną",totalCheck:"Razem: {n} wojsk",presetBearTrap:"Pułapka na Niedźwiedzia",presetDefense:"Obrona",presetBasic:"Podstawowa",presetCustom:"Własna",typeInfantry:"Piechota",typeLancer:"Lansjerzy",typeMarksman:"Strzelcy"},
+pt:{back:"◂ Ferramentas",title:"⚖️ Calculadora de proporção de tropas",lead:"Insira o total de tropas, escolha uma proporção e veja exatamente quantas de cada tipo levar.",totalLabel:"Total de tropas",totalPh:"ex. 100k ou 100000",hint:"Você pode digitar \"100k\" para 100.000 — é lido automaticamente.",customRatio:"Proporção personalizada",setOwn:"⚙️ defina a sua",totalCheck:"Total: {n} tropas",presetBearTrap:"Armadilha do Urso",presetDefense:"Defesa",presetBasic:"Básico",presetCustom:"Personalizado",typeInfantry:"Infantaria",typeLancer:"Lanceiro",typeMarksman:"Atirador"},
+th:{back:"◂ เครื่องมือ",title:"⚖️ เครื่องคำนวณสัดส่วนกำลังพล",lead:"กรอกจำนวนกำลังพลทั้งหมด เลือกสัดส่วน แล้วดูว่าต้องนำแต่ละประเภทไปกี่นาย",totalLabel:"กำลังพลทั้งหมด",totalPh:"เช่น 100k หรือ 100000",hint:"พิมพ์ \"100k\" แทน 100,000 ได้ ระบบจะอ่านค่าให้อัตโนมัติ",customRatio:"สัดส่วนกำหนดเอง",setOwn:"⚙️ กำหนดเอง",totalCheck:"รวม: {n} นาย",presetBearTrap:"กับดักหมี",presetDefense:"การป้องกัน",presetBasic:"พื้นฐาน",presetCustom:"กำหนดเอง",typeInfantry:"ทหารราบ",typeLancer:"ทหารหอก",typeMarksman:"พลแม่นปืน"},
+id:{back:"◂ Alat",title:"⚖️ Kalkulator Rasio Pasukan",lead:"Masukkan total pasukan, pilih rasio, dan lihat persis berapa banyak masing-masing jenis yang harus dibawa.",totalLabel:"Total pasukan",totalPh:"mis. 100k atau 100000",hint:"Anda bisa mengetik \"100k\" untuk 100.000 — dibaca otomatis.",customRatio:"Rasio kustom",setOwn:"⚙️ atur sendiri",totalCheck:"Total: {n} pasukan",presetBearTrap:"Perangkap Beruang",presetDefense:"Pertahanan",presetBasic:"Dasar",presetCustom:"Kustom",typeInfantry:"Infanteri",typeLancer:"Lancer",typeMarksman:"Penembak Jitu"}
+};
+const T=(k)=>PhxI18N.t(k);
 
-const PRESETS=[
-  { name:'Bear Trap',  ratio:[10,10,80] },
-  { name:'Defense',    ratio:[60,40,0]  },
-  { name:'Basic',      ratio:[50,20,30] },
-  { name:'Custom',     ratio:null       }
+const COLORS=['#ff7a3c','#7fd9ee','#f0b93d'];
+const TYPE_KEYS=['typeInfantry','typeLancer','typeMarksman'];
+const PRESET_DEFS=[
+  { key:'presetBearTrap', ratio:[10,10,80] },
+  { key:'presetDefense',  ratio:[60,40,0]  },
+  { key:'presetBasic',    ratio:[50,20,30] },
+  { key:'presetCustom',   ratio:null       }
 ];
 
 let activeIndex=0;
 
 function renderPresets(){
   const box=document.getElementById('presets');
-  box.innerHTML=PRESETS.map((p,i)=>`
+  box.innerHTML=PRESET_DEFS.map((p,i)=>`
     <div class="preset${i===activeIndex?' active':''}" data-i="${i}">
-      <div class="pname">${p.name}</div>
-      <div class="pratio">${p.ratio?p.ratio.join(':'):'⚙️ set your own'}</div>
+      <div class="pname">${T(p.key)}</div>
+      <div class="pratio">${p.ratio?p.ratio.join(':'):T('setOwn')}</div>
     </div>`).join('');
   box.querySelectorAll('.preset').forEach(el=>{
     el.onclick=()=>{ activeIndex=parseInt(el.dataset.i,10); renderPresets(); toggleCustom(); calc(); };
   });
 }
 function toggleCustom(){
-  document.getElementById('customBox').classList.toggle('show', PRESETS[activeIndex].ratio===null);
+  document.getElementById('customBox').classList.toggle('show', PRESET_DEFS[activeIndex].ratio===null);
 }
 
 function parseTotal(raw){
@@ -139,10 +173,10 @@ function parseTotal(raw){
   if(m[2]==='m') n*=1000000;
   return Math.max(0,Math.round(n));
 }
-function fmtNum(n){ return n.toLocaleString('en-US'); }
+function fmtNum(n){ return n.toLocaleString(PhxI18N.getLang()); }
 
 function getRatio(){
-  if(PRESETS[activeIndex].ratio) return PRESETS[activeIndex].ratio;
+  if(PRESET_DEFS[activeIndex].ratio) return PRESET_DEFS[activeIndex].ratio;
   const c1=parseFloat(document.getElementById('c1').value)||0;
   const c2=parseFloat(document.getElementById('c2').value)||0;
   const c3=parseFloat(document.getElementById('c3').value)||0;
@@ -171,25 +205,24 @@ function calc(){
   const amounts=floors.slice();
   for(let k=0;k<remainder;k++){ amounts[order[k%order.length].i]++; }
 
-  resBox.innerHTML=TYPES.map((t,i)=>`
+  resBox.innerHTML=TYPE_KEYS.map((tk,i)=>`
     <div class="res-row">
       <div class="res-dot" style="background:${COLORS[i]};"></div>
       <div class="res-info">
-        <div class="res-name">${t}</div>
+        <div class="res-name">${T(tk)}</div>
         <div class="res-pct">${sum?Math.round(ratio[i]/sum*100):0}%</div>
       </div>
       <div class="res-amount">${fmtNum(amounts[i])}</div>
     </div>`).join('');
 
   const checkSum=amounts.reduce((a,b)=>a+b,0);
-  checkBox.innerHTML='Total: <b>'+fmtNum(checkSum)+'</b> troops';
+  checkBox.innerHTML=T('totalCheck').replace('{n}','<b>'+fmtNum(checkSum)+'</b>');
 }
 
 document.getElementById('totalInput').addEventListener('input',calc);
 ['c1','c2','c3'].forEach(id=>document.getElementById(id).addEventListener('input',calc));
 
-renderPresets();
-toggleCustom();
+PhxI18N.init(DICT, ()=>{ renderPresets(); toggleCustom(); calc(); });
 </script>
 </body>
 </html>

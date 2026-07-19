@@ -18,9 +18,9 @@
     min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:40px;}
   h1,h2,.num{font-family:'Rajdhani',sans-serif;}
   .wrap{max-width:480px;margin:0 auto;padding:16px;}
-  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;justify-content:space-between;}
   .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
-  h1{font-size:1.15rem;font-weight:700;flex:1;}
+  h1{font-size:1.15rem;font-weight:700;}
   .lead{font-size:.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
 
   .box{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
@@ -47,48 +47,65 @@
   .breakdown{display:flex;justify-content:space-between;background:var(--panel);border:1px solid var(--line);
     border-radius:12px;padding:12px 16px;font-size:.8rem;color:var(--text-dim);}
   .breakdown b{color:var(--text);font-family:'Rajdhani';font-weight:700;}
+
+  .lang-box{position:relative;}
+  .lang-btn{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text-dim);font-family:'Inter';font-weight:600;font-size:.74rem;padding:6px 11px;border-radius:13px;cursor:pointer;}
+  .lang-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:8px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:250px;
+    max-height:60vh;overflow-y:auto;box-shadow:0 16px 40px -8px rgba(0,0,0,.5);z-index:60;}
+  .lang-menu.open{display:grid;}
+  .lang-menu button{background:none;border:none;color:var(--text-dim);text-align:left;font-family:'Inter';
+    font-weight:500;font-size:.8rem;padding:8px 9px;border-radius:9px;cursor:pointer;}
+  .lang-menu button:hover{background:var(--panel-2);color:var(--text);}
+  .lang-menu button.active{color:var(--fire);font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
-    <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+    <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="back">◂ Tools</a>
+    <div class="lang-box" id="langBox">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
   </div>
-  <h1 style="margin-bottom:6px;">🐎 Rally Capacity Calculator</h1>
-  <p class="lead">Enter the rally leader's deployment capacity, subtract the troops the leader is sending, and find the max each joiner can safely bring, rounded down.</p>
+  <h1 style="margin-bottom:6px;" data-i18n="title">🐎 Rally Capacity Calculator</h1>
+  <p class="lead" data-i18n="lead">Enter the rally leader's deployment capacity, subtract the troops the leader is sending, and find the max each joiner can safely bring, rounded down.</p>
 
   <div class="box">
-    <label>Rally leader's deployment capacity</label>
-    <input type="text" id="capInput" placeholder="e.g. 2000k or 2000000" inputmode="numeric">
-    <div class="hint">You can type "2000k" for 2,000,000 — it's read automatically.</div>
+    <label data-i18n="capLabel">Rally leader's deployment capacity</label>
+    <input type="text" id="capInput" data-i18n-ph="capPh" placeholder="e.g. 2000k or 2000000" inputmode="numeric">
+    <div class="hint" data-i18n="capHint">You can type "2000k" for 2,000,000 — it's read automatically.</div>
 
     <div class="joiners-row">
-      <label>Leader's own troops</label>
+      <label data-i18n="leaderLabel">Leader's own troops</label>
       <input type="text" id="leaderInput" placeholder="0" inputmode="numeric" style="width:110px;font-size:1.1rem;padding:9px;">
     </div>
-    <div class="joiners-hint">The leader's own troops are subtracted first — only the rest gets split among joiners.</div>
+    <div class="joiners-hint" data-i18n="leaderHint">The leader's own troops are subtracted first — only the rest gets split among joiners.</div>
 
     <div class="joiners-row">
-      <label>Number of joiners</label>
+      <label data-i18n="joinersLabel">Number of joiners</label>
       <input type="number" id="joinersInput" min="1" value="15">
     </div>
-    <div class="joiners-hint">Default is 15 — change it if your rally leader's tech allows more or fewer joiners.</div>
+    <div class="joiners-hint" data-i18n="joinersHint">Default is 15 — change it if your rally leader's tech allows more or fewer joiners.</div>
   </div>
 
   <div class="result" id="result">
-    <div class="lbl">🎯 Max troops per joiner</div>
+    <div class="lbl" data-i18n="resultLbl">🎯 Max troops per joiner</div>
     <div class="amount" id="amount">0</div>
     <div class="sub" id="sub"></div>
   </div>
 
   <div class="breakdown" id="breakdown" style="display:none;">
-    <span>Total used (leader + joiners)</span>
+    <span data-i18n="breakdownLabel">Total used (leader + joiners)</span>
     <b id="usedAmount">0</b>
   </div>
 
   <div id="warnBox" style="display:none;margin-top:10px;background:#3a1a10;border:1px solid #ff5a5a;border-radius:10px;padding:10px 12px;font-size:.78rem;color:#ffb3b3;"></div>
 </div>
 
+<script src="phx-i18n.js"></script>
 <script>
 /* ── State-aware back link (no login required for this tool) ─── */
 (function(){
@@ -97,6 +114,24 @@
   var bl=document.getElementById('backLink');
   if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
 })();
+
+const DICT={
+en:{back:"◂ Tools",title:"🐎 Rally Capacity Calculator",lead:"Enter the rally leader's deployment capacity, subtract the troops the leader is sending, and find the max each joiner can safely bring, rounded down.",capLabel:"Rally leader's deployment capacity",capPh:"e.g. 2000k or 2000000",capHint:"You can type \"2000k\" for 2,000,000 — it's read automatically.",leaderLabel:"Leader's own troops",leaderHint:"The leader's own troops are subtracted first — only the rest gets split among joiners.",joinersLabel:"Number of joiners",joinersHint:"Default is 15 — change it if your rally leader's tech allows more or fewer joiners.",resultLbl:"🎯 Max troops per joiner",subAcross:"Across {n} joiners",breakdownLabel:"Total used (leader + joiners)",warnMsg:"⚠️ The leader's own troops are higher than the total capacity — check your numbers."},
+es:{back:"◂ Herramientas",title:"🐎 Calculadora de capacidad de rally",lead:"Introduce la capacidad de despliegue del líder del rally, resta las tropas que envía el líder, y averigua el máximo que cada participante puede aportar sin pasarse, redondeado hacia abajo.",capLabel:"Capacidad de despliegue del líder del rally",capPh:"ej. 2000k o 2000000",capHint:"Puedes escribir \"2000k\" para 2.000.000 — se interpreta solo.",leaderLabel:"Tropas propias del líder",leaderHint:"Las tropas propias del líder se restan primero — solo el resto se reparte entre los participantes.",joinersLabel:"Número de participantes",joinersHint:"Por defecto son 15 — cámbialo si la tecnología del líder permite más o menos participantes.",resultLbl:"🎯 Máximo de tropas por participante",subAcross:"Entre {n} participantes",breakdownLabel:"Total usado (líder + participantes)",warnMsg:"⚠️ Las tropas propias del líder superan la capacidad total — revisa los números."},
+ko:{back:"◂ 도구",title:"🐎 집결 수용량 계산기",lead:"집결대장의 배치 수용량을 입력하고, 대장이 보내는 병력을 뺀 뒤, 각 참가자가 안전하게 보낼 수 있는 최대치를(내림) 확인하세요.",capLabel:"집결대장의 배치 수용량",capPh:"예: 2000k 또는 2000000",capHint:"\"2000k\"라고 입력하면 2,000,000으로 자동 인식됩니다.",leaderLabel:"대장 본인의 병력",leaderHint:"대장 본인의 병력을 먼저 뺀 나머지만 참가자들에게 분배됩니다.",joinersLabel:"참가자 수",joinersHint:"기본값은 15명입니다 — 대장의 기술에 따라 참가 인원이 다르면 변경하세요.",resultLbl:"🎯 참가자당 최대 병력",subAcross:"{n}명 기준",breakdownLabel:"사용된 총합 (대장 + 참가자)",warnMsg:"⚠️ 대장 본인의 병력이 총 수용량보다 많습니다 — 숫자를 확인하세요."},
+ja:{back:"◂ ツール",title:"🐎 集結収容量計算機",lead:"集結リーダーの展開収容量を入力し、リーダーが送る兵力を差し引いて、各参加者が安全に持ち込める最大値（切り捨て）を確認します。",capLabel:"集結リーダーの展開収容量",capPh:"例: 2000k または 2000000",capHint:"「2000k」と入力すると2,000,000として自動的に読み取られます。",leaderLabel:"リーダー自身の兵力",leaderHint:"リーダー自身の兵力が先に差し引かれ、残りだけが参加者に分配されます。",joinersLabel:"参加者数",joinersHint:"デフォルトは15人です — リーダーの技術レベルに応じて変更してください。",resultLbl:"🎯 参加者1人あたりの最大兵力",subAcross:"{n}人で分配",breakdownLabel:"使用合計（リーダー + 参加者）",warnMsg:"⚠️ リーダー自身の兵力が総収容量を超えています — 数値を確認してください。"},
+de:{back:"◂ Werkzeuge",title:"🐎 Sammel-Kapazitätsrechner",lead:"Gib die Truppenkapazität des Sammel-Anführers ein, ziehe die Truppen ab, die der Anführer selbst schickt, und finde heraus, wie viel jeder Teilnehmer maximal sicher mitbringen kann (abgerundet).",capLabel:"Truppenkapazität des Sammel-Anführers",capPh:"z. B. 2000k oder 2000000",capHint:"Du kannst „2000k\" für 2.000.000 eingeben — wird automatisch erkannt.",leaderLabel:"Eigene Truppen des Anführers",leaderHint:"Die eigenen Truppen des Anführers werden zuerst abgezogen — nur der Rest wird auf die Teilnehmer aufgeteilt.",joinersLabel:"Anzahl der Teilnehmer",joinersHint:"Standard ist 15 — ändere es, wenn die Technik des Anführers mehr oder weniger Teilnehmer erlaubt.",resultLbl:"🎯 Max. Truppen pro Teilnehmer",subAcross:"Auf {n} Teilnehmer verteilt",breakdownLabel:"Gesamt genutzt (Anführer + Teilnehmer)",warnMsg:"⚠️ Die eigenen Truppen des Anführers übersteigen die Gesamtkapazität — prüfe deine Zahlen."},
+fr:{back:"◂ Outils",title:"🐎 Calculateur de capacité de ralliement",lead:"Entrez la capacité de déploiement du chef de ralliement, soustrayez les troupes que le chef envoie lui-même, et trouvez le maximum que chaque participant peut apporter sans risque, arrondi à la baisse.",capLabel:"Capacité de déploiement du chef de ralliement",capPh:"ex. 2000k ou 2000000",capHint:"Vous pouvez taper « 2000k » pour 2 000 000 — c'est lu automatiquement.",leaderLabel:"Troupes propres du chef",leaderHint:"Les troupes propres du chef sont soustraites en premier — seul le reste est réparti entre les participants.",joinersLabel:"Nombre de participants",joinersHint:"La valeur par défaut est 15 — changez-la si la technologie du chef permet plus ou moins de participants.",resultLbl:"🎯 Troupes max par participant",subAcross:"Réparti entre {n} participants",breakdownLabel:"Total utilisé (chef + participants)",warnMsg:"⚠️ Les troupes propres du chef dépassent la capacité totale — vérifiez vos chiffres."},
+ar:{back:"◂ الأدوات",title:"🐎 حاسبة سعة التجمع",lead:"أدخل سعة نشر قائد التجمع، اطرح القوات التي يرسلها القائد نفسه، واعرف الحد الأقصى الذي يمكن لكل مشارك إحضاره بأمان (مقربًا لأسفل).",capLabel:"سعة نشر قائد التجمع",capPh:"مثال: 2000k أو 2000000",capHint:"يمكنك كتابة \"2000k\" لتعني 2,000,000 — تُقرأ تلقائيًا.",leaderLabel:"قوات القائد الخاصة",leaderHint:"تُطرح قوات القائد الخاصة أولاً — يُوزَّع الباقي فقط على المشاركين.",joinersLabel:"عدد المشاركين",joinersHint:"الافتراضي 15 — غيّره إذا سمحت تقنية قائد التجمع بعدد مشاركين أكبر أو أصغر.",resultLbl:"🎯 الحد الأقصى للقوات لكل مشارك",subAcross:"على {n} مشاركين",breakdownLabel:"الإجمالي المستخدم (القائد + المشاركون)",warnMsg:"⚠️ قوات القائد الخاصة أكبر من السعة الإجمالية — تحقق من الأرقام."},
+ru:{back:"◂ Инструменты",title:"🐎 Калькулятор вместимости сбора",lead:"Введите вместимость развёртывания лидера сбора, вычтите войска, которые отправляет сам лидер, и узнайте максимум, который безопасно может привезти каждый участник (округление вниз).",capLabel:"Вместимость развёртывания лидера сбора",capPh:"напр. 2000k или 2000000",capHint:"Можно ввести «2000k» вместо 2 000 000 — распознаётся автоматически.",leaderLabel:"Собственные войска лидера",leaderHint:"Сначала вычитаются собственные войска лидера — остаток делится между участниками.",joinersLabel:"Количество участников",joinersHint:"По умолчанию 15 — измените, если технологии лидера позволяют больше или меньше участников.",resultLbl:"🎯 Макс. войск на участника",subAcross:"На {n} участников",breakdownLabel:"Всего использовано (лидер + участники)",warnMsg:"⚠️ Собственные войска лидера превышают общую вместимость — проверьте цифры."},
+tr:{back:"◂ Araçlar",title:"🐎 Toplanma Kapasitesi Hesaplayıcı",lead:"Toplanma liderinin konuşlandırma kapasitesini girin, liderin gönderdiği askerleri çıkarın ve her katılımcının güvenle getirebileceği maksimum miktarı (aşağı yuvarlanmış) bulun.",capLabel:"Toplanma liderinin konuşlandırma kapasitesi",capPh:"örn. 2000k veya 2000000",capHint:"\"2000k\" yazarak 2.000.000 girebilirsiniz — otomatik algılanır.",leaderLabel:"Liderin kendi askerleri",leaderHint:"Önce liderin kendi askerleri çıkarılır — geri kalanı katılımcılar arasında paylaştırılır.",joinersLabel:"Katılımcı sayısı",joinersHint:"Varsayılan 15'tir — liderin teknolojisi daha fazla veya az katılımcıya izin veriyorsa değiştirin.",resultLbl:"🎯 Katılımcı başına maksimum asker",subAcross:"{n} katılımcıya bölünmüş",breakdownLabel:"Toplam kullanılan (lider + katılımcılar)",warnMsg:"⚠️ Liderin kendi askerleri toplam kapasiteden fazla — sayılarınızı kontrol edin."},
+it:{back:"◂ Strumenti",title:"🐎 Calcolatore capacità raduno",lead:"Inserisci la capacità di schieramento del capo raduno, sottrai le truppe che il capo invia personalmente, e trova il massimo che ogni partecipante può portare in sicurezza, arrotondato per difetto.",capLabel:"Capacità di schieramento del capo raduno",capPh:"es. 2000k o 2000000",capHint:"Puoi digitare \"2000k\" per 2.000.000 — viene letto automaticamente.",leaderLabel:"Truppe proprie del capo",leaderHint:"Le truppe proprie del capo vengono sottratte per prime — solo il resto viene diviso tra i partecipanti.",joinersLabel:"Numero di partecipanti",joinersHint:"Il valore predefinito è 15 — cambialo se la tecnologia del capo raduno permette più o meno partecipanti.",resultLbl:"🎯 Truppe massime per partecipante",subAcross:"Su {n} partecipanti",breakdownLabel:"Totale usato (capo + partecipanti)",warnMsg:"⚠️ Le truppe proprie del capo superano la capacità totale — controlla i numeri."},
+pl:{back:"◂ Narzędzia",title:"🐎 Kalkulator pojemności zlotu",lead:"Wpisz pojemność rozmieszczenia lidera zlotu, odejmij wojska, które wysyła sam lider, i sprawdź maksimum, jakie każdy uczestnik może bezpiecznie wnieść, zaokrąglone w dół.",capLabel:"Pojemność rozmieszczenia lidera zlotu",capPh:"np. 2000k lub 2000000",capHint:"Możesz wpisać „2000k\" zamiast 2 000 000 — jest odczytywane automatycznie.",leaderLabel:"Własne wojska lidera",leaderHint:"Własne wojska lidera są odejmowane jako pierwsze — tylko reszta jest dzielona między uczestników.",joinersLabel:"Liczba uczestników",joinersHint:"Domyślnie 15 — zmień, jeśli technologia lidera pozwala na więcej lub mniej uczestników.",resultLbl:"🎯 Maks. wojsk na uczestnika",subAcross:"Na {n} uczestników",breakdownLabel:"Łącznie wykorzystane (lider + uczestnicy)",warnMsg:"⚠️ Własne wojska lidera przekraczają całkowitą pojemność — sprawdź liczby."},
+pt:{back:"◂ Ferramentas",title:"🐎 Calculadora de capacidade de comitiva",lead:"Insira a capacidade de implantação do líder da comitiva, subtraia as tropas que o próprio líder envia, e descubra o máximo que cada participante pode trazer com segurança, arredondado para baixo.",capLabel:"Capacidade de implantação do líder da comitiva",capPh:"ex. 2000k ou 2000000",capHint:"Você pode digitar \"2000k\" para 2.000.000 — é lido automaticamente.",leaderLabel:"Tropas próprias do líder",leaderHint:"As tropas próprias do líder são subtraídas primeiro — só o restante é dividido entre os participantes.",joinersLabel:"Número de participantes",joinersHint:"O padrão é 15 — mude se a tecnologia do líder permitir mais ou menos participantes.",resultLbl:"🎯 Máximo de tropas por participante",subAcross:"Entre {n} participantes",breakdownLabel:"Total usado (líder + participantes)",warnMsg:"⚠️ As tropas próprias do líder são maiores que a capacidade total — verifique os números."},
+th:{back:"◂ เครื่องมือ",title:"🐎 เครื่องคำนวณความจุการรวมพล",lead:"กรอกความจุการส่งกำลังของหัวหน้าการรวมพล ลบกำลังพลที่หัวหน้าส่งเอง แล้วดูจำนวนสูงสุดที่ผู้เข้าร่วมแต่ละคนสามารถนำมาได้อย่างปลอดภัย (ปัดเศษลง)",capLabel:"ความจุการส่งกำลังของหัวหน้าการรวมพล",capPh:"เช่น 2000k หรือ 2000000",capHint:"พิมพ์ \"2000k\" แทน 2,000,000 ได้ ระบบจะอ่านค่าให้อัตโนมัติ",leaderLabel:"กำลังพลของหัวหน้าเอง",leaderHint:"กำลังพลของหัวหน้าจะถูกหักออกก่อน — ส่วนที่เหลือเท่านั้นที่จะแบ่งให้ผู้เข้าร่วม",joinersLabel:"จำนวนผู้เข้าร่วม",joinersHint:"ค่าเริ่มต้นคือ 15 — เปลี่ยนได้หากเทคโนโลยีของหัวหน้ารองรับผู้เข้าร่วมมากหรือน้อยกว่านี้",resultLbl:"🎯 กำลังพลสูงสุดต่อผู้เข้าร่วม",subAcross:"แบ่งให้ {n} คน",breakdownLabel:"รวมที่ใช้ (หัวหน้า + ผู้เข้าร่วม)",warnMsg:"⚠️ กำลังพลของหัวหน้าเองมากกว่าความจุทั้งหมด — ตรวจสอบตัวเลขของคุณ"},
+id:{back:"◂ Alat",title:"🐎 Kalkulator Kapasitas Rally",lead:"Masukkan kapasitas penempatan pemimpin rally, kurangi pasukan yang dikirim pemimpin sendiri, dan temukan maksimum yang bisa dibawa aman oleh setiap peserta, dibulatkan ke bawah.",capLabel:"Kapasitas penempatan pemimpin rally",capPh:"mis. 2000k atau 2000000",capHint:"Anda bisa mengetik \"2000k\" untuk 2.000.000 — dibaca otomatis.",leaderLabel:"Pasukan milik pemimpin",leaderHint:"Pasukan milik pemimpin dikurangi lebih dulu — hanya sisanya yang dibagi ke peserta.",joinersLabel:"Jumlah peserta",joinersHint:"Default 15 — ubah jika teknologi pemimpin rally memungkinkan lebih banyak atau lebih sedikit peserta.",resultLbl:"🎯 Maksimum pasukan per peserta",subAcross:"Dibagi ke {n} peserta",breakdownLabel:"Total terpakai (pemimpin + peserta)",warnMsg:"⚠️ Pasukan milik pemimpin lebih besar dari kapasitas total — periksa angkanya."}
+};
+const T=(k)=>PhxI18N.t(k);
 
 function parseAmount(raw){
   raw=(raw||'').trim().toLowerCase().replace(/,/g,'');
@@ -108,7 +143,7 @@ function parseAmount(raw){
   if(m[2]==='m') n*=1000000;
   return Math.max(0,n);
 }
-function fmtNum(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtNum(n){ return Math.round(n).toLocaleString(PhxI18N.getLang()); }
 
 function calc(){
   const cap=parseAmount(document.getElementById('capInput').value);
@@ -130,13 +165,13 @@ function calc(){
   const used=perJoiner*joiners;
 
   document.getElementById('amount').textContent=fmtNum(perJoiner);
-  document.getElementById('sub').textContent=`Across ${joiners} joiners`;
+  document.getElementById('sub').textContent=T('subAcross').replace('{n}',joiners);
   document.getElementById('usedAmount').textContent=fmtNum(used+leaderTroops)+' / '+fmtNum(cap);
   resultBox.classList.add('show');
   breakdown.style.display='flex';
 
   if(leaderTroops>cap){
-    warnBox.textContent='⚠️ The leader\'s own troops are higher than the total capacity — check your numbers.';
+    warnBox.textContent=T('warnMsg');
     warnBox.style.display='block';
   }else{
     warnBox.style.display='none';
@@ -146,6 +181,8 @@ function calc(){
 document.getElementById('capInput').addEventListener('input',calc);
 document.getElementById('leaderInput').addEventListener('input',calc);
 document.getElementById('joinersInput').addEventListener('input',calc);
+
+PhxI18N.init(DICT, ()=>{ calc(); });
 </script>
 </body>
 </html>
