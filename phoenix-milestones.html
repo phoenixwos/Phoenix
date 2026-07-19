@@ -16,10 +16,11 @@
     color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 12px 60px;}
   h1{font-family:'Rajdhani',sans-serif;font-size:1.35rem;margin:0 0 4px;}
   .wrap{max-width:600px;margin:0 auto;}
-  header{text-align:center;margin-bottom:12px;}
+  header{text-align:center;margin-bottom:12px;position:relative;}
   .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
   p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
-  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;}
   .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
     border-radius:14px;padding:14px;margin-bottom:14px;}
   .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
@@ -61,25 +62,62 @@
     border:1px solid #1f5a3a;padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:600;
     opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;}
   .toast.show{opacity:1;}
+
+  /* language selector — shared look across Phoenix */
+  .lang-box{position:relative;}
+  .lang-btn{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text-dim);font-family:'Inter';font-weight:600;font-size:.74rem;padding:6px 11px;border-radius:13px;cursor:pointer;}
+  .lang-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:8px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:250px;
+    max-height:60vh;overflow-y:auto;box-shadow:0 16px 40px -8px rgba(0,0,0,.5);z-index:60;}
+  .lang-menu.open{display:grid;}
+  .lang-menu button{background:none;border:none;color:var(--text-dim);text-align:left;font-family:'Inter';
+    font-weight:500;font-size:.8rem;padding:8px 9px;border-radius:9px;cursor:pointer;}
+  .lang-menu button:hover{background:var(--panel-2);color:var(--text);}
+  .lang-menu button.active{color:var(--fire);font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="back">◂ Tools</a>
+    <div class="lang-box" id="langBox">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
+  </div>
   <header>
-    <div class="eyebrow">Phoenix · Leaders</div>
-    <h1>📅 Milestones</h1>
-    <p class="sub">What's arriving, and when — hero/pet generations & system unlocks for this state.</p>
+    <div class="eyebrow" data-i18n="eyebrow">Phoenix · Leaders</div>
+    <h1 data-i18n="title">📅 Milestones</h1>
+    <p class="sub" data-i18n="sub">What's arriving, and when — hero/pet generations &amp; system unlocks for this state.</p>
   </header>
 
   <div id="app"></div>
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="phx-i18n.js"></script>
 <script>
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+const DICT={
+en:{eyebrow:"Phoenix · Leaders",title:"📅 Milestones",sub:"What's arriving, and when — hero/pet generations & system unlocks for this state.",back:"◂ Tools",day:"Day",ofServer:"of this server",filterAll:"All",filterHero:"🦸 Heroes",filterPet:"🐾 Pets",filterSys:"✨ Systems",showPast:"Show past",nothingFiltered:"Nothing upcoming in this filter.",setupText:"This state doesn't have a start date set yet. Set it once and every milestone below calculates itself.",startDateLabel:"Server start date (day 0)",saveCalc:"💾 Save & calculate",gateText:"This state hasn't set its server start date yet. Ask a leader to set it up.",saveStart:"💾 Save start date",today:"Today",daysAgo:"{n}d ago",inDays:"in {n}d",pickDate:"Pick a date first",saved:"Saved ✓",failed:"Failed:"},
+es:{eyebrow:"Phoenix · Líderes",title:"📅 Hitos",sub:"Qué llega y cuándo — generaciones de héroes/mascotas y desbloqueos del sistema para este estado.",back:"◂ Herramientas",day:"Día",ofServer:"de este servidor",filterAll:"Todo",filterHero:"🦸 Héroes",filterPet:"🐾 Mascotas",filterSys:"✨ Sistema",showPast:"Ver pasados",nothingFiltered:"No hay nada próximo en este filtro.",setupText:"Este estado aún no tiene fecha de inicio. Ponla una vez y cada hito de abajo se calcula solo.",startDateLabel:"Fecha de inicio del servidor (día 0)",saveCalc:"💾 Guardar y calcular",gateText:"Este estado aún no tiene fecha de inicio configurada. Pide a un líder que la ponga.",saveStart:"💾 Guardar fecha de inicio",today:"Hoy",daysAgo:"hace {n}d",inDays:"en {n}d",pickDate:"Elige una fecha primero",saved:"Guardado ✓",failed:"Error:"},
+ko:{eyebrow:"Phoenix · 리더",title:"📅 마일스톤",sub:"무엇이 언제 오는지 — 이 서버의 영웅/펫 세대 및 시스템 해금.",back:"◂ 도구",day:"일차",ofServer:"서버 기준",filterAll:"전체",filterHero:"🦸 영웅",filterPet:"🐾 펫",filterSys:"✨ 시스템",showPast:"지난 항목 보기",nothingFiltered:"이 필터에는 예정된 항목이 없습니다.",setupText:"이 서버는 아직 시작일이 설정되지 않았습니다. 한 번 설정하면 아래 마일스톤이 자동으로 계산됩니다.",startDateLabel:"서버 시작일 (0일차)",saveCalc:"💾 저장 및 계산",gateText:"이 서버는 아직 시작일이 설정되지 않았습니다. 리더에게 설정을 요청하세요.",saveStart:"💾 시작일 저장",today:"오늘",daysAgo:"{n}일 전",inDays:"{n}일 후",pickDate:"먼저 날짜를 선택하세요",saved:"저장됨 ✓",failed:"실패:"},
+ja:{eyebrow:"Phoenix · リーダー",title:"📅 マイルストーン",sub:"何がいつ来るか — このサーバーのヒーロー/ペット世代とシステム解放。",back:"◂ ツール",day:"Day",ofServer:"このサーバーの",filterAll:"すべて",filterHero:"🦸 ヒーロー",filterPet:"🐾 ペット",filterSys:"✨ システム",showPast:"過去を表示",nothingFiltered:"このフィルターには今後の予定がありません。",setupText:"このサーバーはまだ開始日が設定されていません。一度設定すれば、以下のマイルストーンは自動計算されます。",startDateLabel:"サーバー開始日（0日目）",saveCalc:"💾 保存して計算",gateText:"このサーバーはまだ開始日が設定されていません。リーダーに設定を依頼してください。",saveStart:"💾 開始日を保存",today:"今日",daysAgo:"{n}日前",inDays:"{n}日後",pickDate:"先に日付を選択してください",saved:"保存しました ✓",failed:"失敗:"},
+de:{eyebrow:"Phoenix · Anführer",title:"📅 Meilensteine",sub:"Was kommt wann — Helden-/Haustier-Generationen & Systemfreischaltungen für diesen Staat.",back:"◂ Werkzeuge",day:"Tag",ofServer:"dieses Servers",filterAll:"Alle",filterHero:"🦸 Helden",filterPet:"🐾 Haustiere",filterSys:"✨ System",showPast:"Vergangene anzeigen",nothingFiltered:"In diesem Filter steht nichts an.",setupText:"Für diesen Staat ist noch kein Startdatum gesetzt. Einmal festlegen, und jeder Meilenstein unten berechnet sich selbst.",startDateLabel:"Serverstart (Tag 0)",saveCalc:"💾 Speichern & berechnen",gateText:"Für diesen Staat ist noch kein Startdatum gesetzt. Bitte einen Anführer, es festzulegen.",saveStart:"💾 Startdatum speichern",today:"Heute",daysAgo:"vor {n} Tagen",inDays:"in {n} Tagen",pickDate:"Wähle zuerst ein Datum",saved:"Gespeichert ✓",failed:"Fehlgeschlagen:"},
+fr:{eyebrow:"Phoenix · Leaders",title:"📅 Jalons",sub:"Ce qui arrive, et quand — générations de héros/animaux et déblocages système pour cet état.",back:"◂ Outils",day:"Jour",ofServer:"de ce serveur",filterAll:"Tout",filterHero:"🦸 Héros",filterPet:"🐾 Animaux",filterSys:"✨ Système",showPast:"Afficher le passé",nothingFiltered:"Rien à venir dans ce filtre.",setupText:"Cet état n'a pas encore de date de début. Définissez-la une fois et chaque jalon ci-dessous se calcule tout seul.",startDateLabel:"Date de début du serveur (jour 0)",saveCalc:"💾 Enregistrer et calculer",gateText:"Cet état n'a pas encore de date de début. Demandez à un leader de la définir.",saveStart:"💾 Enregistrer la date de début",today:"Aujourd'hui",daysAgo:"il y a {n}j",inDays:"dans {n}j",pickDate:"Choisissez d'abord une date",saved:"Enregistré ✓",failed:"Échec :"},
+ar:{eyebrow:"Phoenix · القادة",title:"📅 المحطات الزمنية",sub:"ما الذي سيصل ومتى — أجيال الأبطال/الحيوانات الأليفة وفتحات النظام لهذه الولاية.",back:"◂ الأدوات",day:"اليوم",ofServer:"من عمر هذا الخادم",filterAll:"الكل",filterHero:"🦸 الأبطال",filterPet:"🐾 الحيوانات الأليفة",filterSys:"✨ النظام",showPast:"عرض الماضي",nothingFiltered:"لا يوجد شيء قادم في هذا الفلتر.",setupText:"لم يتم تحديد تاريخ بدء لهذه الولاية بعد. حدده مرة واحدة وستُحسب كل محطة أدناه تلقائيًا.",startDateLabel:"تاريخ بدء الخادم (اليوم 0)",saveCalc:"💾 حفظ واحتساب",gateText:"لم يتم تحديد تاريخ بدء لهذه الولاية بعد. اطلب من أحد القادة تحديده.",saveStart:"💾 حفظ تاريخ البدء",today:"اليوم",daysAgo:"قبل {n} يوم",inDays:"خلال {n} يوم",pickDate:"اختر تاريخًا أولاً",saved:"تم الحفظ ✓",failed:"فشل:"},
+ru:{eyebrow:"Phoenix · Лидеры",title:"📅 Вехи",sub:"Что и когда появится — поколения героев/питомцев и открытие систем для этого штата.",back:"◂ Инструменты",day:"День",ofServer:"этого сервера",filterAll:"Все",filterHero:"🦸 Герои",filterPet:"🐾 Питомцы",filterSys:"✨ Системы",showPast:"Показать прошедшие",nothingFiltered:"В этом фильтре пока ничего нет.",setupText:"Для этого штата ещё не задана дата начала. Задайте её один раз — и все вехи ниже посчитаются сами.",startDateLabel:"Дата начала сервера (день 0)",saveCalc:"💾 Сохранить и рассчитать",gateText:"Для этого штата ещё не задана дата начала. Попросите лидера её указать.",saveStart:"💾 Сохранить дату начала",today:"Сегодня",daysAgo:"{n} дн. назад",inDays:"через {n} дн.",pickDate:"Сначала выберите дату",saved:"Сохранено ✓",failed:"Ошибка:"},
+tr:{eyebrow:"Phoenix · Liderler",title:"📅 Kilometre Taşları",sub:"Neyin ne zaman geleceği — bu eyalet için kahraman/evcil hayvan nesilleri ve sistem açılışları.",back:"◂ Araçlar",day:"Gün",ofServer:"bu sunucunun",filterAll:"Tümü",filterHero:"🦸 Kahramanlar",filterPet:"🐾 Evcil Hayvanlar",filterSys:"✨ Sistem",showPast:"Geçmişi göster",nothingFiltered:"Bu filtrede yaklaşan bir şey yok.",setupText:"Bu eyalet için henüz başlangıç tarihi ayarlanmadı. Bir kez ayarlayın, aşağıdaki tüm kilometre taşları otomatik hesaplanır.",startDateLabel:"Sunucu başlangıç tarihi (0. gün)",saveCalc:"💾 Kaydet ve hesapla",gateText:"Bu eyalet için henüz başlangıç tarihi ayarlanmadı. Bir liderden ayarlamasını isteyin.",saveStart:"💾 Başlangıç tarihini kaydet",today:"Bugün",daysAgo:"{n} gün önce",inDays:"{n} gün sonra",pickDate:"Önce bir tarih seçin",saved:"Kaydedildi ✓",failed:"Başarısız:"},
+it:{eyebrow:"Phoenix · Leader",title:"📅 Traguardi",sub:"Cosa arriva e quando — generazioni di eroi/pet e sblocchi di sistema per questo stato.",back:"◂ Strumenti",day:"Giorno",ofServer:"di questo server",filterAll:"Tutti",filterHero:"🦸 Eroi",filterPet:"🐾 Pet",filterSys:"✨ Sistema",showPast:"Mostra passati",nothingFiltered:"Niente in arrivo in questo filtro.",setupText:"Questo stato non ha ancora una data di inizio. Impostala una volta e ogni traguardo qui sotto si calcola da solo.",startDateLabel:"Data di inizio server (giorno 0)",saveCalc:"💾 Salva e calcola",gateText:"Questo stato non ha ancora una data di inizio impostata. Chiedi a un leader di impostarla.",saveStart:"💾 Salva data di inizio",today:"Oggi",daysAgo:"{n}g fa",inDays:"tra {n}g",pickDate:"Scegli prima una data",saved:"Salvato ✓",failed:"Errore:"},
+pl:{eyebrow:"Phoenix · Liderzy",title:"📅 Kamienie milowe",sub:"Co i kiedy się pojawi — generacje bohaterów/zwierzaków i odblokowania systemowe dla tego stanu.",back:"◂ Narzędzia",day:"Dzień",ofServer:"tego serwera",filterAll:"Wszystko",filterHero:"🦸 Bohaterowie",filterPet:"🐾 Zwierzaki",filterSys:"✨ System",showPast:"Pokaż minione",nothingFiltered:"Nic nadchodzącego w tym filtrze.",setupText:"Ten stan nie ma jeszcze ustawionej daty rozpoczęcia. Ustaw ją raz, a każdy kamień milowy poniżej obliczy się sam.",startDateLabel:"Data startu serwera (dzień 0)",saveCalc:"💾 Zapisz i oblicz",gateText:"Ten stan nie ma jeszcze ustawionej daty rozpoczęcia. Poproś lidera o jej ustawienie.",saveStart:"💾 Zapisz datę startu",today:"Dziś",daysAgo:"{n} dni temu",inDays:"za {n} dni",pickDate:"Najpierw wybierz datę",saved:"Zapisano ✓",failed:"Błąd:"},
+pt:{eyebrow:"Phoenix · Líderes",title:"📅 Marcos",sub:"O que está chegando, e quando — gerações de heróis/pets e desbloqueios do sistema deste estado.",back:"◂ Ferramentas",day:"Dia",ofServer:"deste servidor",filterAll:"Todos",filterHero:"🦸 Heróis",filterPet:"🐾 Pets",filterSys:"✨ Sistema",showPast:"Mostrar passados",nothingFiltered:"Nada próximo neste filtro.",setupText:"Este estado ainda não tem data de início definida. Defina uma vez e cada marco abaixo se calcula sozinho.",startDateLabel:"Data de início do servidor (dia 0)",saveCalc:"💾 Salvar e calcular",gateText:"Este estado ainda não tem data de início definida. Peça a um líder para configurá-la.",saveStart:"💾 Salvar data de início",today:"Hoje",daysAgo:"há {n}d",inDays:"em {n}d",pickDate:"Escolha uma data primeiro",saved:"Salvo ✓",failed:"Falhou:"},
+th:{eyebrow:"Phoenix · ผู้นำ",title:"📅 เหตุการณ์สำคัญ",sub:"อะไรจะมาถึงและเมื่อไหร่ — เจนเนอเรชันฮีโร่/สัตว์เลี้ยง และการปลดล็อกระบบของรัฐนี้",back:"◂ เครื่องมือ",day:"วันที่",ofServer:"ของเซิร์ฟเวอร์นี้",filterAll:"ทั้งหมด",filterHero:"🦸 ฮีโร่",filterPet:"🐾 สัตว์เลี้ยง",filterSys:"✨ ระบบ",showPast:"แสดงที่ผ่านมา",nothingFiltered:"ไม่มีรายการที่กำลังจะมาถึงในตัวกรองนี้",setupText:"รัฐนี้ยังไม่ได้ตั้งวันที่เริ่มต้น ตั้งค่าเพียงครั้งเดียว แล้วเหตุการณ์สำคัญด้านล่างจะคำนวณเอง",startDateLabel:"วันที่เริ่มต้นเซิร์ฟเวอร์ (วันที่ 0)",saveCalc:"💾 บันทึกและคำนวณ",gateText:"รัฐนี้ยังไม่ได้ตั้งวันที่เริ่มต้น ขอให้ผู้นำตั้งค่า",saveStart:"💾 บันทึกวันที่เริ่มต้น",today:"วันนี้",daysAgo:"{n} วันที่แล้ว",inDays:"อีก {n} วัน",pickDate:"เลือกวันที่ก่อน",saved:"บันทึกแล้ว ✓",failed:"ล้มเหลว:"},
+id:{eyebrow:"Phoenix · Pemimpin",title:"📅 Milestone",sub:"Apa yang akan datang, dan kapan — generasi hero/pet & pembukaan sistem untuk state ini.",back:"◂ Alat",day:"Hari",ofServer:"server ini",filterAll:"Semua",filterHero:"🦸 Hero",filterPet:"🐾 Pet",filterSys:"✨ Sistem",showPast:"Tampilkan yang lalu",nothingFiltered:"Tidak ada yang akan datang di filter ini.",setupText:"State ini belum punya tanggal mulai. Atur sekali, dan setiap milestone di bawah akan terhitung otomatis.",startDateLabel:"Tanggal mulai server (hari 0)",saveCalc:"💾 Simpan & hitung",gateText:"State ini belum mengatur tanggal mulai. Minta pemimpin untuk mengaturnya.",saveStart:"💾 Simpan tanggal mulai",today:"Hari ini",daysAgo:"{n}h lalu",inDays:"{n}h lagi",pickDate:"Pilih tanggal dulu",saved:"Tersimpan ✓",failed:"Gagal:"}
+};
 
 function getState(){
   const q=new URLSearchParams(location.search).get('s');
@@ -97,9 +135,10 @@ function toast(msg){
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
+const T=(k)=>PhxI18N.t(k);
 
 // ── Fixed game-content schedule: offset in days from server start (day 0) ──
-// Source: community roadmap tracker, cross-checked against TMQ's data.
+// Names/characters stay in English everywhere (proper nouns, same in every game locale).
 const MILESTONES=[
   {d:0,   n:'Hero Generation 1 (Natalia, Jeronimo, Molly, Zinman)', t:'hero', i:'🦸'},
   {d:40,  n:'Hero Generation 2 (Flint, Philly, Alonso)', t:'hero', i:'🦸'},
@@ -139,7 +178,7 @@ const MILESTONES=[
 let startDate=null, isLeader=false, showPast=false, filterType='all';
 
 function fmtDate(dt){
-  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  return dt.toLocaleDateString(PhxI18N.getLang(),{month:'short',day:'numeric',year:'numeric'});
 }
 function dayNumber(){
   const today=new Date(); today.setHours(0,0,0,0);
@@ -149,18 +188,18 @@ function dayNumber(){
 function render(){
   const app=document.getElementById('app');
   const curDay=dayNumber();
-  let html=`<div class="panel dayHero"><div class="n">Day ${curDay}</div><div class="l">of this server</div></div>`;
+  let html=`<div class="panel dayHero"><div class="n">${T('day')} ${curDay}</div><div class="l">${T('ofServer')}</div></div>`;
   html+=`<div class="filters">
-    <div class="chip ${filterType==='all'?'on':''}" data-f="all">All</div>
-    <div class="chip ${filterType==='hero'?'on':''}" data-f="hero">🦸 Heroes</div>
-    <div class="chip ${filterType==='pet'?'on':''}" data-f="pet">🐾 Pets</div>
-    <div class="chip ${filterType==='sys'?'on':''}" data-f="sys">✨ Systems</div>
+    <div class="chip ${filterType==='all'?'on':''}" data-f="all">${T('filterAll')}</div>
+    <div class="chip ${filterType==='hero'?'on':''}" data-f="hero">${T('filterHero')}</div>
+    <div class="chip ${filterType==='pet'?'on':''}" data-f="pet">${T('filterPet')}</div>
+    <div class="chip ${filterType==='sys'?'on':''}" data-f="sys">${T('filterSys')}</div>
   </div>`;
   html+=`<div class="panel" id="mList"></div>`;
   if(isLeader){
     html+=`<div class="panel">
-      <div class="field"><label>Server start date (day 0)</label><input type="date" id="startInput" value="${startDate||''}"></div>
-      <button class="btn fire" id="saveStartBtn" style="width:100%;">💾 Save start date</button>
+      <div class="field"><label>${T('startDateLabel')}</label><input type="date" id="startInput" value="${startDate||''}"></div>
+      <button class="btn fire" id="saveStartBtn" style="width:100%;">${T('saveStart')}</button>
     </div>`;
   }
   app.innerHTML=html;
@@ -169,16 +208,15 @@ function render(){
   const list=document.getElementById('mList');
   let rows=MILESTONES.filter(m=>filterType==='all'||m.t===filterType);
   if(!showPast) rows=rows.filter(m=>(m.d-curDay)>=-1);
-  if(!rows.length){ list.innerHTML='<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">Nothing upcoming in this filter. <span id="showPastLink" style="text-decoration:underline;cursor:pointer;color:var(--ice-dim);">Show past</span></p>'; }
+  if(!rows.length){ list.innerHTML=`<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">${T('nothingFiltered')} <span id="showPastLink" style="text-decoration:underline;cursor:pointer;color:var(--ice-dim);">${T('showPast')}</span></p>`; }
   else{
     list.innerHTML=rows.map(m=>{
       const diff=m.d-curDay;
       const evDate=new Date(sd.getTime()+m.d*86400000);
       let whenTxt, whenCls;
-      if(diff===0){whenTxt='Today';whenCls='today';}
-      else if(diff<0){whenTxt=Math.abs(diff)+'d ago';whenCls='past';}
-      else if(diff<=14){whenTxt='in '+diff+'d';whenCls='soon';}
-      else{whenTxt='in '+diff+'d';whenCls='';}
+      if(diff===0){whenTxt=T('today');whenCls='today';}
+      else if(diff<0){whenTxt=T('daysAgo').replace('{n}',Math.abs(diff));whenCls='past';}
+      else{whenTxt=T('inDays').replace('{n}',diff);whenCls=diff<=14?'soon':'';}
       return `<div class="mRow ${m.t} ${diff<0?'past':''}">
         <div class="mIco">${m.i}</div>
         <div class="mBody"><div class="mName">${m.n}</div><div class="mDate">${fmtDate(evDate)}</div></div>
@@ -191,32 +229,38 @@ function render(){
   const sb2=document.getElementById('saveStartBtn');
   if(sb2) sb2.onclick=async()=>{
     const v=document.getElementById('startInput').value;
-    if(!v){toast('Pick a date first');return;}
-    sb2.textContent='Saving…';sb2.disabled=true;
+    if(!v){toast(T('pickDate'));return;}
+    sb2.textContent='…';sb2.disabled=true;
     const{error}=await sb.from('states').update({server_start_date:v}).eq('id',S);
-    sb2.textContent='💾 Save start date';sb2.disabled=false;
-    if(error){toast('Failed: '+error.message);return;}
-    startDate=v; toast('Saved ✓'); render();
+    sb2.textContent=T('saveStart');sb2.disabled=false;
+    if(error){toast(T('failed')+' '+error.message);return;}
+    startDate=v; toast(T('saved')); render();
   };
 }
 
 function renderSetup(){
   document.getElementById('app').innerHTML=`<div class="panel setupBox">
     <div style="font-size:2rem;">📅</div>
-    <p>This state doesn't have a start date set yet. Set it once and every milestone below calculates itself.</p>
-    <div class="field" style="text-align:left;"><label>Server start date (day 0)</label><input type="date" id="startInput2"></div>
-    <button class="btn fire" id="saveStartBtn2" style="width:100%;margin-top:8px;">💾 Save & calculate</button>
+    <p>${T('setupText')}</p>
+    <div class="field" style="text-align:left;"><label>${T('startDateLabel')}</label><input type="date" id="startInput2"></div>
+    <button class="btn fire" id="saveStartBtn2" style="width:100%;margin-top:8px;">${T('saveCalc')}</button>
   </div>`;
   document.getElementById('saveStartBtn2').onclick=async()=>{
     const v=document.getElementById('startInput2').value;
-    if(!v){toast('Pick a date first');return;}
+    if(!v){toast(T('pickDate'));return;}
     const{error}=await sb.from('states').update({server_start_date:v}).eq('id',S);
-    if(error){toast('Failed: '+error.message);return;}
+    if(error){toast(T('failed')+' '+error.message);return;}
     startDate=v; render();
   };
 }
 
+function renderCurrent(){
+  if(!startDate){ if(isLeader) renderSetup(); else document.getElementById('app').innerHTML=`<div class="gate">${T('gateText')}</div>`; return; }
+  render();
+}
+
 async function init(){
+  PhxI18N.init(DICT, ()=>{ renderCurrent(); });
   const{data:{session}}=await sb.auth.getSession();
   if(session){
     const{data:rows}=await sb.from('players').select('role,alliance_id,state_id').eq('owner',session.user.id);
@@ -224,12 +268,7 @@ async function init(){
   }
   const{data:st}=await sb.from('states').select('server_start_date').eq('id',S).maybeSingle();
   startDate=st&&st.server_start_date;
-  if(!startDate){
-    if(isLeader) renderSetup();
-    else document.getElementById('app').innerHTML='<div class="gate">This state hasn\'t set its server start date yet. Ask a leader to set it up.</div>';
-    return;
-  }
-  render();
+  renderCurrent();
 }
 init();
 </script>

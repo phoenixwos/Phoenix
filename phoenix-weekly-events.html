@@ -18,14 +18,14 @@
   header{text-align:center;margin-bottom:12px;}
   .eyebrow{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);}
   p.sub{font-size:.8rem;color:var(--text-dim);margin:2px 0 0;}
-  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;margin-bottom:8px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .back{display:inline-block;color:var(--ice-dim);text-decoration:none;font-size:.8rem;}
   .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
     border-radius:14px;padding:14px;margin-bottom:14px;}
   .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);margin-bottom:10px;font-weight:600;}
   .btn{background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:9px 14px;
     border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer;}
   .btn.fire{background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;}
-  .btn.small{padding:6px 10px;font-size:.72rem;}
   input,select{background:var(--bg-deep);border:1px solid var(--line);color:var(--text);
     padding:9px 11px;border-radius:9px;font-size:.85rem;width:100%;}
   .field{margin-bottom:10px;}
@@ -50,25 +50,61 @@
     border:1px solid #1f5a3a;padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:600;
     opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;}
   .toast.show{opacity:1;}
+
+  .lang-box{position:relative;}
+  .lang-btn{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text-dim);font-family:'Inter';font-weight:600;font-size:.74rem;padding:6px 11px;border-radius:13px;cursor:pointer;}
+  .lang-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:8px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:250px;
+    max-height:60vh;overflow-y:auto;box-shadow:0 16px 40px -8px rgba(0,0,0,.5);z-index:60;}
+  .lang-menu.open{display:grid;}
+  .lang-menu button{background:none;border:none;color:var(--text-dim);text-align:left;font-family:'Inter';
+    font-weight:500;font-size:.8rem;padding:8px 9px;border-radius:9px;cursor:pointer;}
+  .lang-menu button:hover{background:var(--panel-2);color:var(--text);}
+  .lang-menu button.active{color:var(--fire);font-weight:700;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" id="backLink" href="phoenix-tools.html">◂ Tools</a>
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="back">◂ Tools</a>
+    <div class="lang-box" id="langBox">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
+  </div>
   <header>
-    <div class="eyebrow">Phoenix · Leaders</div>
-    <h1>🗓️ Weekly Events</h1>
-    <p class="sub">Fort sign-ups, Castle event, SvS — the recurring stuff, so nobody misses the window.</p>
+    <div class="eyebrow" data-i18n="eyebrow">Phoenix · Leaders</div>
+    <h1 data-i18n="title">🗓️ Weekly Events</h1>
+    <p class="sub" data-i18n="sub">Fort sign-ups, Castle event, SvS — the recurring stuff, so nobody misses the window.</p>
   </header>
 
   <div id="app"></div>
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="phx-i18n.js"></script>
 <script>
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+const DICT={
+en:{eyebrow:"Phoenix · Leaders",title:"🗓️ Weekly Events",sub:"Fort sign-ups, Castle event, SvS — the recurring stuff, so nobody misses the window.",back:"◂ Tools",scheduleTitle:"📋 Schedule",addEventTitle:"＋ Add event",eventLabel:"Event",customOption:"✏️ Custom…",customLabel:"Custom name",customPh:"Event name…",dayLabel:"Day (server/UTC)",hourLabel:"Hour (UTC)",noteLabel:"Note (optional)",notePh:"e.g. lasts 24h, sign up before battle…",addBtn:"💾 Add to schedule",noEventsLeader:"No recurring events set up yet. Add one below.",noEventsMember:"No recurring events set up yet. Ask a leader to add them.",confirmDelete:"Remove this event from the schedule?",removed:"Removed ✓",failed:"Failed:",nameFirst:"Name the event first",added:"Added ✓",unitH:"h",unitM:"m",unitD:"d",presetFortSignup:"Fort Sign-up",presetFortBattle:"Fort Battle",presetCastle:"Castle Event",presetSvS:"State vs State (SvS)",presetCanyon:"Canyon Clash",presetFoundry:"Foundry Battle",presetBearTrap:"Bear Trap",day0:"Sunday",day1:"Monday",day2:"Tuesday",day3:"Wednesday",day4:"Thursday",day5:"Friday",day6:"Saturday"},
+es:{eyebrow:"Phoenix · Líderes",title:"🗓️ Eventos semanales",sub:"Inscripción a fuertes, Castillo, VS — lo que se repite, para que nadie se pierda la ventana.",back:"◂ Herramientas",scheduleTitle:"📋 Calendario",addEventTitle:"＋ Añadir evento",eventLabel:"Evento",customOption:"✏️ Personalizado…",customLabel:"Nombre personalizado",customPh:"Nombre del evento…",dayLabel:"Día (servidor/UTC)",hourLabel:"Hora (UTC)",noteLabel:"Nota (opcional)",notePh:"ej. dura 24h, inscribirse antes de la batalla…",addBtn:"💾 Añadir al calendario",noEventsLeader:"Aún no hay eventos recurrentes. Añade uno abajo.",noEventsMember:"Aún no hay eventos recurrentes. Pide a un líder que los añada.",confirmDelete:"¿Quitar este evento del calendario?",removed:"Eliminado ✓",failed:"Error:",nameFirst:"Ponle nombre al evento primero",added:"Añadido ✓",unitH:"h",unitM:"m",unitD:"d",presetFortSignup:"Inscripción a Fuerte",presetFortBattle:"Batalla de Fuerte",presetCastle:"Evento de Castillo",presetSvS:"Estado contra Estado (VS)",presetCanyon:"Choque del Cañón",presetFoundry:"Batalla de Fundición",presetBearTrap:"Trampa del Oso",day0:"Domingo",day1:"Lunes",day2:"Martes",day3:"Miércoles",day4:"Jueves",day5:"Viernes",day6:"Sábado"},
+ko:{eyebrow:"Phoenix · 리더",title:"🗓️ 주간 이벤트",sub:"요새 접수, 성 이벤트, 국가전 — 반복되는 일정이라 아무도 타이밍을 놓치지 않도록.",back:"◂ 도구",scheduleTitle:"📋 일정",addEventTitle:"＋ 이벤트 추가",eventLabel:"이벤트",customOption:"✏️ 직접 입력…",customLabel:"사용자 지정 이름",customPh:"이벤트 이름…",dayLabel:"요일 (서버/UTC)",hourLabel:"시간 (UTC)",noteLabel:"메모 (선택)",notePh:"예: 24시간 지속, 전투 전 접수…",addBtn:"💾 일정에 추가",noEventsLeader:"아직 반복 이벤트가 없습니다. 아래에서 추가하세요.",noEventsMember:"아직 반복 이벤트가 없습니다. 리더에게 추가를 요청하세요.",confirmDelete:"이 이벤트를 일정에서 삭제할까요?",removed:"삭제됨 ✓",failed:"실패:",nameFirst:"먼저 이벤트 이름을 입력하세요",added:"추가됨 ✓",unitH:"시간",unitM:"분",unitD:"일",presetFortSignup:"요새 접수",presetFortBattle:"요새 전투",presetCastle:"성 이벤트",presetSvS:"국가전 (SvS)",presetCanyon:"협곡 충돌",presetFoundry:"주조소 전투",presetBearTrap:"곰덫",day0:"일요일",day1:"월요일",day2:"화요일",day3:"수요일",day4:"목요일",day5:"금요일",day6:"토요일"},
+ja:{eyebrow:"Phoenix · リーダー",title:"🗓️ 週間イベント",sub:"要塞の受付、キャッスルイベント、SvS — 繰り返される予定を逃さないために。",back:"◂ ツール",scheduleTitle:"📋 スケジュール",addEventTitle:"＋ イベントを追加",eventLabel:"イベント",customOption:"✏️ カスタム…",customLabel:"カスタム名",customPh:"イベント名…",dayLabel:"曜日 (サーバー/UTC)",hourLabel:"時刻 (UTC)",noteLabel:"メモ（任意）",notePh:"例: 24時間継続、戦闘前に受付…",addBtn:"💾 スケジュールに追加",noEventsLeader:"まだ定期イベントがありません。下から追加してください。",noEventsMember:"まだ定期イベントがありません。リーダーに追加を依頼してください。",confirmDelete:"このイベントをスケジュールから削除しますか？",removed:"削除しました ✓",failed:"失敗:",nameFirst:"先にイベント名を入力してください",added:"追加しました ✓",unitH:"時間",unitM:"分",unitD:"日",presetFortSignup:"要塞受付",presetFortBattle:"要塞戦",presetCastle:"キャッスルイベント",presetSvS:"国家戦 (SvS)",presetCanyon:"渓谷の衝突",presetFoundry:"鋳造戦",presetBearTrap:"熊の罠",day0:"日曜日",day1:"月曜日",day2:"火曜日",day3:"水曜日",day4:"木曜日",day5:"金曜日",day6:"土曜日"},
+de:{eyebrow:"Phoenix · Anführer",title:"🗓️ Wöchentliche Events",sub:"Fort-Anmeldung, Burg-Event, SvS — die wiederkehrenden Dinge, damit niemand das Zeitfenster verpasst.",back:"◂ Werkzeuge",scheduleTitle:"📋 Zeitplan",addEventTitle:"＋ Event hinzufügen",eventLabel:"Event",customOption:"✏️ Benutzerdefiniert…",customLabel:"Eigener Name",customPh:"Eventname…",dayLabel:"Tag (Server/UTC)",hourLabel:"Uhrzeit (UTC)",noteLabel:"Notiz (optional)",notePh:"z. B. dauert 24h, vor dem Kampf anmelden…",addBtn:"💾 Zum Zeitplan hinzufügen",noEventsLeader:"Noch keine wiederkehrenden Events eingerichtet. Füge unten eins hinzu.",noEventsMember:"Noch keine wiederkehrenden Events eingerichtet. Bitte einen Anführer, welche hinzuzufügen.",confirmDelete:"Dieses Event aus dem Zeitplan entfernen?",removed:"Entfernt ✓",failed:"Fehlgeschlagen:",nameFirst:"Zuerst das Event benennen",added:"Hinzugefügt ✓",unitH:"Std",unitM:"Min",unitD:"T",presetFortSignup:"Fort-Anmeldung",presetFortBattle:"Fort-Schlacht",presetCastle:"Burg-Event",presetSvS:"Staat gegen Staat (SvS)",presetCanyon:"Canyon-Zusammenstoß",presetFoundry:"Gießerei-Schlacht",presetBearTrap:"Bärenfalle",day0:"Sonntag",day1:"Montag",day2:"Dienstag",day3:"Mittwoch",day4:"Donnerstag",day5:"Freitag",day6:"Samstag"},
+fr:{eyebrow:"Phoenix · Leaders",title:"🗓️ Événements hebdomadaires",sub:"Inscriptions aux forts, événement Château, VS — les rendez-vous récurrents, pour que personne ne rate la fenêtre.",back:"◂ Outils",scheduleTitle:"📋 Planning",addEventTitle:"＋ Ajouter un événement",eventLabel:"Événement",customOption:"✏️ Personnalisé…",customLabel:"Nom personnalisé",customPh:"Nom de l'événement…",dayLabel:"Jour (serveur/UTC)",hourLabel:"Heure (UTC)",noteLabel:"Note (facultatif)",notePh:"ex. dure 24h, inscription avant la bataille…",addBtn:"💾 Ajouter au planning",noEventsLeader:"Aucun événement récurrent pour l'instant. Ajoutez-en un ci-dessous.",noEventsMember:"Aucun événement récurrent pour l'instant. Demandez à un leader d'en ajouter.",confirmDelete:"Retirer cet événement du planning ?",removed:"Retiré ✓",failed:"Échec :",nameFirst:"Nommez d'abord l'événement",added:"Ajouté ✓",unitH:"h",unitM:"min",unitD:"j",presetFortSignup:"Inscription au Fort",presetFortBattle:"Bataille de Fort",presetCastle:"Événement Château",presetSvS:"État contre État (SvS)",presetCanyon:"Choc du Canyon",presetFoundry:"Bataille de Fonderie",presetBearTrap:"Piège à Ours",day0:"Dimanche",day1:"Lundi",day2:"Mardi",day3:"Mercredi",day4:"Jeudi",day5:"Vendredi",day6:"Samedi"},
+ar:{eyebrow:"Phoenix · القادة",title:"🗓️ الأحداث الأسبوعية",sub:"تسجيل الحصون، حدث القلعة، الدولة ضد الدولة — الأمور المتكررة حتى لا يفوت أحد الموعد.",back:"◂ الأدوات",scheduleTitle:"📋 الجدول",addEventTitle:"＋ إضافة حدث",eventLabel:"الحدث",customOption:"✏️ مخصص…",customLabel:"اسم مخصص",customPh:"اسم الحدث…",dayLabel:"اليوم (الخادم/UTC)",hourLabel:"الساعة (UTC)",noteLabel:"ملاحظة (اختياري)",notePh:"مثال: يستمر 24 ساعة، التسجيل قبل المعركة…",addBtn:"💾 إضافة إلى الجدول",noEventsLeader:"لا توجد أحداث متكررة بعد. أضف واحدًا أدناه.",noEventsMember:"لا توجد أحداث متكررة بعد. اطلب من أحد القادة إضافتها.",confirmDelete:"إزالة هذا الحدث من الجدول؟",removed:"تمت الإزالة ✓",failed:"فشل:",nameFirst:"سمِّ الحدث أولاً",added:"تمت الإضافة ✓",unitH:"س",unitM:"د",unitD:"يوم",presetFortSignup:"تسجيل الحصن",presetFortBattle:"معركة الحصن",presetCastle:"حدث القلعة",presetSvS:"دولة ضد دولة (SvS)",presetCanyon:"اشتباك الوادي",presetFoundry:"معركة المسبك",presetBearTrap:"فخ الدب",day0:"الأحد",day1:"الاثنين",day2:"الثلاثاء",day3:"الأربعاء",day4:"الخميس",day5:"الجمعة",day6:"السبت"},
+ru:{eyebrow:"Phoenix · Лидеры",title:"🗓️ Еженедельные события",sub:"Запись на форты, событие Замка, ГпГ — повторяющиеся дела, чтобы никто не пропустил окно.",back:"◂ Инструменты",scheduleTitle:"📋 Расписание",addEventTitle:"＋ Добавить событие",eventLabel:"Событие",customOption:"✏️ Своё…",customLabel:"Своё название",customPh:"Название события…",dayLabel:"День (сервер/UTC)",hourLabel:"Час (UTC)",noteLabel:"Заметка (необязательно)",notePh:"напр. длится 24ч, запись перед боем…",addBtn:"💾 Добавить в расписание",noEventsLeader:"Повторяющихся событий пока нет. Добавьте одно ниже.",noEventsMember:"Повторяющихся событий пока нет. Попросите лидера добавить их.",confirmDelete:"Удалить это событие из расписания?",removed:"Удалено ✓",failed:"Ошибка:",nameFirst:"Сначала назовите событие",added:"Добавлено ✓",unitH:"ч",unitM:"мин",unitD:"дн",presetFortSignup:"Запись на форт",presetFortBattle:"Битва за форт",presetCastle:"Событие Замка",presetSvS:"Штат против штата (ГпГ)",presetCanyon:"Схватка в каньоне",presetFoundry:"Битва за литейную",presetBearTrap:"Медвежий капкан",day0:"Воскресенье",day1:"Понедельник",day2:"Вторник",day3:"Среда",day4:"Четверг",day5:"Пятница",day6:"Суббота"},
+tr:{eyebrow:"Phoenix · Liderler",title:"🗓️ Haftalık Etkinlikler",sub:"Kale kaydı, Şato etkinliği, DvD — kimse zamanı kaçırmasın diye tekrar eden şeyler.",back:"◂ Araçlar",scheduleTitle:"📋 Program",addEventTitle:"＋ Etkinlik ekle",eventLabel:"Etkinlik",customOption:"✏️ Özel…",customLabel:"Özel isim",customPh:"Etkinlik adı…",dayLabel:"Gün (sunucu/UTC)",hourLabel:"Saat (UTC)",noteLabel:"Not (isteğe bağlı)",notePh:"örn. 24 saat sürer, savaştan önce kayıt…",addBtn:"💾 Programa ekle",noEventsLeader:"Henüz tekrarlayan etkinlik yok. Aşağıdan bir tane ekle.",noEventsMember:"Henüz tekrarlayan etkinlik yok. Bir liderden eklemesini iste.",confirmDelete:"Bu etkinlik programdan kaldırılsın mı?",removed:"Kaldırıldı ✓",failed:"Başarısız:",nameFirst:"Önce etkinliğe isim ver",added:"Eklendi ✓",unitH:"sa",unitM:"dk",unitD:"g",presetFortSignup:"Kale Kaydı",presetFortBattle:"Kale Savaşı",presetCastle:"Şato Etkinliği",presetSvS:"Devlet vs Devlet (DvD)",presetCanyon:"Kanyon Çatışması",presetFoundry:"Döküm Savaşı",presetBearTrap:"Ayı Tuzağı",day0:"Pazar",day1:"Pazartesi",day2:"Salı",day3:"Çarşamba",day4:"Perşembe",day5:"Cuma",day6:"Cumartesi"},
+it:{eyebrow:"Phoenix · Leader",title:"🗓️ Eventi settimanali",sub:"Iscrizioni ai Forti, evento Castello, SvS — le cose ricorrenti, così nessuno perde la finestra.",back:"◂ Strumenti",scheduleTitle:"📋 Programma",addEventTitle:"＋ Aggiungi evento",eventLabel:"Evento",customOption:"✏️ Personalizzato…",customLabel:"Nome personalizzato",customPh:"Nome evento…",dayLabel:"Giorno (server/UTC)",hourLabel:"Ora (UTC)",noteLabel:"Nota (opzionale)",notePh:"es. dura 24h, iscrizione prima della battaglia…",addBtn:"💾 Aggiungi al programma",noEventsLeader:"Nessun evento ricorrente ancora. Aggiungine uno qui sotto.",noEventsMember:"Nessun evento ricorrente ancora. Chiedi a un leader di aggiungerli.",confirmDelete:"Rimuovere questo evento dal programma?",removed:"Rimosso ✓",failed:"Errore:",nameFirst:"Assegna prima un nome all'evento",added:"Aggiunto ✓",unitH:"h",unitM:"min",unitD:"g",presetFortSignup:"Iscrizione al Forte",presetFortBattle:"Battaglia del Forte",presetCastle:"Evento Castello",presetSvS:"Stato contro Stato (SvS)",presetCanyon:"Scontro nel Canyon",presetFoundry:"Battaglia della Fonderia",presetBearTrap:"Trappola per Orsi",day0:"Domenica",day1:"Lunedì",day2:"Martedì",day3:"Mercoledì",day4:"Giovedì",day5:"Venerdì",day6:"Sabato"},
+pl:{eyebrow:"Phoenix · Liderzy",title:"🗓️ Cotygodniowe wydarzenia",sub:"Zapisy na Fort, wydarzenie Zamek, PvP stanów — powtarzające się rzeczy, żeby nikt nie przegapił okna.",back:"◂ Narzędzia",scheduleTitle:"📋 Harmonogram",addEventTitle:"＋ Dodaj wydarzenie",eventLabel:"Wydarzenie",customOption:"✏️ Własne…",customLabel:"Własna nazwa",customPh:"Nazwa wydarzenia…",dayLabel:"Dzień (serwer/UTC)",hourLabel:"Godzina (UTC)",noteLabel:"Notatka (opcjonalnie)",notePh:"np. trwa 24h, zapisy przed bitwą…",addBtn:"💾 Dodaj do harmonogramu",noEventsLeader:"Nie ma jeszcze cyklicznych wydarzeń. Dodaj jedno poniżej.",noEventsMember:"Nie ma jeszcze cyklicznych wydarzeń. Poproś lidera o dodanie.",confirmDelete:"Usunąć to wydarzenie z harmonogramu?",removed:"Usunięto ✓",failed:"Błąd:",nameFirst:"Najpierw nazwij wydarzenie",added:"Dodano ✓",unitH:"godz",unitM:"min",unitD:"dn",presetFortSignup:"Zapisy na Fort",presetFortBattle:"Bitwa o Fort",presetCastle:"Wydarzenie Zamek",presetSvS:"Stan kontra Stan (SvS)",presetCanyon:"Starcie w Kanionie",presetFoundry:"Bitwa o Odlewnię",presetBearTrap:"Pułapka na Niedźwiedzia",day0:"Niedziela",day1:"Poniedziałek",day2:"Wtorek",day3:"Środa",day4:"Czwartek",day5:"Piątek",day6:"Sobota"},
+pt:{eyebrow:"Phoenix · Líderes",title:"🗓️ Eventos semanais",sub:"Inscrições de Forte, evento Castelo, SvS — as coisas recorrentes, para ninguém perder a janela.",back:"◂ Ferramentas",scheduleTitle:"📋 Calendário",addEventTitle:"＋ Adicionar evento",eventLabel:"Evento",customOption:"✏️ Personalizado…",customLabel:"Nome personalizado",customPh:"Nome do evento…",dayLabel:"Dia (servidor/UTC)",hourLabel:"Hora (UTC)",noteLabel:"Nota (opcional)",notePh:"ex. dura 24h, inscrição antes da batalha…",addBtn:"💾 Adicionar ao calendário",noEventsLeader:"Ainda não há eventos recorrentes. Adicione um abaixo.",noEventsMember:"Ainda não há eventos recorrentes. Peça a um líder para adicionar.",confirmDelete:"Remover este evento do calendário?",removed:"Removido ✓",failed:"Falhou:",nameFirst:"Dê um nome ao evento primeiro",added:"Adicionado ✓",unitH:"h",unitM:"min",unitD:"d",presetFortSignup:"Inscrição de Forte",presetFortBattle:"Batalha de Forte",presetCastle:"Evento Castelo",presetSvS:"Estado contra Estado (SvS)",presetCanyon:"Confronto do Cânion",presetFoundry:"Batalha da Fundição",presetBearTrap:"Armadilha do Urso",day0:"Domingo",day1:"Segunda-feira",day2:"Terça-feira",day3:"Quarta-feira",day4:"Quinta-feira",day5:"Sexta-feira",day6:"Sábado"},
+th:{eyebrow:"Phoenix · ผู้นำ",title:"🗓️ กิจกรรมรายสัปดาห์",sub:"การลงทะเบียนป้อม กิจกรรมปราสาท SvS — สิ่งที่เกิดซ้ำ เพื่อไม่ให้ใครพลาดช่วงเวลา",back:"◂ เครื่องมือ",scheduleTitle:"📋 ตารางเวลา",addEventTitle:"＋ เพิ่มกิจกรรม",eventLabel:"กิจกรรม",customOption:"✏️ กำหนดเอง…",customLabel:"ชื่อกำหนดเอง",customPh:"ชื่อกิจกรรม…",dayLabel:"วัน (เซิร์ฟเวอร์/UTC)",hourLabel:"ชั่วโมง (UTC)",noteLabel:"บันทึก (ไม่บังคับ)",notePh:"เช่น กินเวลา 24 ชม. ลงทะเบียนก่อนการต่อสู้…",addBtn:"💾 เพิ่มลงตาราง",noEventsLeader:"ยังไม่มีกิจกรรมที่เกิดซ้ำ เพิ่มด้านล่างได้เลย",noEventsMember:"ยังไม่มีกิจกรรมที่เกิดซ้ำ ขอให้ผู้นำเพิ่ม",confirmDelete:"ลบกิจกรรมนี้ออกจากตารางหรือไม่?",removed:"ลบแล้ว ✓",failed:"ล้มเหลว:",nameFirst:"ตั้งชื่อกิจกรรมก่อน",added:"เพิ่มแล้ว ✓",unitH:"ชม.",unitM:"นาที",unitD:"วัน",presetFortSignup:"ลงทะเบียนป้อม",presetFortBattle:"การต่อสู้ป้อม",presetCastle:"กิจกรรมปราสาท",presetSvS:"รัฐปะทะรัฐ (SvS)",presetCanyon:"การปะทะในหุบเขา",presetFoundry:"การต่อสู้โรงหลอม",presetBearTrap:"กับดักหมี",day0:"วันอาทิตย์",day1:"วันจันทร์",day2:"วันอังคาร",day3:"วันพุธ",day4:"วันพฤหัสบดี",day5:"วันศุกร์",day6:"วันเสาร์"},
+id:{eyebrow:"Phoenix · Pemimpin",title:"🗓️ Acara Mingguan",sub:"Pendaftaran Fort, acara Castle, SvS — hal yang berulang, jadi tidak ada yang melewatkan waktunya.",back:"◂ Alat",scheduleTitle:"📋 Jadwal",addEventTitle:"＋ Tambah acara",eventLabel:"Acara",customOption:"✏️ Kustom…",customLabel:"Nama kustom",customPh:"Nama acara…",dayLabel:"Hari (server/UTC)",hourLabel:"Jam (UTC)",noteLabel:"Catatan (opsional)",notePh:"mis. berlangsung 24 jam, daftar sebelum pertarungan…",addBtn:"💾 Tambah ke jadwal",noEventsLeader:"Belum ada acara berulang. Tambahkan satu di bawah.",noEventsMember:"Belum ada acara berulang. Minta pemimpin untuk menambahkannya.",confirmDelete:"Hapus acara ini dari jadwal?",removed:"Dihapus ✓",failed:"Gagal:",nameFirst:"Beri nama acara dulu",added:"Ditambahkan ✓",unitH:"j",unitM:"m",unitD:"h",presetFortSignup:"Pendaftaran Fort",presetFortBattle:"Pertarungan Fort",presetCastle:"Acara Castle",presetSvS:"Negara vs Negara (SvS)",presetCanyon:"Bentrokan Canyon",presetFoundry:"Pertarungan Foundry",presetBearTrap:"Perangkap Beruang",day0:"Minggu",day1:"Senin",day2:"Selasa",day3:"Rabu",day4:"Kamis",day5:"Jumat",day6:"Sabtu"}
+};
 
 function getState(){
   const q=new URLSearchParams(location.search).get('s');
@@ -86,31 +122,38 @@ function toast(msg){
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
+const T=(k)=>PhxI18N.t(k);
 
-const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+// Stored value stays the English preset key so data is consistent across
+// every leader's language; only the on-screen label is translated.
 const PRESETS=[
-  {n:'Fort Sign-up', i:'🏯'},
-  {n:'Fort Battle', i:'⚔️'},
-  {n:'Castle Event', i:'🏰'},
-  {n:'State vs State (SvS)', i:'🔥'},
-  {n:'Canyon Clash', i:'🏞️'},
-  {n:'Foundry Battle', i:'🏭'},
-  {n:'Bear Trap', i:'🐻'},
+  {n:'Fort Sign-up', i:'🏯', key:'presetFortSignup'},
+  {n:'Fort Battle', i:'⚔️', key:'presetFortBattle'},
+  {n:'Castle Event', i:'🏰', key:'presetCastle'},
+  {n:'State vs State (SvS)', i:'🔥', key:'presetSvS'},
+  {n:'Canyon Clash', i:'🏞️', key:'presetCanyon'},
+  {n:'Foundry Battle', i:'🏭', key:'presetFoundry'},
+  {n:'Bear Trap', i:'🐻', key:'presetBearTrap'},
 ];
+function dayName(i){ return T('day'+i); }
+function presetLabel(name){
+  const p=PRESETS.find(p=>p.n===name);
+  return p? (p.i+' '+T(p.key)) : ('📌 '+name);
+}
 
 let isLeader=false, events=[];
 
 function nextOccurrence(dow,hour){
   const now=new Date();
-  const nowUTCday=now.getUTCDay(), nowUTCh=now.getUTCHours(), nowUTCm=now.getUTCMinutes();
+  const nowUTCday=now.getUTCDay();
   let diffDays=(dow-nowUTCday+7)%7;
   let target=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+diffDays,hour,0,0));
   if(target<=now) target=new Date(target.getTime()+7*86400000);
   const msLeft=target-now;
   const h=Math.floor(msLeft/3600000), m=Math.floor((msLeft%3600000)/60000);
-  if(h<24) return `in ${h}h ${m}m`;
+  if(h<24) return `${h}${T('unitH')} ${m}${T('unitM')}`;
   const d=Math.floor(h/24);
-  return `in ${d}d ${h%24}h`;
+  return `${d}${T('unitD')} ${h%24}${T('unitH')}`;
 }
 
 async function loadEvents(){
@@ -121,19 +164,19 @@ async function loadEvents(){
 function render(){
   const app=document.getElementById('app');
   let html='';
-  html+='<div class="panel"><div class="panel-title">📋 Schedule</div><div id="eList"></div></div>';
+  html+=`<div class="panel"><div class="panel-title">${T('scheduleTitle')}</div><div id="eList"></div></div>`;
   if(isLeader){
     html+=`<div class="panel">
-      <div class="panel-title">＋ Add event</div>
-      <div class="field"><label>Event</label>
-        <select id="evName">${PRESETS.map(p=>`<option value="${p.n}">${p.i} ${p.n}</option>`).join('')}<option value="__custom">✏️ Custom…</option></select>
+      <div class="panel-title">${T('addEventTitle')}</div>
+      <div class="field"><label>${T('eventLabel')}</label>
+        <select id="evName">${PRESETS.map(p=>`<option value="${p.n}">${p.i} ${T(p.key)}</option>`).join('')}<option value="__custom">${T('customOption')}</option></select>
       </div>
-      <div class="field" id="customWrap" style="display:none;"><label>Custom name</label><input id="evCustom" placeholder="Event name…"></div>
+      <div class="field" id="customWrap" style="display:none;"><label>${T('customLabel')}</label><input id="evCustom" placeholder="${T('customPh')}"></div>
       <div class="row2">
-        <div class="field"><label>Day (server/UTC)</label>
-          <select id="evDay">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select>
+        <div class="field"><label>${T('dayLabel')}</label>
+          <select id="evDay">${[0,1,2,3,4,5,6].map(i=>`<option value="${i}">${dayName(i)}</option>`).join('')}</select>
         </div>
-        <div class="field"><label>Hour (UTC)</label>
+        <div class="field"><label>${T('hourLabel')}</label>
           <select id="evHour">${Array.from({length:24},(_,h)=>`<option value="${h}">${String(h).padStart(2,'0')}:00</option>`).join('')}</select>
         </div>
       </div>
@@ -142,8 +185,8 @@ function render(){
         <div class="qbtn" data-h="14">14:00 UTC</div>
         <div class="qbtn" data-h="17">17:00 UTC</div>
       </div>
-      <div class="field" style="margin-top:10px;"><label>Note (optional)</label><input id="evNote" placeholder="e.g. lasts 24h, sign up before battle…"></div>
-      <button class="btn fire" id="addBtn" style="width:100%;margin-top:6px;">💾 Add to schedule</button>
+      <div class="field" style="margin-top:10px;"><label>${T('noteLabel')}</label><input id="evNote" placeholder="${T('notePh')}"></div>
+      <button class="btn fire" id="addBtn" style="width:100%;margin-top:6px;">${T('addBtn')}</button>
     </div>`;
   }
   app.innerHTML=html;
@@ -153,15 +196,16 @@ function render(){
 
 function renderList(){
   const list=document.getElementById('eList');
-  if(!events.length){ list.innerHTML='<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">No recurring events set up yet.'+(isLeader?' Add one below.':' Ask a leader to add them.')+'</p>'; return; }
+  if(!events.length){ list.innerHTML=`<p style="font-size:.82rem;color:var(--text-dim);text-align:center;padding:10px;">${isLeader?T('noEventsLeader'):T('noEventsMember')}</p>`; return; }
   list.innerHTML=events.map(e=>{
     const preset=PRESETS.find(p=>p.n===e.name);
     const icon=preset?preset.i:'📌';
+    const label=preset? T(preset.key) : e.name;
     return `<div class="eRow" data-id="${e.id}">
       <div style="font-size:1.1rem;width:22px;text-align:center;">${icon}</div>
       <div class="eBody">
-        <div class="eName">${e.name}</div>
-        <div class="eTime">${DAYS[e.day_of_week]} · ${String(e.hour_utc).padStart(2,'0')}:00 UTC${e.note?' · '+e.note:''}</div>
+        <div class="eName">${label}</div>
+        <div class="eTime">${dayName(e.day_of_week)} · ${String(e.hour_utc).padStart(2,'0')}:00 UTC${e.note?' · '+e.note:''}</div>
       </div>
       <div class="eNext">${nextOccurrence(e.day_of_week,e.hour_utc)}</div>
       ${isLeader?`<button class="eDel" data-del="${e.id}">✕</button>`:''}
@@ -169,11 +213,11 @@ function renderList(){
   }).join('');
   if(isLeader){
     list.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
-      if(!confirm('Remove this event from the schedule?'))return;
+      if(!confirm(T('confirmDelete')))return;
       const id=b.dataset.del;
       const{error}=await sb.from('weekly_events').delete().eq('id',id);
-      if(error){toast('Failed: '+error.message);return;}
-      events=events.filter(e=>e.id!==id); renderList(); toast('Removed ✓');
+      if(error){toast(T('failed')+' '+error.message);return;}
+      events=events.filter(e=>e.id!==id); renderList(); toast(T('removed'));
     });
   }
 }
@@ -188,24 +232,25 @@ function wireForm(){
   });
   document.getElementById('addBtn').onclick=async()=>{
     const name=(nameSel.value==='__custom')?document.getElementById('evCustom').value.trim():nameSel.value;
-    if(!name){toast('Name the event first');return;}
+    if(!name){toast(T('nameFirst'));return;}
     const day=Number(document.getElementById('evDay').value);
     const hour=Number(document.getElementById('evHour').value);
     const note=document.getElementById('evNote').value.trim();
     const btn=document.getElementById('addBtn');
-    btn.textContent='Saving…';btn.disabled=true;
+    btn.disabled=true;
     const{data,error}=await sb.from('weekly_events').insert({state_id:S,name,day_of_week:day,hour_utc:hour,note:note||null}).select().single();
-    btn.textContent='💾 Add to schedule';btn.disabled=false;
-    if(error){toast('Failed: '+error.message);return;}
+    btn.disabled=false; btn.textContent=T('addBtn');
+    if(error){toast(T('failed')+' '+error.message);return;}
     events.push(data);
     events.sort((a,b)=>a.day_of_week-b.day_of_week||a.hour_utc-b.hour_utc);
-    renderList(); toast('Added ✓');
+    renderList(); toast(T('added'));
     document.getElementById('evNote').value='';
     if(nameSel.value==='__custom') document.getElementById('evCustom').value='';
   };
 }
 
 async function init(){
+  PhxI18N.init(DICT, ()=>{ render(); });
   const{data:{session}}=await sb.auth.getSession();
   if(session){
     const{data:rows}=await sb.from('players').select('role,state_id').eq('owner',session.user.id);
