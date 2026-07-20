@@ -194,6 +194,16 @@
     <div class="arr">›</div>
   </a>
 
+  <a class="card" id="cardAlerts">
+    <div class="emoji">🔔</div>
+    <div class="body">
+      <h3>Event Alerts</h3>
+      <p>Foundry, Canyon, SvS, Bear Trap and more — toggle which ones remind you. Dates are set by R4/R5.</p>
+      <span class="tag everyone">Everyone · dates by R4/R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
   <a class="card gold" id="cardHeroes">
     <div class="emoji">🦸</div>
     <div class="body">
@@ -251,7 +261,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardWeekly:'phoenix-weekly-events.html'};
+  var dest={cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardWeekly:'phoenix-weekly-events.html', cardAlerts:'phoenix-event-alerts.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
