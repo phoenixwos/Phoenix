@@ -64,6 +64,21 @@ var DEFAULT_SVS_SAVING_DAYS=18; // "2-3 weeks before" -> default mid-point, edit
 
 function addDays(dt,d){ return new Date(dt.getTime()+d*86400000); }
 
+// The leader enters a date ONCE (the "anchor"). From then on, for events with a known
+// cadence, this rolls that anchor forward automatically — no need to re-enter it every cycle.
+// Irregular events (cadenceDays === null) are never auto-advanced; they always show exactly
+// what the leader last typed, since there's no reliable rule to project forward.
+function nextOccurrence(anchorIso, cadenceDays){
+  var anchor=new Date(anchorIso);
+  if(cadenceDays==null) return anchor;
+  var now=new Date();
+  var d=new Date(anchor.getTime());
+  if(d>=now) return d; // anchor is already in the future — nothing to roll forward
+  var ms=cadenceDays*86400000;
+  var cycles=Math.ceil((now-d)/ms);
+  return new Date(d.getTime()+cycles*ms);
+}
+
 function stageDate(occursAt, stage, savingDays){
   var d=new Date(occursAt);
   if(stage.offset==='saving') return addDays(d, -(savingDays||DEFAULT_SVS_SAVING_DAYS));
@@ -88,8 +103,9 @@ async function getUpcoming(sb, stateId, ownerId, lookaheadHours){
     if(disabled[occ.event_key]) return;
     var def=EVENTS.find(function(e){return e.key===occ.event_key;});
     if(!def) return;
+    var rolled=nextOccurrence(occ.occurs_at, def.cadenceDays);
     def.stages.forEach(function(st){
-      var when=stageDate(occ.occurs_at, st, occ.saving_days);
+      var when=stageDate(rolled, st, occ.saving_days);
       if(when>=now && when<=horizon){
         out.push({event:def, legion:occ.legion, stage:st, when:when});
       }
@@ -151,5 +167,5 @@ async function mountBanner(containerId){
   }catch(e){ /* fail silently — alerts must never break the host page */ }
 }
 
-window.PhxAlerts={ EVENTS:EVENTS, EVENT_NAMES:EVENT_NAMES, eventName:eventName, DEFAULT_SVS_SAVING_DAYS:DEFAULT_SVS_SAVING_DAYS, getUpcoming:getUpcoming, fmtWhen:fmtWhen, mountBanner:mountBanner };
+window.PhxAlerts={ EVENTS:EVENTS, EVENT_NAMES:EVENT_NAMES, eventName:eventName, DEFAULT_SVS_SAVING_DAYS:DEFAULT_SVS_SAVING_DAYS, nextOccurrence:nextOccurrence, getUpcoming:getUpcoming, fmtWhen:fmtWhen, mountBanner:mountBanner };
 })();
