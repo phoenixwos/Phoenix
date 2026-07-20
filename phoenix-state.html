@@ -1078,6 +1078,16 @@ else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
 
   // Load alliances sorted by state_rank
   const{data:als}=await sb.from('alliances').select('tag,name,state_rank,members,accent,is_showcase,state_id').eq('state_id',STATE_ID).order('state_rank');
+  // Force TRUE numeric order — the DB column can sort "1","11","12"…"2" as text,
+  // so re-sort here by the actual number regardless of how it's stored.
+  if(als) als.sort((a,b)=>{
+    const na=parseInt(String(a.state_rank||'').replace('#',''),10); 
+    const nb=parseInt(String(b.state_rank||'').replace('#',''),10);
+    if(isNaN(na)&&isNaN(nb)) return 0;
+    if(isNaN(na)) return 1;
+    if(isNaN(nb)) return -1;
+    return na-nb;
+  });
   const container=document.getElementById('allianceList');
   if(als&&als.length){
     container.innerHTML='';

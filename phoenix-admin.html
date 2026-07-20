@@ -74,6 +74,9 @@ input,textarea,select{font-family:'Inter',sans-serif;}
 .ditem-header .dtag{font-family:'Fredoka';font-weight:600;font-size:.78rem;color:var(--ice-deep);}
 .ditem .del-btn{margin-left:auto;background:none;border:none;color:var(--muted);font-size:1rem;padding:2px 6px;border-radius:7px;line-height:1;}
 .ditem .del-btn:hover{background:#fee;color:var(--red);}
+.ditem .mv-btn{background:none;border:none;color:var(--muted);font-size:.85rem;padding:2px 5px;border-radius:6px;line-height:1;}
+.ditem .mv-btn:hover{background:var(--panel);color:var(--ice-deep);}
+.ditem .mv-btn:disabled{opacity:.25;}
 .ditem input,.ditem select,.ditem textarea{width:100%;padding:8px 11px;border:2px solid var(--panel-edge);border-radius:10px;background:var(--panel);color:var(--ink);font-size:.85rem;margin-bottom:6px;outline:none;}
 .ditem input:focus,.ditem select:focus,.ditem textarea:focus{border-color:var(--ice-deep);background:#fff;}
 .ditem textarea{min-height:56px;resize:vertical;}
@@ -2151,9 +2154,15 @@ $('#importCfgFile').addEventListener('change', async(e)=>{
 // ── STATE RANKING EDITOR (admins only) ────────────────────────
 let rankCache=[];
 let rankState=PAGE_STATE; // which state's ranking we're editing
-function rankRowHTML(i,a={}){
+function rankRowHTML(i,a={},total=1){
   return `<div class="ditem" data-i="${i}" data-id="${a.id||''}">
-    <div class="ditem-header"><span class="dtag">[${a.tag}] ${a.name}</span></div>
+    <div class="ditem-header">
+      <button class="mv-btn" data-mv="up" ${i===0?'disabled':''} title="Move up">▲</button>
+      <button class="mv-btn" data-mv="down" ${i===total-1?'disabled':''} title="Move down">▼</button>
+      <span class="dtag">[${a.tag}]</span>
+      <button class="del-btn" data-del="1" title="Delete alliance">✕</button>
+    </div>
+    <input class="rk-name" placeholder="Alliance name" value="${(a.name||'').replace(/"/g,'&quot;')}">
     <div class="row2">
       <input placeholder="Rank (#)" class="rk-pos" value="${(a.state_rank||'').replace('#','')}" inputmode="numeric">
       <input placeholder="Members" class="rk-mem" value="${a.members||''}" inputmode="numeric">
@@ -2174,12 +2183,64 @@ async function loadRankingEditor(){
   await populateRankStatePicker();
   const wrap=$('#rankRows');
   wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">Loading…</p>';
-  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members').eq('state_id',rankState).order('state_rank');
-  rankCache=data||[];
+  const{data}=await sb.from('alliances').select('id,tag,name,state_rank,members').eq('state_id',rankState);
+  rankCache=(data||[]).sort((a,b)=>{
+    const na=parseInt(String(a.state_rank||'').replace('#',''),10);
+    const nb=parseInt(String(b.state_rank||'').replace('#',''),10);
+    if(isNaN(na)&&isNaN(nb))return 0;
+    if(isNaN(na))return 1;
+    if(isNaN(nb))return -1;
+    return na-nb;
+  });
   wrap.innerHTML='';
   if(!rankCache.length){wrap.innerHTML='<p style="text-align:center;color:var(--muted);font-size:.84rem;padding:12px;">No alliances in this state yet.</p>';return;}
-  rankCache.forEach((a,i)=>{const d=document.createElement('div');d.innerHTML=rankRowHTML(i,a);wrap.appendChild(d.firstElementChild);});
+  rankCache.forEach((a,i)=>{const d=document.createElement('div');d.innerHTML=rankRowHTML(i,a,rankCache.length);wrap.appendChild(d.firstElementChild);});
+  wireRankRowButtons();
 };
+
+function wireRankRowButtons(){
+  document.querySelectorAll('#rankRows .ditem').forEach(row=>{
+    row.querySelector('[data-mv="up"]')?.addEventListener('click',()=>moveRankRow(row,-1));
+    row.querySelector('[data-mv="down"]')?.addEventListener('click',()=>moveRankRow(row,1));
+    row.querySelector('[data-del]')?.addEventListener('click',()=>deleteRankRow(row));
+  });
+}
+
+// Swap this alliance's rank with its neighbor and save both immediately — no separate Save tap needed.
+async function moveRankRow(row,dir){
+  const rows=Array.from($('#rankRows').children).filter(r=>r.classList?.contains('ditem'));
+  const i=rows.indexOf(row);
+  const j=i+dir;
+  if(j<0||j>=rows.length)return;
+  const rowA=rows[i], rowB=rows[j];
+  const idA=rowA.dataset.id, idB=rowB.dataset.id;
+  if(!idA||!idB)return;
+  // Renumber sequentially by final on-screen order (1-indexed), not just swap raw numbers —
+  // this keeps things correct even if some ranks were blank or duplicated.
+  const order=rows.map(r=>r.dataset.id);
+  const tmp=order[i]; order[i]=order[j]; order[j]=tmp;
+  const btns=[rowA,rowB].map(r=>r.querySelectorAll('.mv-btn'));
+  btns.forEach(set=>set.forEach(b=>b.disabled=true));
+  let errors=[];
+  for(let k=0;k<order.length;k++){
+    const {error}=await sb.from('alliances').update({state_rank:String(k+1)}).eq('id',order[k]);
+    if(error)errors.push(error.message);
+  }
+  if(errors.length){showErr('#rankErr','Move failed: '+errors[0]);}
+  else{toast('Moved ✓');}
+  await loadRankingEditor();
+}
+
+async function deleteRankRow(row){
+  const id=row.dataset.id;
+  const tagTxt=row.querySelector('.dtag')?.textContent||'this alliance';
+  if(!id)return;
+  if(!window.confirm(`Delete ${tagTxt} entirely? This removes the alliance and can't be undone.`))return;
+  const{error}=await sb.from('alliances').delete().eq('id',id);
+  if(error){showErr('#rankErr','Delete failed: '+error.message);return;}
+  toast('Deleted ✓');
+  await loadRankingEditor();
+}
 $('#saveRankBtn').onclick=async()=>{
   hideErr('#rankErr');
   const btn=$('#saveRankBtn');btn.textContent='Saving…';btn.disabled=true;
@@ -2189,7 +2250,10 @@ $('#saveRankBtn').onclick=async()=>{
     const id=row.dataset.id;if(!id)continue;
     const pos=row.querySelector('.rk-pos')?.value.trim();
     const mem=row.querySelector('.rk-mem')?.value.trim();
-    const{error}=await sb.from('alliances').update({state_rank:pos?'#'+pos.replace('#',''):null,members:mem||null}).eq('id',id);
+    const nm=row.querySelector('.rk-name')?.value.trim();
+    const payload={state_rank:pos?'#'+pos.replace('#',''):null,members:mem||null};
+    if(nm)payload.name=nm;
+    const{error}=await sb.from('alliances').update(payload).eq('id',id);
     if(error)errors.push(error.message);
   }
   btn.textContent='💾 Save state ranking';btn.disabled=false;
@@ -2200,9 +2264,17 @@ $('#saveRankBtn').onclick=async()=>{
 // ── RANKING: DOWNLOAD current list as Excel (pre-filled) ──────
 $('#rankDownloadBtn').onclick=async()=>{
   hideErr('#rankBulkMsg');
-  const{data}=await sb.from('alliances').select('tag,name,state_rank').eq('state_id',rankState).order('state_rank');
+  const{data}=await sb.from('alliances').select('tag,name,state_rank').eq('state_id',rankState);
+  const sorted=(data||[]).sort((a,b)=>{
+    const na=parseInt(String(a.state_rank||'').replace('#',''),10);
+    const nb=parseInt(String(b.state_rank||'').replace('#',''),10);
+    if(isNaN(na)&&isNaN(nb))return 0;
+    if(isNaN(na))return 1;
+    if(isNaN(nb))return -1;
+    return na-nb;
+  });
   const rows=[['Rank','Tag','Alliance name']];
-  (data||[]).forEach(a=>{
+  sorted.forEach(a=>{
     const r=(a.state_rank||'').replace('#','');
     rows.push([r,a.tag||'',a.name||'']);
   });
