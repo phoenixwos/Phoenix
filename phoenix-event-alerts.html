@@ -157,12 +157,13 @@ function render(){
     html+='<label class="toggle"><input type="checkbox" data-toggle="'+def.key+'" '+(enabled?'checked':'')+'><span class="toggleSlider"></span></label></div>';
 
     html+='<div class="leaderOnly" data-leader="1">';
-    if(def.legions){
-      ['legion1','legion2'].forEach(function(leg){
+    if(def.instances){
+      def.instances.forEach(function(instLabel,i){
+        var leg='legion'+(i+1);
         var occ=occByKey[def.key+'|'+leg];
         var displayIso=occ?PhxAlerts.nextOccurrence(occ.occurs_at, def.cadenceDays).toISOString():'';
         var autoTag=(occ && def.cadenceDays!=null)?' <span class="autoTag">'+T('auto')+'</span>':'';
-        html+='<div class="legionRow"><div class="legionLabel">'+T(leg)+autoTag+'</div><input type="datetime-local" class="dtInput" data-occ="'+def.key+'|'+leg+'" value="'+toLocalInputValue(displayIso)+'"></div>';
+        html+='<div class="legionRow"><div class="legionLabel">'+instLabel+autoTag+'</div><input type="datetime-local" class="dtInput" data-occ="'+def.key+'|'+leg+'" value="'+toLocalInputValue(displayIso)+'"></div>';
       });
     }else{
       var occ0=occByKey[def.key+'|'];
@@ -288,10 +289,12 @@ async function init(){
   var{data:{session:s}}=await sb.auth.getSession();
   session=s;
   if(session){
-    var{data:rows}=await sb.from('players').select('role,state_id,alliance_id').eq('owner',session.user.id).eq('state_id',STATE);
-    isLeader=(rows||[]).some(function(p){return p.role==='admin'||p.role==='r4'||p.role==='r5';});
-    isAdmin=(rows||[]).some(function(p){return p.role==='admin';});
-    var leaderRow=(rows||[]).find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
+    var{data:allRows}=await sb.from('players').select('role,state_id,alliance_id').eq('owner',session.user.id);
+    allRows=allRows||[];
+    isAdmin=allRows.some(function(p){return p.role==='admin';}); // admin is global, not tied to one state's profile
+    var rowsThisState=allRows.filter(function(p){return p.state_id===STATE;});
+    isLeader=isAdmin||rowsThisState.some(function(p){return p.role==='r4'||p.role==='r5';});
+    var leaderRow=rowsThisState.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
     if(leaderRow){
       myAllianceId=leaderRow.alliance_id;
       var{data:al}=await sb.from('alliances').select('tag').eq('id',myAllianceId).maybeSingle();

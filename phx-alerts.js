@@ -6,40 +6,43 @@
 (function(){
 
 // Each event: cadenceDays (null = irregular, leader must update manually every time),
-// legions (true = Foundry/Canyon-style, separate date+time per legion),
+// instances (array of sub-schedules with their own date+time, e.g. two Bear Traps or
+// two Legions — null/undefined = a single shared date+time for the whole event),
 // stages: offsetDays relative to the main occurs_at (negative = before, 0 = the day itself).
 var EVENTS = [
-  {key:'bear',        name:'Bear Hunt',              icon:'🐻', cadenceDays:2,  legions:false,
+  {key:'bear',        name:'Bear Hunt',              icon:'🐻', cadenceDays:2,  instances:['Bear Trap 1','Bear Trap 2'],
     stages:[{offset:0, label:'Trap window'}]},
-  {key:'foundry',      name:'Foundry Battle',         icon:'🏭', cadenceDays:14, legions:true,
+  {key:'foundry',      name:'Foundry Battle',         icon:'🏭', cadenceDays:14, instances:['Legion 1','Legion 2'],
     stages:[{offset:-6,label:'Voting opens'},{offset:-4,label:'Registration opens'},{offset:-2,label:'Matchmaking'},{offset:0,label:'Battle'}]},
-  {key:'canyon',       name:'Canyon Clash',           icon:'🏞️', cadenceDays:30, legions:true,
+  {key:'canyon',       name:'Canyon Clash',           icon:'🏞️', cadenceDays:28, instances:['Legion 1','Legion 2'],
     stages:[{offset:-5,label:'Voting (Mon–Tue)'},{offset:-3,label:'Registration (Wed–Thu)'},{offset:-1,label:'Matchmaking (Fri)'},{offset:0,label:'Battle (Sat)'}]},
-  {key:'svs',          name:'SvS – State of Power',   icon:'⚔️', cadenceDays:30, legions:false,
+  {key:'svs',          name:'SvS – State of Power',   icon:'⚔️', cadenceDays:28, instances:null,
     stages:[{offset:'saving',label:'Start saving!'},{offset:-8,label:'Matchmaking begins'},{offset:-6,label:'Prep phase begins'},{offset:0,label:'Battle day'}]},
-  {key:'koi',          name:'King of Icefield',       icon:'🧊', cadenceDays:28, legions:false,
+  {key:'sunfirecastle',name:'Sunfire Castle',         icon:'🏰', cadenceDays:28, instances:null,
+    stages:[{offset:-2,label:'Heads up — coming soon'},{offset:0,label:'Battle day'}]},
+  {key:'koi',          name:'King of Icefield',       icon:'🧊', cadenceDays:28, instances:null,
     stages:[{offset:0,label:'Event starts'}]},
-  {key:'championship', name:'Alliance Championship',  icon:'🏆', cadenceDays:7,  legions:false,
+  {key:'championship', name:'Alliance Championship',  icon:'🏆', cadenceDays:7,  instances:null,
     stages:[{offset:0,label:'Event day'}]},
-  {key:'mercenary',    name:'Mercenary Prestige',     icon:'💰', cadenceDays:30, legions:false,
+  {key:'mercenary',    name:'Mercenary Prestige',     icon:'💰', cadenceDays:28, instances:null,
     stages:[{offset:0,label:'Event window'}]},
-  {key:'flameandfang', name:'Flame and Fang',         icon:'🔥', cadenceDays:14, legions:false,
+  {key:'flameandfang', name:'Flame and Fang',         icon:'🔥', cadenceDays:14, instances:null,
     stages:[{offset:-1,label:"Don't claim your 8:00 UTC intel today!"},{offset:0,label:'Event starts (Mon–Tue)'}]},
-  {key:'snowbusters',  name:'Snowbusters',            icon:'❄️', cadenceDays:30, legions:false,
+  {key:'snowbusters',  name:'Snowbusters',            icon:'❄️', cadenceDays:28, instances:null,
     stages:[{offset:0,label:'Event starts'}]},
-  {key:'tundratrade',  name:'Tundra Trade Route',     icon:'🚚', cadenceDays:30, legions:false,
+  {key:'tundratrade',  name:'Tundra Trade Route',     icon:'🚚', cadenceDays:28, instances:null,
     stages:[{offset:0,label:'Event starts (with Alliance Showdown)'}]},
-  {key:'tundratrading',name:'Tundra Trading Station', icon:'🏪', cadenceDays:null, legions:false,
+  {key:'tundratrading',name:'Tundra Trading Station', icon:'🏪', cadenceDays:null, instances:null,
     stages:[{offset:0,label:'Event window'}]},
-  {key:'tundraarms',   name:'Tundra Arms League',     icon:'🗡️', cadenceDays:null, legions:false,
+  {key:'tundraarms',   name:'Tundra Arms League',     icon:'🗡️', cadenceDays:null, instances:null,
     stages:[{offset:0,label:'Replaces Foundry this season'}]},
-  {key:'crazyjoe',     name:'Crazy Joe',              icon:'🏹', cadenceDays:14, legions:false,
+  {key:'crazyjoe',     name:'Crazy Joe',              icon:'🏹', cadenceDays:14, instances:null,
     stages:[{offset:0,label:'R4/R5-scheduled window'}]},
-  {key:'frostfire',    name:'Frostfire Mine',         icon:'⛏️', cadenceDays:14, legions:false,
+  {key:'frostfire',    name:'Frostfire Mine',         icon:'⛏️', cadenceDays:14, instances:null,
     stages:[{offset:0,label:'Event window (30 min)'}]},
-  {key:'hallofchiefs', name:'Hall of Chiefs',         icon:'👑', cadenceDays:null, legions:false,
+  {key:'hallofchiefs', name:'Hall of Chiefs',         icon:'👑', cadenceDays:null, instances:null,
     stages:[{offset:0,label:'Event window'}]},
-  {key:'arena',        name:'Arena',                  icon:'🎯', cadenceDays:1,  legions:false,
+  {key:'arena',        name:'Arena',                  icon:'🎯', cadenceDays:1,  instances:null,
     stages:[{offset:0,label:'Daily reset'}]}
 ];
 
@@ -48,12 +51,12 @@ var EVENTS = [
 // source was found, so the English name is used as a safe fallback rather than guessing —
 // have someone confirm in-client before treating those as exact.
 var EVENT_NAMES={
-en:{bear:'Bear Hunt',foundry:'Foundry Battle',canyon:'Canyon Clash',svs:'SvS – State of Power',koi:'King of Icefield',championship:'Alliance Championship',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Tundra Trade Route',tundratrading:'Tundra Trading Station',tundraarms:'Tundra Arms League',crazyjoe:'Crazy Joe',frostfire:'Frostfire Mine',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
-es:{bear:'Cacería del Oso',foundry:'Batalla de la Fundición',canyon:'Choque en el Cañón',svs:'Estado de Poder (SvS)',koi:'Rey del Campo de Hielo',championship:'Enfrentamiento de Alianzas',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Ruta Comercial de la Tundra',tundratrading:'Tundra Trading Station',tundraarms:'Liga de Armas de la Tundra',crazyjoe:'Loco Pepe',frostfire:'Frostfire Mine',hallofchiefs:'Salón de los Gobernadores',arena:'Arena'},
-fr:{bear:'La Chasse à l\'ours',foundry:'Bataille de la Fonderie',canyon:'Conflit du Canyon',svs:'SvS – Région aux Pouvoirs',koi:'Roi de la Banquise',championship:'Championnat d\'Alliance',mercenary:'Prestige du Mercenaire',flameandfang:'Flamme et Crocs',snowbusters:'SOS Chasse-Neige',tundratrade:'Axe Marchand Polaire',tundratrading:'Station d\'Échange de la Toundra',tundraarms:'Ligue Armée de la Toundra',crazyjoe:'Joe le Fou',frostfire:'Mine Givrefeu',hallofchiefs:'Panthéon des Chefs',arena:'Arena'},
-de:{bear:'Bärenjagd',foundry:'Schlacht in der Gießerei',canyon:'Canyon-Wettkampf',svs:'SVS – Region der Macht',koi:'König des Eisfelds',championship:'Allianzmeisterschaft',mercenary:'Söldner-Prestige',flameandfang:'Flamme und Reißzähne',snowbusters:'Schneeräumer',tundratrade:'Tundra Handelsroute',tundratrading:'Tundra-Handelsstation',tundraarms:'Tundra Waffen Liga',crazyjoe:'Crazy Joe',frostfire:'Frostfeuer Bergwerk',hallofchiefs:'Halle der Gouverneure',arena:'Arena'},
-pt:{bear:'Caça ao Urso',foundry:'Batalha da Forja',canyon:'Duelo no Desfiladeiro',svs:'SVS – Estado de Poder',koi:'Rei do Campo de Gelo',championship:'Campeonato da Aliança',mercenary:'Prestígio Mercenário',flameandfang:'Chamas e Presas',snowbusters:'Destruidora de Neve',tundratrade:'Rota Comercial da Tundra',tundratrading:'Posto de Troca da Tundra',tundraarms:'Liga dos Braços da Tundra',crazyjoe:'Joe Louco',frostfire:'Mina Fogo Frio',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
-ko:{bear:'곰 사냥 작전',foundry:'무기공장 쟁탈전',canyon:'협곡 전투',svs:'서버전 – 최강 왕국',koi:'빙원의 왕',championship:'연맹 챔피언십',mercenary:'용병 명예',flameandfang:'불꽃과 송곳니',snowbusters:'제설 특공대',tundratrade:'설원 장삿길',tundratrading:'설원 거래소',tundraarms:'서리 영역 병기 리그',crazyjoe:'미치광이 조이',frostfire:'프로스트 파이어 광산',hallofchiefs:'최강 영주',arena:'Arena'}
+en:{bear:'Bear Hunt',foundry:'Foundry Battle',canyon:'Canyon Clash',svs:'SvS – State of Power',sunfirecastle:'Sunfire Castle',koi:'King of Icefield',championship:'Alliance Championship',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Tundra Trade Route',tundratrading:'Tundra Trading Station',tundraarms:'Tundra Arms League',crazyjoe:'Crazy Joe',frostfire:'Frostfire Mine',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
+es:{bear:'Cacería del Oso',foundry:'Batalla de la Fundición',canyon:'Choque en el Cañón',svs:'Estado de Poder (SvS)',sunfirecastle:'Castillo del Fuego Solar',koi:'Rey del Campo de Hielo',championship:'Enfrentamiento de Alianzas',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Ruta Comercial de la Tundra',tundratrading:'Tundra Trading Station',tundraarms:'Liga de Armas de la Tundra',crazyjoe:'Loco Pepe',frostfire:'Frostfire Mine',hallofchiefs:'Salón de los Gobernadores',arena:'Arena'},
+fr:{bear:'La Chasse à l\'ours',foundry:'Bataille de la Fonderie',canyon:'Conflit du Canyon',svs:'SvS – Région aux Pouvoirs',sunfirecastle:'Chateau du Feu Solaire',koi:'Roi de la Banquise',championship:'Championnat d\'Alliance',mercenary:'Prestige du Mercenaire',flameandfang:'Flamme et Crocs',snowbusters:'SOS Chasse-Neige',tundratrade:'Axe Marchand Polaire',tundratrading:'Station d\'Échange de la Toundra',tundraarms:'Ligue Armée de la Toundra',crazyjoe:'Joe le Fou',frostfire:'Mine Givrefeu',hallofchiefs:'Panthéon des Chefs',arena:'Arena'},
+de:{bear:'Bärenjagd',foundry:'Schlacht in der Gießerei',canyon:'Canyon-Wettkampf',svs:'SVS – Region der Macht',sunfirecastle:'Sonnenfeuer-Schloss',koi:'König des Eisfelds',championship:'Allianzmeisterschaft',mercenary:'Söldner-Prestige',flameandfang:'Flamme und Reißzähne',snowbusters:'Schneeräumer',tundratrade:'Tundra Handelsroute',tundratrading:'Tundra-Handelsstation',tundraarms:'Tundra Waffen Liga',crazyjoe:'Crazy Joe',frostfire:'Frostfeuer Bergwerk',hallofchiefs:'Halle der Gouverneure',arena:'Arena'},
+pt:{bear:'Caça ao Urso',foundry:'Batalha da Forja',canyon:'Duelo no Desfiladeiro',svs:'SVS – Estado de Poder',sunfirecastle:'Castelo do Fogo Solar',koi:'Rei do Campo de Gelo',championship:'Campeonato da Aliança',mercenary:'Prestígio Mercenário',flameandfang:'Chamas e Presas',snowbusters:'Destruidora de Neve',tundratrade:'Rota Comercial da Tundra',tundratrading:'Posto de Troca da Tundra',tundraarms:'Liga dos Braços da Tundra',crazyjoe:'Joe Louco',frostfire:'Mina Fogo Frio',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
+ko:{bear:'곰 사냥 작전',foundry:'무기공장 쟁탈전',canyon:'협곡 전투',svs:'서버전 – 최강 왕국',sunfirecastle:'태양불의 성',koi:'빙원의 왕',championship:'연맹 챔피언십',mercenary:'용병 명예',flameandfang:'불꽃과 송곳니',snowbusters:'제설 특공대',tundratrade:'설원 장삿길',tundratrading:'설원 거래소',tundraarms:'서리 영역 병기 리그',crazyjoe:'미치광이 조이',frostfire:'프로스트 파이어 광산',hallofchiefs:'최강 영주',arena:'Arena'}
 };
 function eventName(key, lang){
   var pack = EVENT_NAMES[lang] || EVENT_NAMES.en;
@@ -152,11 +155,15 @@ async function mountBanner(containerId){
     if(!upcoming.length) return;
     var top=upcoming[0];
     var lang=(window.PhxI18N&&window.PhxI18N.getLang)?window.PhxI18N.getLang():'en';
-    var legionTxt=top.legion?(' ['+(top.legion==='legion1'?'Legion 1':'Legion 2')+']'):'';
+    var instTxt='';
+    if(top.legion && top.event.instances){
+      var idx=parseInt(top.legion.replace('legion',''),10)-1;
+      instTxt=top.event.instances[idx]?(' — '+top.event.instances[idx]):'';
+    }
     var moreTxt=upcoming.length>1?(' +'+(upcoming.length-1)+' more'):'';
     box.style.cssText='display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#3a2410,#241708);border:1px solid #ff9a3d;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-family:inherit;';
     box.innerHTML='<div style="font-size:1.3rem;">'+top.event.icon+'</div>'+
-      '<div style="flex:1;min-width:0;font-size:.82rem;color:#fff;"><b>'+eventName(top.event.key,lang)+legionTxt+'</b> — '+top.stage.label+' <span style="opacity:.75;">('+fmtWhen(top.when)+')</span>'+(moreTxt?'<div style="font-size:.7rem;opacity:.7;">'+moreTxt+'</div>':'')+'</div>'+
+      '<div style="flex:1;min-width:0;font-size:.82rem;color:#fff;"><b>'+eventName(top.event.key,lang)+instTxt+'</b> — '+top.stage.label+' <span style="opacity:.75;">('+fmtWhen(top.when)+')</span>'+(moreTxt?'<div style="font-size:.7rem;opacity:.7;">'+moreTxt+'</div>':'')+'</div>'+
       '<button id="phxAlertDismiss" style="background:none;border:none;color:#ffb938;font-size:1rem;cursor:pointer;padding:2px 6px;">✕</button>';
     document.getElementById('phxAlertDismiss').onclick=function(){
       var id=top.event.key+'|'+(top.legion||'')+'|'+top.stage.label+'|'+todayTag;
