@@ -518,6 +518,7 @@ body{padding-bottom:72px !important;}
 <footer data-i18n="footer">State 3139 · Phoenix community hub · Whiteout Survival. Not affiliated with Century Games.</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ── STATE SYSTEM (scalable, URL-based) ────────────────────────
 // The state is read from the URL: ?s=4501 → state 4501. No parameter → "3139".
@@ -983,6 +984,97 @@ else document.addEventListener('DOMContentLoaded',hideZhBrandingOutside3139);
       return;
     }
   }
+
+
+  // ── SYNC RANKING FROM EXCEL ──
+  async function syncRankingFromExcel() {
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/phoenixwos/Phoenix/main/state-' + STATE_ID + '-ranking.xlsx');
+      if (!res.ok) {
+        console.log('ℹ️ Excel ranking no encontrado (es normal). Usando datos de Supabase.');
+        return false;
+      }
+      
+      const buffer = await res.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws);
+      
+      const excelAlliances = data
+        .filter(row => row.Rank && row.Tag && row['Alliance name'])
+        .map((row, idx) => ({
+          rank: parseInt(row.Rank) || (idx + 1),
+          tag: String(row.Tag).trim().toUpperCase(),
+          name: String(row['Alliance name']).trim(),
+        }));
+      
+      if (excelAlliances.length === 0) {
+        console.log('ℹ️ Excel vacío');
+        return false;
+      }
+      
+      console.log(`📊 Sincronizando ${excelAlliances.length} alianzas desde Excel...`);
+      
+      const { data: currentAlliances, error: fetchErr } = await sb
+        .from('alliances')
+        .select('tag, name, state_rank, id, state_id')
+        .eq('state_id', STATE_ID);
+      
+      if (fetchErr) {
+        console.error('❌ Error en sync:', fetchErr);
+        return false;
+      }
+      
+      const tagsInExcel = new Set(excelAlliances.map(a => a.tag));
+      const tagsInDB = new Map(currentAlliances.map(a => [a.tag, a]));
+      
+      let changeCount = 0;
+      
+      // AGREGAR / ACTUALIZAR
+      for (const excelAli of excelAlliances) {
+        const existing = tagsInDB.get(excelAli.tag);
+        
+        if (existing) {
+          if (existing.name !== excelAli.name || existing.state_rank !== excelAli.rank) {
+            await sb.from('alliances').update({ name: excelAli.name, state_rank: excelAli.rank }).eq('id', existing.id);
+            changeCount++;
+            console.log(`✏️  ${excelAli.tag}: Rank ${excelAli.rank}`);
+          }
+        } else {
+          await sb.from('alliances').insert([{
+            tag: excelAli.tag,
+            name: excelAli.name,
+            state_rank: excelAli.rank,
+            state_id: STATE_ID,
+            alliance_id: null,
+            accent: '#5fa8da',
+          }]);
+          changeCount++;
+          console.log(`✨ ${excelAli.tag}: NUEVA`);
+        }
+      }
+      
+      // ELIMINAR las que no están en Excel
+      for (const [tag, ali] of tagsInDB.entries()) {
+        if (!tagsInExcel.has(tag)) {
+          await sb.from('alliances').delete().eq('id', ali.id);
+          changeCount++;
+          console.log(`🗑️  ${tag}: ELIMINADA`);
+        }
+      }
+      
+      console.log(`✅ Sync completado (${changeCount} cambios)`);
+      return changeCount > 0;
+      
+    } catch (err) {
+      console.error('❌ Error en sync:', err);
+      return false;
+    }
+  }
+  
+  // Ejecutar sync antes de cargar el ranking
+  await syncRankingFromExcel();
+
 
   // Load alliances sorted by state_rank
   const{data:als}=await sb.from('alliances').select('tag,name,state_rank,members,accent,is_showcase,state_id').eq('state_id',STATE_ID).order('state_rank');
