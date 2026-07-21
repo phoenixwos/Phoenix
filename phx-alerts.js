@@ -71,6 +71,8 @@ var DEFAULT_SVS_SAVING_DAYS=18; // "2-3 weeks before" -> default mid-point, edit
 function addDays(dt,d){ return new Date(dt.getTime()+d*86400000); }
 function addMinutes(dt,m){ return new Date(dt.getTime()+m*60000); }
 
+var GRACE_MINUTES=3; // small backward buffer so a stage exactly at a cron tick isn't missed — must match discord-alerts function
+
 // The leader enters a date ONCE (the "anchor"). From then on, for events with a known
 // cadence, this rolls that anchor forward automatically — no need to re-enter it every cycle.
 // Irregular events (cadenceDays === null) are never auto-advanced; they always show exactly
@@ -79,10 +81,11 @@ function nextOccurrence(anchorIso, cadenceDays){
   var anchor=new Date(anchorIso);
   if(cadenceDays==null) return anchor;
   var now=new Date();
+  var graceNow=new Date(now.getTime()-GRACE_MINUTES*60000);
   var d=new Date(anchor.getTime());
-  if(d>=now) return d; // anchor is already in the future — nothing to roll forward
+  if(d>=graceNow) return d; // still within grace — don't roll forward yet
   var ms=cadenceDays*86400000;
-  var cycles=Math.ceil((now-d)/ms);
+  var cycles=Math.ceil((graceNow-d)/ms);
   return new Date(d.getTime()+cycles*ms);
 }
 
