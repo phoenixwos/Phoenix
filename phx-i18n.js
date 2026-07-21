@@ -42,6 +42,11 @@
       const v=t(k);
       if(v!==undefined) el.textContent=v;
     });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+      const k=el.getAttribute('data-i18n-html');
+      const v=t(k);
+      if(v!==undefined) el.innerHTML=v;
+    });
     document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
       const k=el.getAttribute('data-i18n-ph');
       const v=t(k);

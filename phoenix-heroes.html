@@ -217,146 +217,164 @@ body.dark .top{background:linear-gradient(180deg,rgba(13,27,42,.92),rgba(10,20,3
 .hgKey span{display:flex; align-items:center; gap:5px;}
 .hgDot{width:9px; height:9px; border-radius:3px; display:inline-block;}
 .disclaimer{font-size:11px; color:var(--muted); text-align:center; padding:20px 24px 6px; line-height:1.5;}
+
+.lang-box{position:relative;}
+.lang-btn{display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--panel-edge);
+  color:var(--ink-soft);font-family:'Fredoka';font-weight:600;font-size:12px;padding:6px 10px;border-radius:13px;cursor:pointer;}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--white);border:1px solid var(--panel-edge);
+  border-radius:14px;padding:8px;display:none;grid-template-columns:repeat(2,1fr);gap:2px;width:230px;
+  max-height:60vh;overflow-y:auto;box-shadow:0 16px 40px -8px rgba(30,60,90,.3);z-index:60;}
+.lang-menu.open{display:grid;}
+.lang-menu button{background:none;border:none;color:var(--ink-soft);text-align:left;font-family:'Fredoka';
+  font-weight:500;font-size:12.5px;padding:7px 8px;border-radius:9px;cursor:pointer;}
+.lang-menu button:hover{background:var(--panel);color:var(--ink);}
+.lang-menu button.active{color:var(--acc);font-weight:700;}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <a class="back" id="backLink" href="phoenix-tools.html">‹ Tools</a>
-  <div class="brand">🦸 <b>Hero</b> Guide</div>
-  <button id="themeBtn">🌙</button>
+  <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="back">‹ Tools</a>
+  <div class="brand">🦸 <b data-i18n="brandB">Hero</b> <span data-i18n="brandRest">Guide</span></div>
+  <div style="display:flex;align-items:center;gap:6px;">
+    <div class="lang-box" id="langBox">
+      <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu"></div>
+    </div>
+    <button id="themeBtn">🌙</button>
+  </div>
 </div>
 
 <div class="hero">
-  <h1>Which hero for which job?</h1>
-  <p>Browse heroes by role, see their real in-game skill numbers, and compare any two side by side.</p>
+  <h1 data-i18n="heroH1">Which hero for which job?</h1>
+  <p data-i18n="heroP">Browse heroes by role, see their real in-game skill numbers, and compare any two side by side.</p>
 </div>
 
 <div style="max-width:480px;margin:0 auto 6px;padding:0 16px;">
-  <a href="index.html" style="display:block;text-align:center;background:linear-gradient(90deg,var(--acc),var(--gold-deep));color:var(--white);font-weight:800;text-decoration:none;padding:11px 14px;border-radius:12px;box-shadow:0 4px 0 var(--acc-sh);font-size:13.5px;">
+  <a href="index.html" data-i18n="ctaTop" style="display:block;text-align:center;background:linear-gradient(90deg,var(--acc),var(--gold-deep));color:var(--white);font-weight:800;text-decoration:none;padding:11px 14px;border-radius:12px;box-shadow:0 4px 0 var(--acc-sh);font-size:13.5px;">
     ✨ Free to browse — sign up for more Phoenix tools →
   </a>
 </div>
 
 <div class="wrap">
   <div class="viewTabs">
-    <div class="viewTab on" id="tabCards">🦸 Hero Cards</div>
-    <div class="viewTab" id="tabTeams">🐻 Bear Trap Teams by Gen</div>
-    <div class="viewTab" id="tabGuide">📘 How Heroes Work</div>
+    <div class="viewTab on" id="tabCards" data-i18n="tabCards">🦸 Hero Cards</div>
+    <div class="viewTab" id="tabTeams" data-i18n="tabTeams">🐻 Bear Trap Teams by Gen</div>
+    <div class="viewTab" id="tabGuide" data-i18n="tabGuide">📘 How Heroes Work</div>
   </div>
 
   <div id="cardsView">
   <div class="searchbar">
-    <input type="text" id="search" placeholder="Search hero name…">
+    <input type="text" id="search" data-i18n-ph="searchPh" placeholder="Search hero name…">
   </div>
   <div class="chips" id="chips"></div>
 
   <div class="compareBar" id="compareBar">
-    <span class="lbl">Comparing:</span>
+    <span class="lbl" data-i18n="comparing">Comparing:</span>
     <div id="cmpSlots" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-    <button class="goBtn" id="goCompare">Compare ⚖️</button>
+    <button class="goBtn" id="goCompare" data-i18n="compareBtn">Compare ⚖️</button>
   </div>
 
   <div class="grid" id="grid"></div>
-  <div class="empty" id="emptyMsg" style="display:none;">No heroes match that search or filter.</div>
+  <div class="empty" id="emptyMsg" data-i18n="noMatch" style="display:none;">No heroes match that search or filter.</div>
 
-  <div class="disclaimer">
+  <div class="disclaimer" data-i18n="disclaimer">
     ✓ Verified heroes have their skill numbers pulled directly from in-game screenshots. Unmarked heroes are based on community tier-list guides and may need a closer look. Either way, real performance still depends on your hero level, gear, and pet.
   </div>
   </div><!-- /cardsView -->
 
   <div id="teamsView" style="display:none;">
     <div id="genCards"></div>
-    <div class="teamsNote">
+    <div class="teamsNote" data-i18n="teamsNote">
       Formation shown as Infantry / Lancer / Marksman troop ratio for that rally. "Best" needs the strongest investment, "Alternative" is a close second, "F2P" works without premium heroes. New generations replace old picks fast — recheck this list once your state unlocks a new hero tier.
     </div>
   </div>
 
   <div id="guideView" style="display:none;">
     <div class="hgSection">
-      <h3>🎭 Rarity &amp; the troop triangle</h3>
-      <p><b>Rare</b> (blue) heroes have 4 skills, <b>Epic</b> (purple) have 5, <b>Mythic</b> (gold) have 6 plus 2 more on their exclusive weapon. Every hero is Infantry, Lancer, or Marksman, and there's a damage triangle between them: Infantry hit Lancers harder, Lancers hit Marksmen harder, Marksmen hit Infantry harder. Mixing all three troop types on a march means you're always covered.</p>
+      <h3 data-i18n="g1h">🎭 Rarity &amp; the troop triangle</h3>
+      <p data-i18n-html="g1p"><b>Rare</b> (blue) heroes have 4 skills, <b>Epic</b> (purple) have 5, <b>Mythic</b> (gold) have 6 plus 2 more on their exclusive weapon. Every hero is Infantry, Lancer, or Marksman, and there's a damage triangle between them: Infantry hit Lancers harder, Lancers hit Marksmen harder, Marksmen hit Infantry harder. Mixing all three troop types on a march means you're always covered.</p>
     </div>
 
     <div class="hgSection">
-      <h3>🗺️ Two separate skill sets</h3>
-      <p>Every hero has an <b>Exploration</b> set (left side of their page) and an <b>Expedition</b> set (right side) — they don't work in the same places:</p>
+      <h3 data-i18n="g2h">🗺️ Two separate skill sets</h3>
+      <p data-i18n-html="g2p1">Every hero has an <b>Exploration</b> set (left side of their page) and an <b>Expedition</b> set (right side) — they don't work in the same places:</p>
       <ul>
-        <li><b>Exploration</b> skills apply to Exploration, Arena, and Lighthouse/Intel 5v5 battles.</li>
-        <li><b>Expedition</b> skills apply to real deployments — Polar Terror rallies, beast hunts, city attacks, fortress and castle fights.</li>
+        <li data-i18n-html="g2li1"><b>Exploration</b> skills apply to Exploration, Arena, and Lighthouse/Intel 5v5 battles.</li>
+        <li data-i18n-html="g2li2"><b>Expedition</b> skills apply to real deployments — Polar Terror rallies, beast hunts, city attacks, fortress and castle fights.</li>
       </ul>
-      <p>Mythic exclusive weapons follow the same split: odd upgrade levels (1,3,5,7,9) boost the Exploration side, even levels (2,4,6,8,10) boost the Expedition side. A level 10 weapon costs 275 widgets total.</p>
+      <p data-i18n="g2p2">Mythic exclusive weapons follow the same split: odd upgrade levels (1,3,5,7,9) boost the Exploration side, even levels (2,4,6,8,10) boost the Expedition side. A level 10 weapon costs 275 widgets total.</p>
     </div>
 
     <div class="hgSection">
-      <h3>⭐ Leveling vs. ascending</h3>
-      <p>These are two different systems, and mixing them up wastes resources:</p>
+      <h3 data-i18n="g3h">⭐ Leveling vs. ascending</h3>
+      <p data-i18n="g3p1">These are two different systems, and mixing them up wastes resources:</p>
       <ul>
-        <li><b>EXP (level 1–80)</b> raises escort stats and deployment capacity. Your Furnace level caps how high you can go. Focus your best 5 heroes.</li>
-        <li><b>Shards (star level)</b> unlock new skill slots and let you upgrade skills further. Each hero needs 10 shards just to unlock, then far more to push stars — roughly <b>1,075 shards total</b> to fully ascend one hero to 4 stars. Don't blow General Shards on heroes you're not committed to.</li>
+        <li data-i18n-html="g3li1"><b>EXP (level 1–80)</b> raises escort stats and deployment capacity. Your Furnace level caps how high you can go. Focus your best 5 heroes.</li>
+        <li data-i18n-html="g3li2"><b>Shards (star level)</b> unlock new skill slots and let you upgrade skills further. Each hero needs 10 shards just to unlock, then far more to push stars — roughly <b>1,075 shards total</b> to fully ascend one hero to 4 stars. Don't blow General Shards on heroes you're not committed to.</li>
       </ul>
-      <p>At Furnace 13 the <b>Drill Camp</b> unlocks: park low-level heroes there and they auto-level to match your 5th-strongest hero, which is a good way to bring backup heroes up to speed without babysitting them. If you ever want to swap your top 5, resetting a hero in the Drill Camp refunds 100% of its EXP.</p>
+      <p data-i18n-html="g3p2">At <b>Furnace 13</b> the <b>Drill Camp</b> unlocks: park low-level heroes there and they auto-level to match your 5th-strongest hero, which is a good way to bring backup heroes up to speed without babysitting them. If you ever want to swap your top 5, resetting a hero in the Drill Camp refunds 100% of its EXP.</p>
     </div>
 
     <div class="hgSection">
-      <h3>📖 Skill manuals</h3>
-      <p>Skills level up with Exploration or Expedition manuals (matching the skill type), and cost scales up fast per level:</p>
+      <h3 data-i18n="g4h">📖 Skill manuals</h3>
+      <p data-i18n="g4p1">Skills level up with Exploration or Expedition manuals (matching the skill type), and cost scales up fast per level:</p>
       <div class="hgTable">
-        <div class="hgRow hgHead"><span>Skill level</span><span>Exploration</span><span>Expedition</span></div>
+        <div class="hgRow hgHead"><span data-i18n="tSkillLevel">Skill level</span><span data-i18n="tExploration">Exploration</span><span data-i18n="tExpedition">Expedition</span></div>
         <div class="hgRow"><span>1 → 2</span><span>5</span><span>10</span></div>
         <div class="hgRow"><span>2 → 3</span><span>15</span><span>30</span></div>
         <div class="hgRow"><span>3 → 4</span><span>30</span><span>50</span></div>
-        <div class="hgRow"><span>4 → 5 (max)</span><span>50</span><span>75</span></div>
-        <div class="hgRow hgTotal"><span>Total per skill</span><span>100</span><span>165</span></div>
+        <div class="hgRow"><span data-i18n="tLvl45">4 → 5 (max)</span><span>50</span><span>75</span></div>
+        <div class="hgRow hgTotal"><span data-i18n="tTotalPerSkill">Total per skill</span><span>100</span><span>165</span></div>
       </div>
-      <p>That's 200–300 Exploration manuals and 330–495 Expedition manuals to fully max one hero's skills, depending on rarity. Prioritize your main 3, then your top 5 for Arena, then key support heroes.</p>
+      <p data-i18n="g4p2">That's 200–300 Exploration manuals and 330–495 Expedition manuals to fully max one hero's skills, depending on rarity. Prioritize your main 3, then your top 5 for Arena, then key support heroes.</p>
     </div>
 
     <div class="hgSection">
-      <h3>🔨 "Growth" skills — always-on economy buffs</h3>
-      <p>Some skills quietly boost your city all the time, not just in battle — look for the green hammer icon next to a hero's troop type. All four Rare heroes have one (a resource-gathering buff plus a matching income buff). A few notable ones from later heroes: construction cost/speed, research speed, infirmary healing speed, and training speed. A couple of heroes also buff march speed or stamina cost for a rally they're part of. Worth leveling early since the effect runs constantly.</p>
+      <h3 data-i18n="g5h">🔨 "Growth" skills — always-on economy buffs</h3>
+      <p data-i18n="g5p1">Some skills quietly boost your city all the time, not just in battle — look for the green hammer icon next to a hero's troop type. All four Rare heroes have one (a resource-gathering buff plus a matching income buff). A few notable ones from later heroes: construction cost/speed, research speed, infirmary healing speed, and training speed. A couple of heroes also buff march speed or stamina cost for a rally they're part of. Worth leveling early since the effect runs constantly.</p>
     </div>
 
     <div class="hgSection">
-      <h3>🎽 Gear priorities by troop type</h3>
-      <p>Each of the 4 gear pieces rolls a different stat at each tier (Gold, then Red +20/+60/+100), and which stat is worth chasing depends on your troop type. Here's the actual priority per piece — <span class="gRec">green = recommended</span>, <span class="gSec">yellow = secondary</span>, <span class="gLow">grey = low priority</span>:</p>
+      <h3 data-i18n="g6h">🎽 Gear priorities by troop type</h3>
+      <p data-i18n-html="g6p1">Each of the 4 gear pieces rolls a different stat at each tier (Gold, then Red +20/+60/+100), and which stat is worth chasing depends on your troop type. Here's the actual priority per piece — <span class="gRec">green = recommended</span>, <span class="gSec">yellow = secondary</span>, <span class="gLow">grey = low priority</span>:</p>
 
-      <p style="margin-bottom:4px;"><b>Infantry</b> — put your materials into Gloves &amp; Belt (Health/Defense); Goggles &amp; Boots matter less.</p>
+      <p style="margin-bottom:4px;" data-i18n-html="g6infTitle"><b>Infantry</b> — put your materials into Gloves &amp; Belt (Health/Defense); Goggles &amp; Boots matter less.</p>
       <div class="hgGearTable">
-        <div class="hgGearRow hgGearHead"><span>Piece</span><span>Gold</span><span>Red+20</span><span>Red+60</span><span>Red+100</span></div>
-        <div class="hgGearRow"><span>Goggles</span><span class="gLow">Lethality</span><span class="gLow">Attack</span><span class="gRec">Defense</span><span class="gLow">Attack</span></div>
-        <div class="hgGearRow"><span>Gloves</span><span class="gRec">Health</span><span class="gRec">Defense</span><span class="gLow">Attack</span><span class="gRec">Defense</span></div>
-        <div class="hgGearRow"><span>Belt</span><span class="gRec">Health</span><span class="gLow">Attack</span><span class="gRec">Defense</span><span class="gLow">Attack</span></div>
-        <div class="hgGearRow"><span>Boots</span><span class="gLow">Lethality</span><span class="gRec">Defense</span><span class="gLow">Attack</span><span class="gRec">Defense</span></div>
+        <div class="hgGearRow hgGearHead"><span data-i18n="tPiece">Piece</span><span data-i18n="tGold">Gold</span><span data-i18n="tRed20">Red+20</span><span data-i18n="tRed60">Red+60</span><span data-i18n="tRed100">Red+100</span></div>
+        <div class="hgGearRow"><span data-i18n="tGoggles">Goggles</span><span class="gLow" data-i18n="tLethality">Lethality</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gRec" data-i18n="tDefense">Defense</span><span class="gLow" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tGloves">Gloves</span><span class="gRec" data-i18n="tHealth">Health</span><span class="gRec" data-i18n="tDefense">Defense</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gRec" data-i18n="tDefense">Defense</span></div>
+        <div class="hgGearRow"><span data-i18n="tBelt">Belt</span><span class="gRec" data-i18n="tHealth">Health</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gRec" data-i18n="tDefense">Defense</span><span class="gLow" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tBoots">Boots</span><span class="gLow" data-i18n="tLethality">Lethality</span><span class="gRec" data-i18n="tDefense">Defense</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gRec" data-i18n="tDefense">Defense</span></div>
       </div>
 
-      <p style="margin-bottom:4px;"><b>Lancer</b> — put your materials into Goggles &amp; Belt (Lethality/Attack); Gloves &amp; Boots matter less.</p>
+      <p style="margin-bottom:4px;" data-i18n-html="g6lanTitle"><b>Lancer</b> — put your materials into Goggles &amp; Belt (Lethality/Attack); Gloves &amp; Boots matter less.</p>
       <div class="hgGearTable">
-        <div class="hgGearRow hgGearHead"><span>Piece</span><span>Gold</span><span>Red+20</span><span>Red+60</span><span>Red+100</span></div>
-        <div class="hgGearRow"><span>Goggles</span><span class="gRec">Lethality</span><span class="gLow">Attack</span><span class="gLow">Defense</span><span class="gRec">Attack</span></div>
-        <div class="hgGearRow"><span>Gloves</span><span class="gLow">Health</span><span class="gLow">Defense</span><span class="gRec">Attack</span><span class="gLow">Defense</span></div>
-        <div class="hgGearRow"><span>Belt</span><span class="gLow">Health</span><span class="gRec">Attack</span><span class="gLow">Defense</span><span class="gRec">Attack</span></div>
-        <div class="hgGearRow"><span>Boots</span><span class="gRec">Lethality</span><span class="gLow">Defense</span><span class="gLow">Attack</span><span class="gLow">Defense</span></div>
+        <div class="hgGearRow hgGearHead"><span data-i18n="tPiece">Piece</span><span data-i18n="tGold">Gold</span><span data-i18n="tRed20">Red+20</span><span data-i18n="tRed60">Red+60</span><span data-i18n="tRed100">Red+100</span></div>
+        <div class="hgGearRow"><span data-i18n="tGoggles">Goggles</span><span class="gRec" data-i18n="tLethality">Lethality</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gLow" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tGloves">Gloves</span><span class="gLow" data-i18n="tHealth">Health</span><span class="gLow" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gLow" data-i18n="tDefense">Defense</span></div>
+        <div class="hgGearRow"><span data-i18n="tBelt">Belt</span><span class="gLow" data-i18n="tHealth">Health</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gLow" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tBoots">Boots</span><span class="gRec" data-i18n="tLethality">Lethality</span><span class="gLow" data-i18n="tDefense">Defense</span><span class="gLow" data-i18n="tAttack">Attack</span><span class="gLow" data-i18n="tDefense">Defense</span></div>
       </div>
 
-      <p style="margin-bottom:4px;"><b>Marksmen</b> — Goggles &amp; Boots are the clearest priority; Belt is worth it at +20/+100; Gloves is mostly secondary.</p>
+      <p style="margin-bottom:4px;" data-i18n-html="g6marTitle"><b>Marksmen</b> — Goggles &amp; Boots are the clearest priority; Belt is worth it at +20/+100; Gloves is mostly secondary.</p>
       <div class="hgGearTable">
-        <div class="hgGearRow hgGearHead"><span>Piece</span><span>Gold</span><span>Red+20</span><span>Red+60</span><span>Red+100</span></div>
-        <div class="hgGearRow"><span>Goggles</span><span class="gRec">Lethality</span><span class="gRec">Attack</span><span class="gSec">Defense</span><span class="gRec">Attack</span></div>
-        <div class="hgGearRow"><span>Gloves</span><span class="gSec">Health</span><span class="gSec">Defense</span><span class="gRec">Attack</span><span class="gSec">Defense</span></div>
-        <div class="hgGearRow"><span>Belt</span><span class="gSec">Health</span><span class="gRec">Attack</span><span class="gSec">Defense</span><span class="gRec">Attack</span></div>
-        <div class="hgGearRow"><span>Boots</span><span class="gRec">Lethality</span><span class="gSec">Defense</span><span class="gRec">Attack</span><span class="gSec">Defense</span></div>
+        <div class="hgGearRow hgGearHead"><span data-i18n="tPiece">Piece</span><span data-i18n="tGold">Gold</span><span data-i18n="tRed20">Red+20</span><span data-i18n="tRed60">Red+60</span><span data-i18n="tRed100">Red+100</span></div>
+        <div class="hgGearRow"><span data-i18n="tGoggles">Goggles</span><span class="gRec" data-i18n="tLethality">Lethality</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gSec" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tGloves">Gloves</span><span class="gSec" data-i18n="tHealth">Health</span><span class="gSec" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gSec" data-i18n="tDefense">Defense</span></div>
+        <div class="hgGearRow"><span data-i18n="tBelt">Belt</span><span class="gSec" data-i18n="tHealth">Health</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gSec" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span></div>
+        <div class="hgGearRow"><span data-i18n="tBoots">Boots</span><span class="gRec" data-i18n="tLethality">Lethality</span><span class="gSec" data-i18n="tDefense">Defense</span><span class="gRec" data-i18n="tAttack">Attack</span><span class="gSec" data-i18n="tDefense">Defense</span></div>
       </div>
 
-      <p>Materials are scarce, so don't spread them evenly across all 4 pieces — push the recommended ones for your troop type first, and only backfill the low-priority pieces once those are done. Most players also keep this focused on just 3 sets total (one per troop type) rather than gearing every hero individually.</p>
+      <p data-i18n="g6p2">Materials are scarce, so don't spread them evenly across all 4 pieces — push the recommended ones for your troop type first, and only backfill the low-priority pieces once those are done. Most players also keep this focused on just 3 sets total (one per troop type) rather than gearing every hero individually.</p>
     </div>
 
     <div class="hgSection">
-      <h3>🚩 Rally leader vs. joiner buffs</h3>
-      <p>This one trips a lot of people up: when you <b>lead</b> a rally, all of your heroes' buffs apply. When you <b>join</b> someone else's rally, only your top-right Expedition skill counts — the rest of your hero lineup doesn't matter for that march. That's why attack-focused heroes (e.g. Jessie) are the go-to for attacking, and defense/garrison-focused heroes (e.g. Patrick, Sergey) are the go-to for holding a fortress or castle. Inside a garrison, the strongest hero lineup present takes priority for buffs — not necessarily whoever is nominally "leading" it.</p>
+      <h3 data-i18n="g7h">🚩 Rally leader vs. joiner buffs</h3>
+      <p data-i18n-html="g7p">This one trips a lot of people up: when you <b>lead</b> a rally, all of your heroes' buffs apply. When you <b>join</b> someone else's rally, only your top-right Expedition skill counts — the rest of your hero lineup doesn't matter for that march. That's why attack-focused heroes (e.g. Jessie) are the go-to for attacking, and defense/garrison-focused heroes (e.g. Patrick, Sergey) are the go-to for holding a fortress or castle. Inside a garrison, the strongest hero lineup present takes priority for buffs — not necessarily whoever is nominally "leading" it.</p>
     </div>
 
-    <div class="hgSection hgCredit">
+    <div class="hgSection hgCredit" data-i18n-html="gCredit">
       Gear priority chart compiled by <b>jujiterita</b> (State 2062). Hero-mechanics writeup distilled from community research shared by <b>u/GridironGrace</b> on r/whiteoutsurvival. Numbers can shift with game updates; treat this as a solid starting framework, not gospel.
     </div>
   </div>
@@ -365,7 +383,7 @@ body.dark .top{background:linear-gradient(180deg,rgba(13,27,42,.92),rgba(10,20,3
 <div class="modalWrap" id="modalWrap">
   <div class="modal">
     <button class="closeM" id="closeM">✕</button>
-    <h2>Hero Comparison</h2>
+    <h2 data-i18n="cmpTitle">Hero Comparison</h2>
     <div class="cmpHeads" id="cmpHeads"></div>
     <div id="compareBody"></div>
   </div>
@@ -374,19 +392,20 @@ body.dark .top{background:linear-gradient(180deg,rgba(13,27,42,.92),rgba(10,20,3
 <div style="max-width:480px;margin:22px auto 40px;padding:0 16px;">
   <div style="background:var(--panel);border:1px solid var(--panel-edge);border-radius:16px;padding:20px 18px;text-align:center;">
     <div style="font-size:30px;">🔥</div>
-    <h2 style="margin:6px 0 6px;color:var(--ink);font-size:19px;">Liked the hero guide?</h2>
-    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 auto 14px;max-width:380px;line-height:1.5;">
+    <h2 style="margin:6px 0 6px;color:var(--ink);font-size:19px;" data-i18n="likedTitle">Liked the hero guide?</h2>
+    <p style="color:var(--ink-soft);font-size:13.5px;margin:0 auto 14px;max-width:380px;line-height:1.5;" data-i18n="signUpSub">
       Sign up to Phoenix for more like this.
     </p>
-    <a href="index.html" style="display:inline-block;background:linear-gradient(90deg,var(--acc),var(--gold-deep));color:var(--white);font-weight:800;text-decoration:none;padding:13px 26px;border-radius:12px;box-shadow:0 4px 0 var(--acc-sh);font-size:15px;">
+    <a href="index.html" style="display:inline-block;background:linear-gradient(90deg,var(--acc),var(--gold-deep));color:var(--white);font-weight:800;text-decoration:none;padding:13px 26px;border-radius:12px;box-shadow:0 4px 0 var(--acc-sh);font-size:15px;" data-i18n="signUpFree">
       Sign up free →
     </a>
-    <p style="color:var(--ink-soft);font-size:12.5px;margin:16px 0 0;">
-      Enjoying it? <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--acc-d);font-weight:700;text-decoration:none;">Support Phoenix on Ko-fi ☕</a>
+    <p style="color:var(--ink-soft);font-size:12.5px;margin:16px 0 0;" data-i18n-html="supportText">
+      Enjoying it? &lt;a href=&quot;https://ko-fi.com/phoenixwos&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; style=&quot;color:var(--acc-d);font-weight:700;text-decoration:none;&quot;&gt;Support Phoenix on Ko-fi ☕&lt;/a&gt;
     </p>
   </div>
 </div>
 
+<script src="phx-i18n.js"></script>
 <script>
 function getState(){
   const p = new URLSearchParams(location.search);
@@ -537,23 +556,21 @@ const HEROES = [
 ];
 
 const CLASS_ICON = {inf:"🛡️", lan:"🔱", mar:"🏹", gat:"⛏️", sup:"🎵"};
-const CLASS_LABEL = {inf:"Infantry", lan:"Lancer", mar:"Marksman", gat:"Gatherer", sup:"Support"};
-const ROLE_LABEL = {
-  "rally-lead":"Rally Lead", "rally-join":"Rally Join", "bear-trap":"Bear Trap",
-  "resource":"Resource", "arena":"Arena", "exploration":"Exploration", "heal":"Healer"
-};
+function classLabel(cls){ return T('cls_'+cls); }
+function roleLabel(role){ return T('role_'+role.replace('-','_')); }
 const STAT_ICON = {dmg:"⚔️", buff:"💪", debuff:"🌀", econ:"⛏️", heal:"➕"};
 const STAT_MAX = {dmg:450, buff:30, debuff:30, econ:30, heal:300};
-const FILTERS = [
-  {key:"all", label:"All"},
-  {key:"rally-lead", label:"🚩 Rally Lead"},
-  {key:"rally-join", label:"⚔️ Rally Join"},
-  {key:"bear-trap", label:"🐻 Bear Trap"},
-  {key:"resource", label:"⛏️ Resource"},
-  {key:"heal", label:"➕ Healer"},
-  {key:"f2p", label:"🆓 F2P Friendly"},
-  {key:"p2p", label:"💎 Premium"},
+const FILTER_KEYS = [
+  {key:"all", icon:""},
+  {key:"rally-lead", icon:"🚩 "},
+  {key:"rally-join", icon:"⚔️ "},
+  {key:"bear-trap", icon:"🐻 "},
+  {key:"resource", icon:"⛏️ "},
+  {key:"heal", icon:"➕ "},
+  {key:"f2p", icon:"🆓 "},
+  {key:"p2p", icon:"💎 "},
 ];
+function filterLabel(key){ return T('filt_'+key.replace('-','_')); }
 
 let activeFilter = "all";
 let searchTerm = "";
@@ -561,19 +578,22 @@ let verifiedOnly = false;
 let compareSet = [];
 
 const chipsEl = document.getElementById('chips');
-FILTERS.forEach(f=>{
-  const c = document.createElement('div');
-  c.className = 'chip' + (f.key===activeFilter ? ' on' : '');
-  c.textContent = f.label;
-  c.dataset.key = f.key;
-  c.onclick = ()=>{ activeFilter = f.key; render(); };
-  chipsEl.appendChild(c);
-});
-const verifyChip = document.createElement('div');
-verifyChip.className = 'chip verifyToggle';
-verifyChip.textContent = 'In-game verified only';
-verifyChip.onclick = ()=>{ verifiedOnly = !verifiedOnly; verifyChip.classList.toggle('on', verifiedOnly); render(); };
-chipsEl.appendChild(verifyChip);
+function buildChips(){
+  chipsEl.innerHTML='';
+  FILTER_KEYS.forEach(f=>{
+    const c = document.createElement('div');
+    c.className = 'chip' + (f.key===activeFilter ? ' on' : '');
+    c.textContent = f.icon + filterLabel(f.key);
+    c.dataset.key = f.key;
+    c.onclick = ()=>{ activeFilter = f.key; render(); };
+    chipsEl.appendChild(c);
+  });
+  const verifyChip = document.createElement('div');
+  verifyChip.className = 'chip verifyToggle' + (verifiedOnly?' on':'');
+  verifyChip.textContent = T('verifiedOnlyChip');
+  verifyChip.onclick = ()=>{ verifiedOnly = !verifiedOnly; verifyChip.classList.toggle('on', verifiedOnly); render(); };
+  chipsEl.appendChild(verifyChip);
+}
 
 document.getElementById('search').addEventListener('input', e=>{
   searchTerm = e.target.value.trim().toLowerCase();
@@ -600,30 +620,39 @@ function bearTrapGens(name){
   return gens;
 }
 
-function statChipHTML(stat){
+function hf(h, field){
+  const lang = PhxI18N.getLang();
+  const pack = HERO_I18N[lang] && HERO_I18N[lang][h.name];
+  if(pack && pack[field]) return pack[field];
+  return field==='label' ? h.stat.label : field==='note' ? h.stat.note : h.blurb;
+}
+
+function statChipHTML(h){
+  const stat=h.stat;
   if(!stat || !stat.label) return '';
   const icon = STAT_ICON[stat.type] || '📊';
-  const valTxt = stat.value ? (stat.value + (stat.unit ? ' ' + stat.unit : '')) : (stat.unit || 'See notes');
-  return '<div class="statChip"><div class="ic">'+icon+'</div><div class="txt"><div class="lbl">'+stat.label+'</div><div class="val">'+valTxt+'</div>'+(stat.note ? '<div class="note">'+stat.note+'</div>' : '')+'</div></div>';
+  const lbl = hf(h,'label'), note = hf(h,'note');
+  const valTxt = stat.value ? (stat.value + (stat.unit ? ' ' + stat.unit : '')) : (stat.unit || T('seeNotes'));
+  return '<div class="statChip"><div class="ic">'+icon+'</div><div class="txt"><div class="lbl">'+lbl+'</div><div class="val">'+valTxt+'</div>'+(note ? '<div class="note">'+note+'</div>' : '')+'</div></div>';
 }
 
 function heroCard(h){
   const div = document.createElement('div');
   div.className = 'card cls-'+h.cls + (compareSet.includes(h.name)?' cmp-on':'');
-  const roleTags = h.roles.map(r=>'<span class="tag">'+ROLE_LABEL[r]+'</span>').join('');
+  const roleTags = h.roles.map(r=>'<span class="tag">'+roleLabel(r)+'</span>').join('');
   const gens = bearTrapGens(h.name);
-  const bearTag = gens.length ? '<span class="tag bear">Gen '+gens.join(', ')+' Bear Trap pick</span>' : '';
+  const bearTag = gens.length ? '<span class="tag bear">'+T('genWord')+' '+gens.join(', ')+' '+T('bearTrapPick')+'</span>' : '';
   div.innerHTML =
     '<div class="head"><div class="avatar">'+CLASS_ICON[h.cls]+'<span class="gen">G'+h.gen+'</span></div>'+
     '<div><p class="name">'+h.name+' <span class="genpill">S'+h.gen+'</span></p>'+
-    '<div class="sub">'+CLASS_LABEL[h.cls]+'</div>'+
+    '<div class="sub">'+classLabel(h.cls)+'</div>'+
     '<span class="rarity r-'+h.rarity+'">'+h.rarity+'</span>'+
-    (h.verified ? '<div class="verifiedTag">Verified in-game</div>' : '')+
+    (h.verified ? '<div class="verifiedTag">'+T('verifiedTag')+'</div>' : '')+
     '</div></div>'+
-    '<div class="blurb">'+h.blurb+'</div>'+
-    statChipHTML(h.stat)+
-    '<div class="tags">'+roleTags+bearTag+'<span class="tag '+h.access+'">'+(h.access==='f2p'?'F2P Friendly':'Premium')+'</span></div>'+
-    '<button class="cmpToggle '+(compareSet.includes(h.name)?'on':'')+'">'+(compareSet.includes(h.name)?'Selected to compare':'+ Add to compare')+'</button>';
+    '<div class="blurb">'+hf(h,'blurb')+'</div>'+
+    statChipHTML(h)+
+    '<div class="tags">'+roleTags+bearTag+'<span class="tag '+h.access+'">'+(h.access==='f2p'?T('f2pFriendly'):T('premium'))+'</span></div>'+
+    '<button class="cmpToggle '+(compareSet.includes(h.name)?'on':'')+'">'+(compareSet.includes(h.name)?T('selectedToCompare'):T('addToCompare'))+'</button>';
   div.querySelector('.cmpToggle').onclick = ()=> toggleCompare(h.name);
   return div;
 }
@@ -671,10 +700,11 @@ document.getElementById('goCompare').onclick = ()=>{
 function statCard(h){
   const s = h.stat;
   const icon = STAT_ICON[s.type] || '📊';
+  const lbl = hf(h,'label'), note = hf(h,'note');
   const bar = s.value ? '<div class="barTrack"><div class="barFill" style="width:'+Math.min(100, s.value/STAT_MAX[s.type]*100)+'%; background:var(--acc);"></div></div>' : '';
-  return '<div class="statCompareCard"><div class="who">'+h.name+'</div><div class="lab">'+icon+' '+s.label+'</div>'+
-    '<div class="val">'+(s.value ? s.value+' '+s.unit : (s.unit || 'No numeric data yet'))+'</div>'+bar+
-    (s.note ? '<div class="note">'+s.note+'</div>' : '')+'</div>';
+  return '<div class="statCompareCard"><div class="who">'+h.name+'</div><div class="lab">'+icon+' '+lbl+'</div>'+
+    '<div class="val">'+(s.value ? s.value+' '+s.unit : (s.unit || T('noNumericData')))+'</div>'+bar+
+    (note ? '<div class="note">'+note+'</div>' : '')+'</div>';
 }
 
 function openCompare(a,b){
@@ -686,19 +716,20 @@ function openCompare(a,b){
   let html = '';
   if(a.stat.type === b.stat.type && a.stat.value && b.stat.value){
     const max = STAT_MAX[a.stat.type];
-    html += '<div class="compareNote">Both heroes share a comparable skill type - scaled on the same bar for a fair read.</div><div class="statCompareGrid">';
+    html += '<div class="compareNote">'+T('cmpSameType')+'</div><div class="statCompareGrid">';
     [a,b].forEach(h=>{
-      html += '<div class="statCompareCard"><div class="who">'+h.name+' - '+STAT_ICON[h.stat.type]+' '+h.stat.label+'</div>'+
+      const lbl=hf(h,'label'), note=hf(h,'note');
+      html += '<div class="statCompareCard"><div class="who">'+h.name+' - '+STAT_ICON[h.stat.type]+' '+lbl+'</div>'+
         '<div class="val">'+h.stat.value+' '+h.stat.unit+'</div>'+
         '<div class="barTrack"><div class="barFill" style="width:'+Math.min(100,h.stat.value/max*100)+'%; background:var(--acc);"></div></div>'+
-        (h.stat.note ? '<div class="note">'+h.stat.note+'</div>' : '')+'</div>';
+        (note ? '<div class="note">'+note+'</div>' : '')+'</div>';
     });
     html += '</div>';
   } else {
-    html += '<div class="compareNote">These two use different kinds of skills, so a single bar would be misleading - here are both real numbers side by side.</div>';
+    html += '<div class="compareNote">'+T('cmpDiffType')+'</div>';
     html += '<div class="statCompareGrid">'+statCard(a)+statCard(b)+'</div>';
   }
-  html += '<div class="compareNote" style="margin-top:10px;">'+a.name+': '+a.blurb+'</div><div class="compareNote">'+b.name+': '+b.blurb+'</div>';
+  html += '<div class="compareNote" style="margin-top:10px;">'+a.name+': '+hf(a,'blurb')+'</div><div class="compareNote">'+b.name+': '+hf(b,'blurb')+'</div>';
   body.innerHTML = html;
 
   modalWrap.classList.add('show');
@@ -718,14 +749,12 @@ const BEAR_TEAMS = [
 function renderTeams(){
   const wrap = document.getElementById('genCards');
   wrap.innerHTML = BEAR_TEAMS.map(g=>
-    '<div class="genCard"><p class="genTitle">Generation '+g.gen+' <span>Bear Trap start rally</span></p>'+
-    '<div class="compRow best"><div class="compLabel">Best</div><div class="compHeroes">'+g.best.h.join(' + ')+'</div><div class="compFormation">'+g.best.f+'</div></div>'+
-    '<div class="compRow alt"><div class="compLabel">Alternative</div><div class="compHeroes">'+g.alt.h.join(' + ')+'</div><div class="compFormation">'+g.alt.f+'</div></div>'+
-    '<div class="compRow f2p"><div class="compLabel">F2P</div><div class="compHeroes">'+g.f2p.h.join(' + ')+'</div><div class="compFormation">'+g.f2p.f+'</div></div>'+
+    '<div class="genCard"><p class="genTitle">'+T('genWord')+' '+g.gen+' <span>'+T('bearTrapStartRally')+'</span></p>'+
+    '<div class="compRow best"><div class="compLabel">'+T('compBest')+'</div><div class="compHeroes">'+g.best.h.join(' + ')+'</div><div class="compFormation">'+g.best.f+'</div></div>'+
+    '<div class="compRow alt"><div class="compLabel">'+T('compAlt')+'</div><div class="compHeroes">'+g.alt.h.join(' + ')+'</div><div class="compFormation">'+g.alt.f+'</div></div>'+
+    '<div class="compRow f2p"><div class="compLabel">'+T('compF2p')+'</div><div class="compHeroes">'+g.f2p.h.join(' + ')+'</div><div class="compFormation">'+g.f2p.f+'</div></div>'+
     '</div>').join('');
 }
-renderTeams();
-render();
 
 const tabCards = document.getElementById('tabCards');
 const tabTeams = document.getElementById('tabTeams');
@@ -744,6 +773,428 @@ function showTab(which){
 tabCards.onclick = ()=>showTab('cards');
 tabTeams.onclick = ()=>showTab('teams');
 tabGuide.onclick = ()=>showTab('guide');
+
+const DICT = {
+"en": {
+"back": "‹ Tools",
+"brandB": "Hero",
+"brandRest": "Guide",
+"heroH1": "Which hero for which job?",
+"heroP": "Browse heroes by role, see their real in-game skill numbers, and compare any two side by side.",
+"ctaTop": "✨ Free to browse — sign up for more Phoenix tools →",
+"tabCards": "🦸 Hero Cards",
+"tabTeams": "🐻 Bear Trap Teams by Gen",
+"tabGuide": "📘 How Heroes Work",
+"searchPh": "Search hero name…",
+"comparing": "Comparing:",
+"compareBtn": "Compare ⚖️",
+"noMatch": "No heroes match that search or filter.",
+"disclaimer": "✓ Verified heroes have their skill numbers pulled directly from in-game screenshots. Unmarked heroes are based on community tier-list guides and may need a closer look. Either way, real performance still depends on your hero level, gear, and pet.",
+"teamsNote": "Formation shown as Infantry / Lancer / Marksman troop ratio for that rally. \"Best\" needs the strongest investment, \"Alternative\" is a close second, \"F2P\" works without premium heroes. New generations replace old picks fast — recheck this list once your state unlocks a new hero tier.",
+"filt_all": "All",
+"filt_rally_lead": "Rally Lead",
+"filt_rally_join": "Rally Join",
+"filt_bear_trap": "Bear Trap",
+"filt_resource": "Resource",
+"filt_heal": "Healer",
+"filt_f2p": "F2P Friendly",
+"filt_p2p": "Premium",
+"verifiedOnlyChip": "In-game verified only",
+"cls_inf": "Infantry",
+"cls_lan": "Lancer",
+"cls_mar": "Marksman",
+"cls_gat": "Gatherer",
+"cls_sup": "Support",
+"role_rally_lead": "Rally Lead",
+"role_rally_join": "Rally Join",
+"role_bear_trap": "Bear Trap",
+"role_resource": "Resource",
+"role_arena": "Arena",
+"role_exploration": "Exploration",
+"role_heal": "Healer",
+"seeNotes": "See notes",
+"verifiedTag": "Verified in-game",
+"f2pFriendly": "F2P Friendly",
+"premium": "Premium",
+"selectedToCompare": "Selected to compare",
+"addToCompare": "+ Add to compare",
+"genWord": "Gen",
+"bearTrapPick": "Bear Trap pick",
+"bearTrapStartRally": "Bear Trap start rally",
+"compBest": "Best",
+"compAlt": "Alternative",
+"compF2p": "F2P",
+"noNumericData": "No numeric data yet",
+"cmpSameType": "Both heroes share a comparable skill type - scaled on the same bar for a fair read.",
+"cmpDiffType": "These two use different kinds of skills, so a single bar would be misleading - here are both real numbers side by side.",
+"cmpTitle": "Hero Comparison",
+"likedTitle": "Liked the hero guide?",
+"signUpSub": "Sign up to Phoenix for more like this.",
+"signUpFree": "Sign up free →",
+"supportText": "Enjoying it? <a href=\"https://ko-fi.com/phoenixwos\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--acc-d);font-weight:700;text-decoration:none;\">Support Phoenix on Ko-fi ☕</a>",
+"g1h": "🎭 Rarity &amp; the troop triangle",
+"g1p": "<b>Rare</b> (blue) heroes have 4 skills, <b>Epic</b> (purple) have 5, <b>Mythic</b> (gold) have 6 plus 2 more on their exclusive weapon. Every hero is Infantry, Lancer, or Marksman, and there's a damage triangle between them: Infantry hit Lancers harder, Lancers hit Marksmen harder, Marksmen hit Infantry harder. Mixing all three troop types on a march means you're always covered.",
+"g2h": "🗺️ Two separate skill sets",
+"g2p1": "Every hero has an <b>Exploration</b> set (left side of their page) and an <b>Expedition</b> set (right side) — they don't work in the same places:",
+"g2li1": "<b>Exploration</b> skills apply to Exploration, Arena, and Lighthouse/Intel 5v5 battles.",
+"g2li2": "<b>Expedition</b> skills apply to real deployments — Polar Terror rallies, beast hunts, city attacks, fortress and castle fights.",
+"g2p2": "Mythic exclusive weapons follow the same split: odd upgrade levels (1,3,5,7,9) boost the Exploration side, even levels (2,4,6,8,10) boost the Expedition side. A level 10 weapon costs 275 widgets total.",
+"g3h": "⭐ Leveling vs. ascending",
+"g3p1": "These are two different systems, and mixing them up wastes resources:",
+"g3li1": "<b>EXP (level 1–80)</b> raises escort stats and deployment capacity. Your Furnace level caps how high you can go. Focus your best 5 heroes.",
+"g3li2": "<b>Shards (star level)</b> unlock new skill slots and let you upgrade skills further. Each hero needs 10 shards just to unlock, then far more to push stars — roughly <b>1,075 shards total</b> to fully ascend one hero to 4 stars. Don't blow General Shards on heroes you're not committed to.",
+"g3p2": "At <b>Furnace 13</b> the <b>Drill Camp</b> unlocks: park low-level heroes there and they auto-level to match your 5th-strongest hero, which is a good way to bring backup heroes up to speed without babysitting them. If you ever want to swap your top 5, resetting a hero in the Drill Camp refunds 100% of its EXP.",
+"g4h": "📖 Skill manuals",
+"g4p1": "Skills level up with Exploration or Expedition manuals (matching the skill type), and cost scales up fast per level:",
+"tSkillLevel": "Skill level",
+"tExploration": "Exploration",
+"tExpedition": "Expedition",
+"tLvl45": "4 → 5 (max)",
+"tTotalPerSkill": "Total per skill",
+"g4p2": "That's 200–300 Exploration manuals and 330–495 Expedition manuals to fully max one hero's skills, depending on rarity. Prioritize your main 3, then your top 5 for Arena, then key support heroes.",
+"g5h": "🔨 \"Growth\" skills — always-on economy buffs",
+"g5p1": "Some skills quietly boost your city all the time, not just in battle — look for the green hammer icon next to a hero's troop type. All four Rare heroes have one (a resource-gathering buff plus a matching income buff). A few notable ones from later heroes: construction cost/speed, research speed, infirmary healing speed, and training speed. A couple of heroes also buff march speed or stamina cost for a rally they're part of. Worth leveling early since the effect runs constantly.",
+"g6h": "🎽 Gear priorities by troop type",
+"g6p1": "Each of the 4 gear pieces rolls a different stat at each tier (Gold, then Red +20/+60/+100), and which stat is worth chasing depends on your troop type. Here's the actual priority per piece — <span class=\"gRec\">green = recommended</span>, <span class=\"gSec\">yellow = secondary</span>, <span class=\"gLow\">grey = low priority</span>:",
+"g6infTitle": "<b>Infantry</b> — put your materials into Gloves &amp; Belt (Health/Defense); Goggles &amp; Boots matter less.",
+"tPiece": "Piece",
+"tGold": "Gold",
+"tRed20": "Red+20",
+"tRed60": "Red+60",
+"tRed100": "Red+100",
+"tGoggles": "Goggles",
+"tGloves": "Gloves",
+"tBelt": "Belt",
+"tBoots": "Boots",
+"tLethality": "Lethality",
+"tAttack": "Attack",
+"tDefense": "Defense",
+"tHealth": "Health",
+"g6lanTitle": "<b>Lancer</b> — put your materials into Goggles &amp; Belt (Lethality/Attack); Gloves &amp; Boots matter less.",
+"g6marTitle": "<b>Marksmen</b> — Goggles &amp; Boots are the clearest priority; Belt is worth it at +20/+100; Gloves is mostly secondary.",
+"g6p2": "Materials are scarce, so don't spread them evenly across all 4 pieces — push the recommended ones for your troop type first, and only backfill the low-priority pieces once those are done. Most players also keep this focused on just 3 sets total (one per troop type) rather than gearing every hero individually.",
+"g7h": "🚩 Rally leader vs. joiner buffs",
+"g7p": "This one trips a lot of people up: when you <b>lead</b> a rally, all of your heroes' buffs apply. When you <b>join</b> someone else's rally, only your top-right Expedition skill counts — the rest of your hero lineup doesn't matter for that march. That's why attack-focused heroes (e.g. Jessie) are the go-to for attacking, and defense/garrison-focused heroes (e.g. Patrick, Sergey) are the go-to for holding a fortress or castle. Inside a garrison, the strongest hero lineup present takes priority for buffs — not necessarily whoever is nominally \"leading\" it.",
+"gCredit": "Gear priority chart compiled by <b>jujiterita</b> (State 2062). Hero-mechanics writeup distilled from community research shared by <b>u/GridironGrace</b> on r/whiteoutsurvival. Numbers can shift with game updates; treat this as a solid starting framework, not gospel."
+},
+"ko": {
+"back": "‹ 도구",
+"brandB": "영웅",
+"brandRest": "가이드",
+"heroH1": "어떤 영웅을 어디에 써야 할까?",
+"heroP": "역할별로 영웅을 둘러보고, 실제 인게임 스킬 수치를 확인하고, 두 영웅을 나란히 비교해보세요.",
+"ctaTop": "✨ 무료로 둘러보기 — 더 많은 Phoenix 도구를 위해 가입하세요 →",
+"tabCards": "🦸 영웅 카드",
+"tabTeams": "🐻 세대별 곰 사냥 팀",
+"tabGuide": "📘 영웅 작동 원리",
+"searchPh": "영웅 이름 검색…",
+"comparing": "비교 중:",
+"compareBtn": "비교하기 ⚖️",
+"noMatch": "해당 검색어나 필터에 맞는 영웅이 없습니다.",
+"disclaimer": "✓ 확인됨 표시가 있는 영웅은 인게임 스크린샷에서 직접 확인한 수치입니다. 표시가 없는 영웅은 커뮤니티 티어리스트를 참고한 것이라 추가 확인이 필요할 수 있습니다. 어느 쪽이든 실제 성능은 영웅 레벨, 장비, 펫에 따라 달라집니다.",
+"teamsNote": "편성은 해당 집결의 보병/창병/궁병 비율로 표시됩니다. \"최상\"은 가장 많은 투자가 필요하고, \"대안\"은 그 다음으로 좋은 선택이며, \"무과금\"은 유료 영웅 없이도 가능합니다. 새로운 세대가 나오면 기존 픽이 빠르게 바뀌므로, 새로운 영웅 등급이 풀리면 이 목록을 다시 확인하세요.",
+"filt_all": "전체",
+"filt_rally_lead": "집결대장",
+"filt_rally_join": "집결참여",
+"filt_bear_trap": "곰 사냥",
+"filt_resource": "자원",
+"filt_heal": "치유",
+"filt_f2p": "무과금 친화",
+"filt_p2p": "프리미엄",
+"verifiedOnlyChip": "인게임 확인된 것만",
+"cls_inf": "보병",
+"cls_lan": "창병",
+"cls_mar": "궁병",
+"cls_gat": "채집가",
+"cls_sup": "지원",
+"role_rally_lead": "집결대장",
+"role_rally_join": "집결참여",
+"role_bear_trap": "곰 사냥",
+"role_resource": "자원",
+"role_arena": "투기장",
+"role_exploration": "탐사",
+"role_heal": "치유사",
+"seeNotes": "메모 참고",
+"verifiedTag": "인게임 확인됨",
+"f2pFriendly": "무과금 친화",
+"premium": "프리미엄",
+"selectedToCompare": "비교 대상으로 선택됨",
+"addToCompare": "+ 비교에 추가",
+"genWord": "세대",
+"bearTrapPick": "곰 사냥 픽",
+"bearTrapStartRally": "곰 사냥 시작 집결",
+"compBest": "최상",
+"compAlt": "대안",
+"compF2p": "무과금",
+"noNumericData": "아직 수치 데이터 없음",
+"cmpSameType": "두 영웅이 비슷한 유형의 스킬을 가지고 있어, 같은 기준으로 공정하게 비교할 수 있도록 표시했습니다.",
+"cmpDiffType": "두 영웅은 서로 다른 유형의 스킬을 사용하므로, 하나의 막대로 비교하면 오해의 소지가 있어 실제 수치를 나란히 보여드립니다.",
+"cmpTitle": "영웅 비교",
+"likedTitle": "영웅 가이드가 마음에 드셨나요?",
+"signUpSub": "더 많은 콘텐츠를 원하시면 Phoenix에 가입하세요.",
+"signUpFree": "무료로 가입하기 →",
+"supportText": "마음에 드셨나요? <a href=\"https://ko-fi.com/phoenixwos\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--acc-d);font-weight:700;text-decoration:none;\">Ko-fi에서 Phoenix를 후원해주세요 ☕</a>",
+"g1h": "🎭 등급과 병종 삼각관계",
+"g1p": "<b>희귀(레어)</b>(파란색) 영웅은 스킬 4개, <b>영웅(에픽)</b>(보라색)은 5개, <b>신화(미식)</b>(금색)는 6개에 전용 무기 스킬 2개가 추가됩니다. 모든 영웅은 보병, 창병, 궁병 중 하나이며, 이들 사이에는 상성 삼각관계가 있습니다: 보병은 창병에게 강하고, 창병은 궁병에게 강하고, 궁병은 보병에게 강합니다. 세 병종을 모두 섞어 행군하면 항상 상성에서 밀리지 않습니다.",
+"g2h": "🗺️ 두 개의 서로 다른 스킬 세트",
+"g2p1": "모든 영웅은 <b>탐사</b> 세트(페이지 왼쪽)와 <b>원정</b> 세트(오른쪽)를 가지고 있으며, 서로 다른 상황에서 작동합니다:",
+"g2li1": "<b>탐사</b> 스킬은 탐사, 투기장, 등대/정보 5대5 전투에 적용됩니다.",
+"g2li2": "<b>원정</b> 스킬은 실제 출정 — 극지 공포 집결, 야수 사냥, 도시 공격, 요새·성 전투에 적용됩니다.",
+"g2p2": "신화 전용 무기도 같은 방식으로 나뉩니다: 홀수 강화 단계(1,3,5,7,9)는 탐사 쪽을, 짝수 단계(2,4,6,8,10)는 원정 쪽을 강화합니다. 10강 무기는 총 275개의 부품이 필요합니다.",
+"g3h": "⭐ 레벨업 vs. 승급",
+"g3p1": "이 둘은 서로 다른 시스템이며, 혼동하면 자원을 낭비하게 됩니다:",
+"g3li1": "<b>경험치(레벨 1~80)</b>는 호위 스탯과 출정 인원수를 높입니다. 용광로 레벨이 최대 레벨을 제한하므로, 상위 5명의 영웅에 집중하세요.",
+"g3li2": "<b>조각(성급)</b>은 새로운 스킬 슬롯을 열어주고 스킬을 더 강화할 수 있게 해줍니다. 영웅마다 해금에만 조각 10개가 필요하며, 별을 올리려면 훨씬 더 많이 필요합니다 — 한 영웅을 4성까지 완전히 승급시키려면 약 <b>총 1,075개의 조각</b>이 필요합니다. 확신 없는 영웅에게 일반 조각을 낭비하지 마세요.",
+"g3p2": "용광로 13에서 <b>훈련소</b>가 열립니다: 낮은 레벨의 영웅을 여기 두면 5번째로 강한 영웅에 맞춰 자동으로 레벨업되므로, 신경 쓰지 않고도 예비 영웅을 키우기 좋은 방법입니다. 상위 5명을 바꾸고 싶다면, 훈련소에서 영웅을 초기화하면 경험치를 100% 환급받습니다.",
+"g4h": "📖 스킬 교본",
+"g4p1": "스킬은 해당 스킬 유형에 맞는 탐사 또는 원정 교본으로 레벨업하며, 비용은 레벨이 오를수록 빠르게 늘어납니다:",
+"tSkillLevel": "스킬 레벨",
+"tExploration": "탐사",
+"tExpedition": "원정",
+"tLvl45": "4 → 5 (최대)",
+"tTotalPerSkill": "스킬당 총합",
+"g4p2": "등급에 따라 영웅 하나의 스킬을 완전히 최대로 만드는 데 탐사 교본 200~300개, 원정 교본 330~495개가 필요합니다. 주력 3명을 먼저, 그다음 투기장용 상위 5명, 그다음 핵심 지원 영웅 순으로 우선순위를 두세요.",
+"g5h": "🔨 \"성장\" 스킬 — 상시 발동되는 경제 버프",
+"g5p1": "일부 스킬은 전투 중이 아니어도 항상 조용히 도시를 강화해줍니다 — 영웅의 병종 옆에 있는 초록색 망치 아이콘을 찾아보세요. 4명의 희귀(레어) 영웅 모두 이런 스킬(자원 채집 버프 + 그에 맞는 수입 버프)을 하나씩 가지고 있습니다. 이후 영웅들의 주목할 만한 예시로는 건설 비용/속도, 연구 속도, 병원 치료 속도, 훈련 속도가 있습니다. 몇몇 영웅은 자신이 속한 집결의 행군 속도나 활력 소모도 버프해줍니다. 효과가 항상 적용되므로 일찍 레벨업할 가치가 있습니다.",
+"g6h": "🎽 병종별 장비 우선순위",
+"g6p1": "4개의 장비 부위는 각 등급(골드, 그다음 레드 +20/+60/+100)마다 서로 다른 스탯이 나오며, 어떤 스탯을 노려야 할지는 병종에 따라 다릅니다. 부위별 실제 우선순위는 다음과 같습니다 — <span class=\"gRec\">초록 = 추천</span>, <span class=\"gSec\">노랑 = 차선</span>, <span class=\"gLow\">회색 = 낮은 우선순위</span>:",
+"g6infTitle": "<b>보병</b> — 재료는 장갑과 벨트(체력/방어력)에 투자하세요; 고글과 부츠는 상대적으로 덜 중요합니다.",
+"tPiece": "부위",
+"tGold": "골드",
+"tRed20": "레드+20",
+"tRed60": "레드+60",
+"tRed100": "레드+100",
+"tGoggles": "고글",
+"tGloves": "장갑",
+"tBelt": "벨트",
+"tBoots": "부츠",
+"tLethality": "살상력",
+"tAttack": "공격력",
+"tDefense": "방어력",
+"tHealth": "체력",
+"g6lanTitle": "<b>창병</b> — 재료는 고글과 벨트(살상력/공격력)에 투자하세요; 장갑과 부츠는 상대적으로 덜 중요합니다.",
+"g6marTitle": "<b>궁병</b> — 고글과 부츠가 가장 명확한 우선순위이며, 벨트는 +20/+100에서 투자할 가치가 있고, 장갑은 대체로 차선입니다.",
+"g6p2": "재료는 한정적이므로 4개 부위에 고르게 나누지 말고, 병종에 맞는 추천 부위부터 먼저 밀어준 뒤, 그것들이 끝나면 낮은 우선순위 부위를 채우세요. 대부분의 플레이어는 영웅 개개인마다 장비를 맞추기보다 병종당 하나씩, 총 3세트에만 집중합니다.",
+"g7h": "🚩 집결대장 vs. 참여자 버프",
+"g7p": "많은 사람들이 헷갈려하는 부분입니다: 집결을 <b>이끌 때</b>는 자신의 모든 영웅 버프가 적용됩니다. 다른 사람의 집결에 <b>참여할 때</b>는 오른쪽 상단의 원정 스킬만 적용되며, 나머지 영웅 편성은 그 행군에서 의미가 없습니다. 그래서 공격형 영웅(예: 제시)은 공격용으로, 방어/주둔형 영웅(예: 패트릭, 세르게이)은 요새나 성을 지킬 때 주로 쓰입니다. 주둔지 안에서는 명목상 \"대장\"이 누구든 상관없이, 그 자리에 있는 가장 강한 영웅 편성이 버프의 우선순위를 갖습니다.",
+"gCredit": "장비 우선순위 표는 <b>jujiterita</b>(2062 서버)가 정리했습니다. 영웅 메커니즘 정리는 r/whiteoutsurvival의 <b>u/GridironGrace</b>가 공유한 커뮤니티 리서치를 바탕으로 했습니다. 수치는 게임 업데이트에 따라 바뀔 수 있으니 절대적인 기준이 아닌 좋은 출발점으로 참고하세요."
+}
+};
+const HERO_I18N = {
+"ko": {
+"Jeronimo": {
+"label": "3연속 콤보 타격",
+"note": "먼저 적을 공중에 띄웁니다",
+"blurb": "적을 공중에 띄운 뒤 224% 공격력의 검격을 3연속으로 가합니다. 1세대부터 8세대까지 보병 집결대장의 중추적인 영웅입니다."
+},
+"Molly": {
+"label": "슈퍼 눈덩이",
+"note": "1.5초간 빙결 효과도 있음",
+"blurb": "거대한 눈덩이를 떨어뜨려 252% 광역 피해를 입히고 생존자를 1.5초간 빙결시킵니다. 1~2세대 곰 사냥에서 안정적인 광역+제어형 창병 픽입니다."
+},
+"Sergey": {
+"label": "수호자의 우위",
+"note": "액티브: 방패 강타로 280% 광역 피해 + 넉백",
+"blurb": "패시브로 모든 부대의 받는 피해를 20% 감소시키며, 방패 강타로 280% 광역 피해와 넉백을 줄 수 있습니다. 초반 최전방에 믿을 만한 픽입니다."
+},
+"Flint": {
+"label": "복수의 불길",
+"note": "대상은 2초간 받는 피해 +30%",
+"blurb": "0.5초마다 84% 공격력의 화염방사 지속피해를 입히며, 대상은 2초간 받는 피해가 30% 증가합니다. 방어와 집결 모두에 꾸준히 쓰이는 영웅입니다."
+},
+"Alonso": {
+"label": "함정 그물",
+"note": "1.5초간 적을 속박",
+"blurb": "그물을 던져 280% 광역 피해를 주고 1.5초간 적을 속박합니다. 강력한 제어 덕분에 곰 사냥과 탐사 보스전의 MVP입니다."
+},
+"Mia": {
+"label": "운명의 종말",
+"note": "무작위: 대상 공격력 -20%(2초) 또는 1.5초 기절",
+"blurb": "타로 카드를 던져 378%의 단일 대상 피해를 입히며, 확률적으로 대상의 공격력을 낮추거나 기절시킵니다. 3세대부터 이어지는 최상급 창병 픽입니다."
+},
+"Logan": {
+"label": "파괴의 주먹",
+"note": "대상 공격속도 4초간 -50%",
+"blurb": "땅을 내리쳐 168% 피해를 입히고 대상의 공격속도를 4초간 50% 늦춥니다. 실제로 제어력을 갖춘 진정한 벽입니다."
+},
+"Gregory": {
+"label": "거장의 돌풍",
+"note": "맞은 모든 대상 2초 기절",
+"blurb": "떨어지는 우리를 소환해 224% 광역 피해를 입히고 맞은 모두를 2초간 기절시킵니다. 3세대 탱킹+제어형 리더로 지금도 활용도가 좋습니다."
+},
+"Jessie": {
+"label": "무기고",
+"note": "",
+"blurb": "패시브로 모든 병종의 피해를 25% 증가시킵니다. 곰 사냥에 진지하게 참여하는 사람이라면 반드시 만렙으로 키워야 할 영웅입니다."
+},
+"Patrick": {
+"label": "바비큐 연회",
+"note": "추가로 4초간 공격력 +7%",
+"blurb": "모든 아군 영웅에게 즉시 공격력의 280%만큼 체력을 회복시키고, 약간의 공격력 버프도 줍니다. 성벽/주둔 방어에 최고의 영웅입니다."
+},
+"Bahiti": {
+"label": "육감",
+"note": "",
+"blurb": "패시브로 모든 부대의 받는 피해를 20% 감소시킵니다. 3세대까지 최고/무과금 곰 사냥 조합을 완성해주는 영웅입니다."
+},
+"Jasser": {
+"label": "전술 천재",
+"note": "추가로 도시 연구 속도 +15%",
+"blurb": "전투 중 모든 병종 피해를 25% 증가시키고, 평상시엔 연구 속도를 15% 올려줍니다. 집결에 자주 참여하는 것만으로도 큰 가치를 줍니다."
+},
+"Hector": {
+"label": "소용돌이 칼날",
+"note": "4초간 빙결/기절/제어 면역",
+"blurb": "자신의 공격속도를 120% 올리고 4초간 모든 제어에 면역이 됩니다. 5세대부터 무과금 곰 사냥의 죽지 않는 딜러 축입니다."
+},
+"Renee": {
+"label": "환영 구름",
+"note": "1초간 생존자 혼란 - 주변 아무나 공격",
+"blurb": "화려한 구슬을 터뜨려 140% 광역 피해를 입히고 생존자를 1초간 혼란시킵니다. 6세대 무과금 곰 사냥 조합에 들어갑니다."
+},
+"Wu Ming": {
+"label": "선풍 방벽",
+"note": "시전 중 2초간 무적",
+"blurb": "지팡이를 회전시켜 140% 광역 피해를 입히며, 시전 중 2초간 무적 상태가 됩니다. 탐사/원정에서 강력한 지원형 캐스터입니다."
+},
+"Gordon": {
+"label": "독 주입",
+"note": "창병 부대 피해 증가 - 정확한 수치는 아직 확인되지 않음",
+"blurb": "독 속성 창병으로 창병 부대 피해를 크게 늘려줍니다. 곰 사냥 집결대장으로 강력하지만 무과금으로 얻기 어렵습니다."
+},
+"Bradley": {
+"label": "전체 공격력 증가",
+"note": "",
+"blurb": "집결 전체에 25% 공격력 버프를 주는 전역 버프입니다. 해당 세대에서 반드시 확보해야 할 궁병입니다."
+},
+"Gatot": {
+"label": "요새화 자세",
+"note": "매우 높은 생존력 - 정확한 수치는 아직 확인되지 않음",
+"blurb": "거의 죽지 않습니다. 한번 키워두면 몇 달간 든든하게 활약할 최전방 탱커입니다."
+},
+"Fred": {
+"label": "현대형 창병 키트",
+"note": "정확한 수치는 아직 확인되지 않음",
+"blurb": "오래된 창병 자리를 현대적으로 업그레이드한 영웅으로, 최신 세대에 뒤지지 않는 피해량과 활용도를 갖췄습니다."
+},
+"Magnus": {
+"label": "퍼센트 스케일링 키트",
+"note": "기절+버프+탱크 키트 - 정확한 수치는 아직 확인되지 않음",
+"blurb": "기절, 버프, 탱킹을 모두 갖췄으며 퍼센트 기반 능력이라 여러 세대가 지나도 가치를 유지합니다."
+},
+"Blanchette": {
+"label": "무과금 폭딜 키트",
+"note": "정확한 수치는 아직 확인되지 않음",
+"blurb": "행운의 수레바퀴로 얻을 수 있는 무과금 딜러 강자로, 3세대 이상 경쟁력을 유지합니다."
+},
+"Freya": {
+"label": "스케일링 지원 키트",
+"note": "정확한 수치는 아직 확인되지 않음",
+"blurb": "피해와 지원 양쪽 모두 스케일링이 뛰어납니다. 훌륭하지만 영웅 전당 투자가 필요해 과금 유저에게 더 적합합니다."
+},
+"Eleonora": {
+"label": "반사 방패 키트",
+"note": "정확한 수치는 아직 확인되지 않음",
+"blurb": "피해를 반사하는 방패와 보병 공격 5회마다 발동하는 팀 버프를 갖췄습니다. 13세대가 지나도 충분히 쓸 만합니다."
+},
+"Natalia": {
+"label": "야수 돌진",
+"note": "1초간 기절 - 북극곰에 탑승",
+"blurb": "타고 있는 곰이 땅을 내리쳐 224% 광역 피해를 입히고 1초간 기절시킵니다. 3세대 곰 사냥 조합에서는 실제로 제로니모보다 우수합니다."
+},
+"Philly": {
+"label": "응급 처치",
+"note": "추가로 모든 영웅에게 공격력의 280% 즉시 회복",
+"blurb": "모든 부대의 공격력과 방어력을 올려준 뒤, 아군 영웅 전체를 공격력의 280%만큼 회복시킵니다. 2세대의 지원형 중심 영웅입니다."
+},
+"Reina": {
+"label": "환영 습격",
+"note": "",
+"blurb": "환영을 소환해 후방을 기습, 420%라는 어마어마한 광역 피해를 입힙니다 - 여기서 확인된 창병 중 가장 강력한 폭딜입니다."
+},
+"Gwen": {
+"label": "탄막",
+"note": "대상 공격속도 2초간 -50%",
+"blurb": "후방에 탄막을 퍼부어 252% 광역 피해를 입히고 대상의 공격속도를 50% 늦춥니다. 알론소를 은퇴시키는 상위호환입니다."
+},
+"Wayne": {
+"label": "허리케인 리바운드",
+"note": "",
+"blurb": "부메랑이 일직선 상의 모든 대상을 왕복으로 타격해 140% 광역 피해를 입힙니다. 집결 위젯 없이도 동급 영웅들을 능가합니다."
+},
+"Sonya": {
+"label": "창병 전용 키트",
+"note": "정확한 수치는 아직 확인되지 않음",
+"blurb": "미아의 대체제격 창병으로, 효과가 창병 부대에만 적용되어 창병 위주 조합에서만 적합합니다."
+},
+"Lynn": {
+"label": "시드락의 찬가",
+"note": "모든 디버프 제거, 3~5초간 제어 면역",
+"blurb": "부대의 모든 디버프를 제거하고 몇 초간 제어 면역을 부여하며, 소소한 공격력 버프도 줍니다. 4~6세대 무과금 조합을 지탱해줍니다."
+},
+"Seo-yoon": {
+"label": "동원의 리듬",
+"note": "추가로 병원 치료 속도 +50%",
+"blurb": "북을 울려 모든 부대에 고정 25% 공격력 버프를 주고, 병원 치료 속도를 50% 높여줍니다. 집결 참여용으로 정말 강력한 지원형 영웅입니다."
+},
+"Ling Xue": {
+"label": "완전 통제",
+"note": "",
+"blurb": "전투용 집결 픽이 아닙니다 - '완전 통제' 스킬이 훈련 속도를 20% 올려주는, 곰 사냥보다는 경제형에 가까운 영웅입니다."
+},
+"Norah": {
+"label": "합동 병과",
+"note": "보병과 궁병에만 적용",
+"blurb": "보병과 궁병에 한해 가하는 피해를 늘리고 받는 피해를 15% 줄여줍니다. 이 두 병종 위주 조합이라면 매우 좋습니다."
+},
+"Zinman": {
+"label": "요새의 달인",
+"note": "",
+"blurb": "기본 자원 건설 비용을 15% 줄이고 건물 업그레이드 속도를 15% 높입니다. 전투용이 아닌 순수 경제형 영웅입니다."
+},
+"Lumak Bokan": {
+"label": "전술적 기만",
+"note": "추가로 사냥 행군 속도 +100%",
+"blurb": "적 부대로부터 받는 피해를 20% 줄이고 사냥 행군 속도를 2배로 늘립니다. 곰 사냥용 폭딜러가 아닌 방어/탐사 전문 영웅입니다."
+},
+"Ahmose": {
+"label": "크투가의 가호",
+"note": "발동 중 2초간 무적+제어면역 - 방어형 희생 스킬",
+"blurb": "2초간 무적의 방패를 세우지만, 그동안 주변 아군 부대의 피해량이 50% 줄어듭니다. 특수한 상황에서 쓰는 방어용 영웅입니다."
+},
+"Cloris": {
+"label": "최상위 포식자",
+"note": "",
+"blurb": "전용 고기 채집가 - 고기 채집 속도를 25%, 사냥 오두막 생산량을 25% 올려줍니다."
+},
+"Eugene": {
+"label": "숲의 계승자",
+"note": "",
+"blurb": "전용 목재 채집가 - 목재 채집 속도를 25%, 제재소 생산량을 25% 올려줍니다."
+},
+"Charlie": {
+"label": "석탄 채굴꾼",
+"note": "",
+"blurb": "전용 석탄 채집가 - 석탄 채집 속도를 25%, 석탄 광산 생산량을 25% 올려줍니다."
+},
+"Smith": {
+"label": "정련된 철",
+"note": "",
+"blurb": "전용 철 채집가 - 철 채집 속도를 25%, 철광산 생산량을 25% 올려줍니다."
+},
+"Gina": {
+"label": "인내력 훈련",
+"note": "",
+"blurb": "탐사 행동의 활력 소모를 20% 줄여줍니다. 전투용이 아닌 편의성 위주의 경제형 영웅입니다."
+}
+}
+};
+
+PhxI18N.init(DICT, function(){
+  buildChips();
+  renderTeams();
+  render();
+});
 </script>
 </body>
 </html>
