@@ -302,7 +302,7 @@ async function saveCustomMessage(eventKey, text){
 async function saveOccurrence(compositeKey, isoValue){
   if(!isLeader){ toast(T('leadersOnly')); return; }
   var parts=compositeKey.split('|');
-  var eventKey=parts[0], legion=parts[1]||null;
+  var eventKey=parts[0], legion=parts[1]||'';
   if(!isoValue){ return; }
   await sb.from('event_occurrences').upsert({
     state_id:STATE, event_key:eventKey, legion:legion, occurs_at:isoValue, updated_at:new Date().toISOString()
@@ -316,7 +316,7 @@ async function saveSvsSavingDays(val){
   var occ=occByKey['svs|'];
   var iso=occ?occ.occurs_at:new Date().toISOString();
   await sb.from('event_occurrences').upsert({
-    state_id:STATE, event_key:'svs', legion:null, occurs_at:iso, saving_days:parseInt(val,10)||PhxAlerts.DEFAULT_SVS_SAVING_DAYS, updated_at:new Date().toISOString()
+    state_id:STATE, event_key:'svs', legion:'', occurs_at:iso, saving_days:parseInt(val,10)||PhxAlerts.DEFAULT_SVS_SAVING_DAYS, updated_at:new Date().toISOString()
   },{onConflict:'state_id,event_key,legion'});
   toast(T('saved'));
 }
@@ -386,29 +386,27 @@ async function renderDiscordBox(){
   if(!isLeader || previewMode || (!myAllianceId && !isAdmin)){ box.style.display='none'; return; }
   box.style.display='block';
 
-  var allianceSelectorHtml='';
+  var allianceTag='';
   if(isAdmin){
-    if(!selectedAllianceId && stateAlliances.length) selectedAllianceId=stateAlliances[0].id;
-    allianceSelectorHtml='<select id="discordAllianceSelect" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:8px 9px;border-radius:8px;font-size:.8rem;font-family:inherit;margin-bottom:8px;">'+
-      stateAlliances.map(function(a){return '<option value="'+a.id+'"'+(a.id===selectedAllianceId?' selected':'')+'>['+a.tag+'] '+(a.name||'')+'</option>';}).join('')+
-      '</select>';
+    var pxr=stateAlliances.find(function(a){return (a.tag||'').toUpperCase()==='PXR';});
+    var picked=pxr||stateAlliances[0];
+    selectedAllianceId=picked?picked.id:null;
+    allianceTag=picked?picked.tag:'';
   }else{
     selectedAllianceId=myAllianceId;
+    allianceTag=myAllianceTag;
   }
 
   var current=await loadDiscordWebhook(selectedAllianceId);
-  var tagLabel=isAdmin?'':(' — ['+(myAllianceTag||'')+']');
+  var tagLabel=allianceTag?(' — ['+allianceTag+']'):'';
   box.innerHTML=
     '<div class="evCard">'+
       '<div class="evHead"><div class="evIcon">💬</div><div class="evName">'+T('discordTitle')+tagLabel+'</div></div>'+
-      allianceSelectorHtml+
       '<p style="font-size:.76rem;color:var(--text-dim);margin:8px 0;">'+T('discordHelp')+'</p>'+
       '<input type="url" id="discordUrlInput" placeholder="https://discord.com/api/webhooks/…" value="'+(current||'').replace(/"/g,'&quot;')+'" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;font-size:.8rem;font-family:inherit;margin-bottom:8px;">'+
       '<button class="btn fire" id="saveDiscordBtn" style="width:100%;">'+T('discordSave')+'</button>'+
     '</div>';
   document.getElementById('saveDiscordBtn').addEventListener('click',saveDiscordWebhook);
-  var sel=document.getElementById('discordAllianceSelect');
-  if(sel) sel.addEventListener('change',function(){ selectedAllianceId=sel.value; renderDiscordBox(); });
 }
 
 async function saveDiscordWebhook(){
