@@ -8,18 +8,21 @@
 // Each event: cadenceDays (null = irregular, leader must update manually every time),
 // instances (array of sub-schedules with their own date+time, e.g. two Bear Traps or
 // two Legions — null/undefined = a single shared date+time for the whole event),
-// stages: offsetDays relative to the main occurs_at (negative = before, 0 = the day itself).
+// stages: offset in DAYS relative to occurs_at (negative = before, 0 = the day itself),
+// or offsetMin in MINUTES for short-notice pings (e.g. -15 = 15 minutes before).
 var EVENTS = [
   {key:'bear',        name:'Bear Hunt',              icon:'🐻', cadenceDays:2,  instances:['Bear Trap 1','Bear Trap 2'],
-    stages:[{offset:0, label:'Trap window'}]},
+    stages:[{offsetMin:-15,label:'Starting in 15 min'},{offset:0, label:'Trap window'}]},
   {key:'foundry',      name:'Foundry Battle',         icon:'🏭', cadenceDays:14, instances:['Legion 1','Legion 2'],
-    stages:[{offset:-6,label:'Voting opens'},{offset:-4,label:'Registration opens'},{offset:-2,label:'Matchmaking'},{offset:0,label:'Battle'}]},
+    stages:[{offset:-6,label:'Voting opens'},{offset:-4,label:'Registration opens'},{offset:-2,label:'Matchmaking'},{offsetMin:-15,label:'Battle starting in 15 min'},{offset:0,label:'Battle'}]},
   {key:'canyon',       name:'Canyon Clash',           icon:'🏞️', cadenceDays:28, instances:['Legion 1','Legion 2'],
-    stages:[{offset:-5,label:'Voting (Mon–Tue)'},{offset:-3,label:'Registration (Wed–Thu)'},{offset:-1,label:'Matchmaking (Fri)'},{offset:0,label:'Battle (Sat)'}]},
+    stages:[{offset:-5,label:'Voting (Mon–Tue)'},{offset:-3,label:'Registration (Wed–Thu)'},{offset:-1,label:'Matchmaking (Fri)'},{offsetMin:-15,label:'Battle starting in 15 min'},{offset:0,label:'Battle (Sat)'}]},
   {key:'svs',          name:'SvS – State of Power',   icon:'⚔️', cadenceDays:28, instances:null,
     stages:[{offset:'saving',label:'Start saving!'},{offset:-8,label:'Matchmaking begins'},{offset:-6,label:'Prep phase begins'},{offset:0,label:'Battle day'}]},
   {key:'sunfirecastle',name:'Sunfire Castle',         icon:'🏰', cadenceDays:28, instances:null,
-    stages:[{offset:-2,label:'Heads up — coming soon'},{offset:0,label:'Battle day'}]},
+    stages:[{offset:-2,label:'Heads up — coming soon'},{offsetMin:-60,label:'Battle starting in 1 hour'},{offset:0,label:'Battle day'}]},
+  {key:'biabrothers',  name:'Brothers in Arms',       icon:'🗡️', cadenceDays:28, instances:null,
+    stages:[{offset:0,label:'BIA starts (Fri 00:00 UTC)'},{offset:2,label:'BIA ends (Sun 00:00 UTC)'}]},
   {key:'koi',          name:'King of Icefield',       icon:'🧊', cadenceDays:28, instances:null,
     stages:[{offset:0,label:'Event starts'}]},
   {key:'championship', name:'Alliance Championship',  icon:'🏆', cadenceDays:7,  instances:null,
@@ -37,7 +40,7 @@ var EVENTS = [
   {key:'tundraarms',   name:'Tundra Arms League',     icon:'🗡️', cadenceDays:null, instances:null,
     stages:[{offset:0,label:'Replaces Foundry this season'}]},
   {key:'crazyjoe',     name:'Crazy Joe',              icon:'🏹', cadenceDays:14, instances:null,
-    stages:[{offset:0,label:'R4/R5-scheduled window'}]},
+    stages:[{offsetMin:-15,label:'Starting in 15 min'},{offset:0,label:'R4/R5-scheduled window'}]},
   {key:'frostfire',    name:'Frostfire Mine',         icon:'⛏️', cadenceDays:14, instances:null,
     stages:[{offset:0,label:'Event window (30 min)'}]},
   {key:'hallofchiefs', name:'Hall of Chiefs',         icon:'👑', cadenceDays:null, instances:null,
@@ -51,12 +54,12 @@ var EVENTS = [
 // source was found, so the English name is used as a safe fallback rather than guessing —
 // have someone confirm in-client before treating those as exact.
 var EVENT_NAMES={
-en:{bear:'Bear Hunt',foundry:'Foundry Battle',canyon:'Canyon Clash',svs:'SvS – State of Power',sunfirecastle:'Sunfire Castle',koi:'King of Icefield',championship:'Alliance Championship',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Tundra Trade Route',tundratrading:'Tundra Trading Station',tundraarms:'Tundra Arms League',crazyjoe:'Crazy Joe',frostfire:'Frostfire Mine',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
-es:{bear:'Cacería del Oso',foundry:'Batalla de la Fundición',canyon:'Choque en el Cañón',svs:'Estado de Poder (SvS)',sunfirecastle:'Castillo del Fuego Solar',koi:'Rey del Campo de Hielo',championship:'Enfrentamiento de Alianzas',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Ruta Comercial de la Tundra',tundratrading:'Tundra Trading Station',tundraarms:'Liga de Armas de la Tundra',crazyjoe:'Loco Pepe',frostfire:'Frostfire Mine',hallofchiefs:'Salón de los Gobernadores',arena:'Arena'},
-fr:{bear:'La Chasse à l\'ours',foundry:'Bataille de la Fonderie',canyon:'Conflit du Canyon',svs:'SvS – Région aux Pouvoirs',sunfirecastle:'Chateau du Feu Solaire',koi:'Roi de la Banquise',championship:'Championnat d\'Alliance',mercenary:'Prestige du Mercenaire',flameandfang:'Flamme et Crocs',snowbusters:'SOS Chasse-Neige',tundratrade:'Axe Marchand Polaire',tundratrading:'Station d\'Échange de la Toundra',tundraarms:'Ligue Armée de la Toundra',crazyjoe:'Joe le Fou',frostfire:'Mine Givrefeu',hallofchiefs:'Panthéon des Chefs',arena:'Arena'},
-de:{bear:'Bärenjagd',foundry:'Schlacht in der Gießerei',canyon:'Canyon-Wettkampf',svs:'SVS – Region der Macht',sunfirecastle:'Sonnenfeuer-Schloss',koi:'König des Eisfelds',championship:'Allianzmeisterschaft',mercenary:'Söldner-Prestige',flameandfang:'Flamme und Reißzähne',snowbusters:'Schneeräumer',tundratrade:'Tundra Handelsroute',tundratrading:'Tundra-Handelsstation',tundraarms:'Tundra Waffen Liga',crazyjoe:'Crazy Joe',frostfire:'Frostfeuer Bergwerk',hallofchiefs:'Halle der Gouverneure',arena:'Arena'},
-pt:{bear:'Caça ao Urso',foundry:'Batalha da Forja',canyon:'Duelo no Desfiladeiro',svs:'SVS – Estado de Poder',sunfirecastle:'Castelo do Fogo Solar',koi:'Rei do Campo de Gelo',championship:'Campeonato da Aliança',mercenary:'Prestígio Mercenário',flameandfang:'Chamas e Presas',snowbusters:'Destruidora de Neve',tundratrade:'Rota Comercial da Tundra',tundratrading:'Posto de Troca da Tundra',tundraarms:'Liga dos Braços da Tundra',crazyjoe:'Joe Louco',frostfire:'Mina Fogo Frio',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
-ko:{bear:'곰 사냥 작전',foundry:'무기공장 쟁탈전',canyon:'협곡 전투',svs:'서버전 – 최강 왕국',sunfirecastle:'태양불의 성',koi:'빙원의 왕',championship:'연맹 챔피언십',mercenary:'용병 명예',flameandfang:'불꽃과 송곳니',snowbusters:'제설 특공대',tundratrade:'설원 장삿길',tundratrading:'설원 거래소',tundraarms:'서리 영역 병기 리그',crazyjoe:'미치광이 조이',frostfire:'프로스트 파이어 광산',hallofchiefs:'최강 영주',arena:'Arena'}
+en:{bear:'Bear Hunt',foundry:'Foundry Battle',canyon:'Canyon Clash',svs:'SvS – State of Power',sunfirecastle:'Sunfire Castle',biabrothers:'Brothers in Arms',koi:'King of Icefield',championship:'Alliance Championship',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Tundra Trade Route',tundratrading:'Tundra Trading Station',tundraarms:'Tundra Arms League',crazyjoe:'Crazy Joe',frostfire:'Frostfire Mine',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
+es:{bear:'Cacería del Oso',foundry:'Batalla de la Fundición',canyon:'Choque en el Cañón',svs:'Estado de Poder (SvS)',sunfirecastle:'Castillo del Fuego Solar',biabrothers:'Hermanos de Armas',koi:'Rey del Campo de Hielo',championship:'Enfrentamiento de Alianzas',mercenary:'Mercenary Prestige',flameandfang:'Flame and Fang',snowbusters:'Snowbusters',tundratrade:'Ruta Comercial de la Tundra',tundratrading:'Tundra Trading Station',tundraarms:'Liga de Armas de la Tundra',crazyjoe:'Loco Pepe',frostfire:'Frostfire Mine',hallofchiefs:'Salón de los Gobernadores',arena:'Arena'},
+fr:{bear:'La Chasse à l\'ours',foundry:'Bataille de la Fonderie',canyon:'Conflit du Canyon',svs:'SvS – Région aux Pouvoirs',sunfirecastle:'Chateau du Feu Solaire',biabrothers:'Frères d\'Armes',koi:'Roi de la Banquise',championship:'Championnat d\'Alliance',mercenary:'Prestige du Mercenaire',flameandfang:'Flamme et Crocs',snowbusters:'SOS Chasse-Neige',tundratrade:'Axe Marchand Polaire',tundratrading:'Station d\'Échange de la Toundra',tundraarms:'Ligue Armée de la Toundra',crazyjoe:'Joe le Fou',frostfire:'Mine Givrefeu',hallofchiefs:'Panthéon des Chefs',arena:'Arena'},
+de:{bear:'Bärenjagd',foundry:'Schlacht in der Gießerei',canyon:'Canyon-Wettkampf',svs:'SVS – Region der Macht',sunfirecastle:'Sonnenfeuer-Schloss',biabrothers:'Waffenbrüder',koi:'König des Eisfelds',championship:'Allianzmeisterschaft',mercenary:'Söldner-Prestige',flameandfang:'Flamme und Reißzähne',snowbusters:'Schneeräumer',tundratrade:'Tundra Handelsroute',tundratrading:'Tundra-Handelsstation',tundraarms:'Tundra Waffen Liga',crazyjoe:'Crazy Joe',frostfire:'Frostfeuer Bergwerk',hallofchiefs:'Halle der Gouverneure',arena:'Arena'},
+pt:{bear:'Caça ao Urso',foundry:'Batalha da Forja',canyon:'Duelo no Desfiladeiro',svs:'SVS – Estado de Poder',sunfirecastle:'Castelo do Fogo Solar',biabrothers:'Irmãos de Armas',koi:'Rei do Campo de Gelo',championship:'Campeonato da Aliança',mercenary:'Prestígio Mercenário',flameandfang:'Chamas e Presas',snowbusters:'Destruidora de Neve',tundratrade:'Rota Comercial da Tundra',tundratrading:'Posto de Troca da Tundra',tundraarms:'Liga dos Braços da Tundra',crazyjoe:'Joe Louco',frostfire:'Mina Fogo Frio',hallofchiefs:'Hall of Chiefs',arena:'Arena'},
+ko:{bear:'곰 사냥 작전',foundry:'무기공장 쟁탈전',canyon:'협곡 전투',svs:'서버전 – 최강 왕국',sunfirecastle:'태양불의 성',biabrothers:'전우들',koi:'빙원의 왕',championship:'연맹 챔피언십',mercenary:'용병 명예',flameandfang:'불꽃과 송곳니',snowbusters:'제설 특공대',tundratrade:'설원 장삿길',tundratrading:'설원 거래소',tundraarms:'서리 영역 병기 리그',crazyjoe:'미치광이 조이',frostfire:'프로스트 파이어 광산',hallofchiefs:'최강 영주',arena:'Arena'}
 };
 function eventName(key, lang){
   var pack = EVENT_NAMES[lang] || EVENT_NAMES.en;
@@ -66,6 +69,7 @@ function eventName(key, lang){
 var DEFAULT_SVS_SAVING_DAYS=18; // "2-3 weeks before" -> default mid-point, editable
 
 function addDays(dt,d){ return new Date(dt.getTime()+d*86400000); }
+function addMinutes(dt,m){ return new Date(dt.getTime()+m*60000); }
 
 // The leader enters a date ONCE (the "anchor"). From then on, for events with a known
 // cadence, this rolls that anchor forward automatically — no need to re-enter it every cycle.
@@ -85,6 +89,7 @@ function nextOccurrence(anchorIso, cadenceDays){
 function stageDate(occursAt, stage, savingDays){
   var d=new Date(occursAt);
   if(stage.offset==='saving') return addDays(d, -(savingDays||DEFAULT_SVS_SAVING_DAYS));
+  if(stage.offsetMin!=null) return addMinutes(d, stage.offsetMin);
   return addDays(d, stage.offset);
 }
 

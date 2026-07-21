@@ -72,12 +72,12 @@
       <div class="lang-menu" id="langMenu"></div>
     </div>
   </div>
-  <div id="bannerBox"></div>
   <header>
     <div class="eyebrow">Phoenix</div>
     <h1 data-i18n="title">📅 Event Calendar</h1>
     <p class="sub" data-i18n="sub">Toggle which recurring events remind you — leaders set the real dates below.</p>
   </header>
+  <div id="shieldBox" style="display:none;"></div>
   <div id="app"></div>
   <div id="discordBox" class="leaderOnly" data-leader="1" style="display:none;"></div>
 </div>
@@ -91,8 +91,8 @@ var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 var DICT={
-en:{back:"◂ Tools",title:"📅 Event Calendar",sub:"Toggle which recurring events remind you — leaders set the real dates below.",auto:"auto",discordTitle:"Discord alerts",discordHelp:"Paste your alliance's Discord webhook URL. In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL. Alerts post to that channel automatically as they come due.",discordSave:"💾 Save webhook",cadenceIrregular:"irregular — update manually",cadenceDaily:"daily",cadence2d:"every ~2 days",cadenceWeekly:"weekly",cadence2w:"every 2 weeks",cadence4w:"every 4 weeks",cadenceMonthly:"monthly",legion1:"Legion 1",legion2:"Legion 2",next:"Next",startSaving:"Start saving",daysBeforeWord:"days before",signInFirst:"Sign in first",leadersOnly:"Leaders only",alertsOn:"Alerts on ✓",alertsOff:"Alerts off",saved:"Saved ✓",dayOf:"(day of)",daysBeforeTag:"({n}d before)"},
-es:{back:"◂ Herramientas",title:"📅 Calendario de eventos",sub:"Activa o desactiva qué eventos recurrentes te avisan — los líderes ponen las fechas reales abajo.",auto:"auto",discordTitle:"Alertas en Discord",discordHelp:"Pega la URL del webhook de Discord de tu alianza. En Discord: Ajustes del servidor → Integraciones → Webhooks → Nuevo Webhook → Copiar URL. Los avisos se publicarán solos en ese canal cuando toque.",discordSave:"💾 Guardar webhook",cadenceIrregular:"irregular — actualizar a mano",cadenceDaily:"diario",cadence2d:"cada ~2 días",cadenceWeekly:"semanal",cadence2w:"cada 2 semanas",cadence4w:"cada 4 semanas",cadenceMonthly:"mensual",legion1:"Legión 1",legion2:"Legión 2",next:"Próximo",startSaving:"Empezar a ahorrar",daysBeforeWord:"días antes",signInFirst:"Inicia sesión primero",leadersOnly:"Solo líderes",alertsOn:"Alertas activadas ✓",alertsOff:"Alertas desactivadas",saved:"Guardado ✓",dayOf:"(el mismo día)",daysBeforeTag:"({n}d antes)"},
+en:{customMsgPh:"Optional note added to the Discord alert (e.g. which hero to use)…",shieldTitle:"🛡️ Shield reminder",shieldHelp:"When you raise your shield, turn this on — a reminder posts to your alliance's Discord every hour until you turn it off.",shieldOn:"Shield reminder ON",shieldOff:"Shield reminder OFF",shieldActivate:"🛡️ Turn on shield reminder",shieldDeactivate:"Turn off",shieldSince:"Active since",back:"◂ Tools",title:"📅 Event Calendar",sub:"Toggle which recurring events remind you — leaders set the real dates below.",auto:"auto",discordTitle:"Discord alerts",discordHelp:"Paste your alliance's Discord webhook URL. In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL. Alerts post to that channel automatically as they come due.",discordSave:"💾 Save webhook",cadenceIrregular:"irregular — update manually",cadenceDaily:"daily",cadence2d:"every ~2 days",cadenceWeekly:"weekly",cadence2w:"every 2 weeks",cadence4w:"every 4 weeks",cadenceMonthly:"monthly",legion1:"Legion 1",legion2:"Legion 2",next:"Next",startSaving:"Start saving",daysBeforeWord:"days before",signInFirst:"Sign in first",leadersOnly:"Leaders only",alertsOn:"Alerts on ✓",alertsOff:"Alerts off",saved:"Saved ✓",dayOf:"(day of)",daysBeforeTag:"({n}d before)"},
+es:{customMsgPh:"Nota opcional que se añade al aviso de Discord (ej. qué héroe usar)…",shieldTitle:"🛡️ Recordatorio de escudo",shieldHelp:"Cuando actives tu escudo, enciende esto — se publicará un aviso en el Discord de tu alianza cada hora hasta que lo apagues.",shieldOn:"Recordatorio de escudo ACTIVADO",shieldOff:"Recordatorio de escudo APAGADO",shieldActivate:"🛡️ Activar recordatorio de escudo",shieldDeactivate:"Apagar",shieldSince:"Activo desde",back:"◂ Herramientas",title:"📅 Calendario de eventos",sub:"Activa o desactiva qué eventos recurrentes te avisan — los líderes ponen las fechas reales abajo.",auto:"auto",discordTitle:"Alertas en Discord",discordHelp:"Pega la URL del webhook de Discord de tu alianza. En Discord: Ajustes del servidor → Integraciones → Webhooks → Nuevo Webhook → Copiar URL. Los avisos se publicarán solos en ese canal cuando toque.",discordSave:"💾 Guardar webhook",cadenceIrregular:"irregular — actualizar a mano",cadenceDaily:"diario",cadence2d:"cada ~2 días",cadenceWeekly:"semanal",cadence2w:"cada 2 semanas",cadence4w:"cada 4 semanas",cadenceMonthly:"mensual",legion1:"Legión 1",legion2:"Legión 2",next:"Próximo",startSaving:"Empezar a ahorrar",daysBeforeWord:"días antes",signInFirst:"Inicia sesión primero",leadersOnly:"Solo líderes",alertsOn:"Alertas activadas ✓",alertsOff:"Alertas desactivadas",saved:"Guardado ✓",dayOf:"(el mismo día)",daysBeforeTag:"({n}d antes)"},
 ko:{back:"◂ 도구",title:"📅 이벤트 캘린더",sub:"어떤 반복 이벤트가 알림을 보낼지 선택하세요 — 실제 날짜는 리더가 아래에 입력합니다.",auto:"자동",discordTitle:"디스코드 알림",discordHelp:"동맹의 디스코드 웹훅 URL을 붙여넣으세요. 디스코드에서: 서버 설정 → 연동 → 웹후크 → 새 웹후크 → URL 복사. 알림이 때가 되면 자동으로 해당 채널에 게시됩니다.",discordSave:"💾 웹훅 저장",cadenceIrregular:"불규칙 — 직접 업데이트",cadenceDaily:"매일",cadence2d:"약 2일마다",cadenceWeekly:"매주",cadence2w:"2주마다",cadence4w:"4주마다",cadenceMonthly:"매월",legion1:"군단 1",legion2:"군단 2",next:"다음",startSaving:"저축 시작",daysBeforeWord:"일 전",signInFirst:"먼저 로그인하세요",leadersOnly:"리더 전용",alertsOn:"알림 켜짐 ✓",alertsOff:"알림 꺼짐",saved:"저장됨 ✓",dayOf:"(당일)",daysBeforeTag:"({n}일 전)"},
 ja:{back:"◂ ツール",title:"📅 イベントカレンダー",sub:"どの定期イベントで通知するか切り替えます — 実際の日付はリーダーが下で設定します。",auto:"自動",discordTitle:"Discord通知",discordHelp:"同盟のDiscord Webhook URLを貼り付けてください。Discordで：サーバー設定 → 連携サービス → ウェブフック → 新しいウェブフック → URLをコピー。時期が来ると自動的にそのチャンネルに投稿されます。",discordSave:"💾 Webhookを保存",cadenceIrregular:"不定期 — 手動で更新",cadenceDaily:"毎日",cadence2d:"約2日ごと",cadenceWeekly:"毎週",cadence2w:"2週間ごと",cadence4w:"4週間ごと",cadenceMonthly:"毎月",legion1:"軍団1",legion2:"軍団2",next:"次回",startSaving:"貯蓄開始",daysBeforeWord:"日前",signInFirst:"先にサインインしてください",leadersOnly:"リーダー限定",alertsOn:"通知オン ✓",alertsOff:"通知オフ",saved:"保存しました ✓",dayOf:"（当日）",daysBeforeTag:"（{n}日前）"},
 de:{back:"◂ Werkzeuge",title:"📅 Event-Kalender",sub:"Wähle, welche wiederkehrenden Events dich erinnern — Anführer setzen unten die echten Termine.",auto:"auto",discordTitle:"Discord-Benachrichtigungen",discordHelp:"Füge die Discord-Webhook-URL deines Bündnisses ein. In Discord: Servereinstellungen → Integrationen → Webhooks → Neuer Webhook → URL kopieren. Benachrichtigungen werden automatisch in diesen Kanal gepostet, sobald sie fällig sind.",discordSave:"💾 Webhook speichern",cadenceIrregular:"unregelmäßig — manuell aktualisieren",cadenceDaily:"täglich",cadence2d:"alle ~2 Tage",cadenceWeekly:"wöchentlich",cadence2w:"alle 2 Wochen",cadence4w:"alle 4 Wochen",cadenceMonthly:"monatlich",legion1:"Legion 1",legion2:"Legion 2",next:"Nächster",startSaving:"Sparen beginnen",daysBeforeWord:"Tage vorher",signInFirst:"Zuerst anmelden",leadersOnly:"Nur Anführer",alertsOn:"Benachrichtigung an ✓",alertsOff:"Benachrichtigung aus",saved:"Gespeichert ✓",dayOf:"(am selben Tag)",daysBeforeTag:"({n}T vorher)"},
@@ -113,7 +113,7 @@ var STATE=getState();
 (function(){var bl=document.getElementById('backLink');if(bl&&STATE&&STATE!=='3139')bl.href='phoenix-tools.html?s='+STATE;})();
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800);}
 
-var session=null, isLeader=false, occByKey={}, prefsByKey={};
+var session=null, isLeader=false, occByKey={}, customMsgByKey={};
 
 function toLocalInputValue(iso){
   if(!iso) return '';
@@ -126,11 +126,9 @@ async function loadData(){
   var occRes=await sb.from('event_occurrences').select('*').eq('state_id',STATE);
   occByKey={};
   (occRes.data||[]).forEach(function(o){ occByKey[o.event_key+'|'+(o.legion||'')]=o; });
-  if(session){
-    var prefRes=await sb.from('event_alert_prefs').select('*').eq('owner',session.user.id).eq('state_id',STATE);
-    prefsByKey={};
-    (prefRes.data||[]).forEach(function(p){ prefsByKey[p.event_key]=p.enabled; });
-  }
+  var msgRes=await sb.from('event_custom_messages').select('*').eq('state_id',STATE);
+  customMsgByKey={};
+  (msgRes.data||[]).forEach(function(m){ customMsgByKey[m.event_key]=m.message; });
 }
 
 function cadenceLabel(days){
@@ -151,10 +149,8 @@ function render(){
   PhxAlerts.EVENTS.forEach(function(def){
     var card=document.createElement('div');
     card.className='evCard';
-    var enabled = prefsByKey[def.key]!==false; // default true
     var displayName = PhxAlerts.eventName(def.key, lang);
-    var html='<div class="evHead"><div class="evIcon">'+def.icon+'</div><div><div class="evName">'+displayName+'</div><div class="evCadence">'+cadenceLabel(def.cadenceDays)+'</div></div>';
-    html+='<label class="toggle"><input type="checkbox" data-toggle="'+def.key+'" '+(enabled?'checked':'')+'><span class="toggleSlider"></span></label></div>';
+    var html='<div class="evHead"><div class="evIcon">'+def.icon+'</div><div><div class="evName">'+displayName+'</div><div class="evCadence">'+cadenceLabel(def.cadenceDays)+'</div></div></div>';
 
     html+='<div class="leaderOnly" data-leader="1">';
     if(def.instances){
@@ -175,17 +171,25 @@ function render(){
         html+='<div class="savingField">'+T('startSaving')+' <input type="number" min="7" max="28" id="svsSavingDays" value="'+savingDays+'"> '+T('daysBeforeWord')+'</div>';
       }
     }
+    var noteVal=(customMsgByKey[def.key]||'').replace(/</g,'&lt;');
+    html+='<textarea class="noteInput" data-note="'+def.key+'" placeholder="'+T('customMsgPh')+'" rows="2" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:8px 9px;border-radius:8px;font-size:.78rem;font-family:inherit;margin-top:6px;resize:vertical;">'+noteVal+'</textarea>';
     html+='</div>';
 
     html+='<div class="stageList">'+def.stages.map(function(s){
-      return '<div>• '+s.label+(s.offset==='saving'?'':(s.offset===0?' '+T('dayOf'):(' '+T('daysBeforeTag').replace('{n}',Math.abs(s.offset)))))+'</div>';
+      var tag;
+      if(s.offset==='saving') tag='';
+      else if(s.offsetMin!=null) tag=' ('+Math.abs(s.offsetMin)+' min '+(s.offsetMin<0?T('daysBeforeWord').split(' ')[0]||'before':'')+')';
+      else if(s.offset===0) tag=' '+T('dayOf');
+      else tag=' '+T('daysBeforeTag').replace('{n}',Math.abs(s.offset));
+      return '<div>• '+s.label+tag+'</div>';
     }).join('')+'</div>';
 
     card.innerHTML=html;
-    card.querySelector('[data-toggle]').addEventListener('change',function(e){ saveToggle(def.key, e.target.checked); });
     card.querySelectorAll('[data-occ]').forEach(function(inp){
       inp.addEventListener('change',function(){ saveOccurrence(inp.dataset.occ, inp.value); });
     });
+    var noteEl=card.querySelector('[data-note]');
+    if(noteEl) noteEl.addEventListener('change',function(){ saveCustomMessage(def.key, noteEl.value); });
     if(def.key==='svs'){
       var sdInp=card.querySelector('#svsSavingDays');
       if(sdInp) sdInp.addEventListener('change',function(){ saveSvsSavingDays(sdInp.value); });
@@ -195,15 +199,13 @@ function render(){
   document.querySelectorAll('[data-leader]').forEach(function(el){ el.style.display=isLeader?'block':'none'; });
 }
 
-async function saveToggle(eventKey, checked){
-  if(!session){ toast(T('signInFirst')); return; }
-  prefsByKey[eventKey]=checked;
-  if(checked){
-    await sb.from('event_alert_prefs').delete().eq('owner',session.user.id).eq('state_id',STATE).eq('event_key',eventKey);
-  }else{
-    await sb.from('event_alert_prefs').upsert({owner:session.user.id, state_id:STATE, event_key:eventKey, enabled:false, updated_at:new Date().toISOString()},{onConflict:'owner,state_id,event_key'});
-  }
-  toast(checked?T('alertsOn'):T('alertsOff'));
+async function saveCustomMessage(eventKey, text){
+  if(!isLeader){ toast(T('leadersOnly')); return; }
+  customMsgByKey[eventKey]=text;
+  await sb.from('event_custom_messages').upsert({
+    state_id:STATE, event_key:eventKey, message:text||null, updated_by:session?session.user.id:null, updated_at:new Date().toISOString()
+  },{onConflict:'state_id,event_key'});
+  toast(T('saved'));
 }
 
 async function saveOccurrence(compositeKey, localValue){
@@ -230,11 +232,54 @@ async function saveSvsSavingDays(val){
 }
 
 var myAllianceId=null, myAllianceTag=null, isAdmin=false, stateAlliances=[], selectedAllianceId=null;
+var myPlayerAllianceId=null, myPlayerName='', shieldActive=false, shieldActivatedAt=null;
 
 async function loadDiscordWebhook(allianceId){
   if(!allianceId) return '';
   var{data}=await sb.from('alliance_discord_webhooks').select('webhook_url').eq('alliance_id',allianceId).maybeSingle();
   return data?data.webhook_url:'';
+}
+
+// ── Shield reminder: personal, any player, posts to their alliance's Discord hourly ──
+async function loadShieldState(){
+  if(!session)return;
+  var{data}=await sb.from('shield_reminders').select('*').eq('owner',session.user.id).maybeSingle();
+  shieldActive=data?data.active:false;
+  shieldActivatedAt=data?data.activated_at:null;
+}
+
+async function renderShieldBox(){
+  var box=document.getElementById('shieldBox');
+  if(!session || !myPlayerAllianceId){ box.style.display='none'; return; }
+  await loadShieldState();
+  box.style.display='block';
+  var sinceTxt=shieldActive&&shieldActivatedAt?(' — '+T('shieldSince')+' '+new Date(shieldActivatedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})):'';
+  box.innerHTML='<div class="evCard">'+
+    '<div class="evHead"><div class="evIcon">🛡️</div><div class="evName">'+T('shieldTitle')+'</div></div>'+
+    '<p style="font-size:.76rem;color:var(--text-dim);margin:8px 0;">'+T('shieldHelp')+'</p>'+
+    '<button class="btn" id="shieldToggleBtn" style="width:100%;'+(shieldActive?'background:linear-gradient(90deg,var(--fire),#ffb938);border:none;color:#08131f;font-weight:800;':'')+'">'+
+      (shieldActive?('✅ '+T('shieldOn')+sinceTxt):T('shieldActivate'))+
+    '</button>'+
+  '</div>';
+  document.getElementById('shieldToggleBtn').addEventListener('click',toggleShield);
+}
+
+async function toggleShield(){
+  if(!session)return;
+  var btn=document.getElementById('shieldToggleBtn');
+  btn.disabled=true;
+  if(shieldActive){
+    await sb.from('shield_reminders').update({active:false}).eq('owner',session.user.id);
+    toast(T('shieldOff'));
+  }else{
+    await sb.from('shield_reminders').upsert({
+      owner:session.user.id, state_id:STATE, alliance_id:myPlayerAllianceId, player_name:myPlayerName,
+      active:true, activated_at:new Date().toISOString(), last_sent_at:new Date().toISOString(), updated_at:new Date().toISOString()
+    },{onConflict:'owner'});
+    toast(T('shieldOn'));
+  }
+  btn.disabled=false;
+  await renderShieldBox();
 }
 
 async function renderDiscordBox(){
@@ -284,12 +329,12 @@ async function saveDiscordWebhook(){
 }
 
 async function init(){
-  PhxI18N.init(DICT, function(){ render(); renderDiscordBox(); });
-  PhxAlerts.mountBanner('bannerBox');
+  PhxI18N.init(DICT, function(){ render(); renderDiscordBox(); renderShieldBox(); });
+  // In-app banner disabled — alerts now go to Discord only.
   var{data:{session:s}}=await sb.auth.getSession();
   session=s;
   if(session){
-    var{data:allRows}=await sb.from('players').select('role,state_id,alliance_id').eq('owner',session.user.id);
+    var{data:allRows}=await sb.from('players').select('role,state_id,alliance_id,name').eq('owner',session.user.id);
     allRows=allRows||[];
     isAdmin=allRows.some(function(p){return p.role==='admin';}); // admin is global, not tied to one state's profile
     var rowsThisState=allRows.filter(function(p){return p.state_id===STATE;});
@@ -300,6 +345,9 @@ async function init(){
       var{data:al}=await sb.from('alliances').select('tag').eq('id',myAllianceId).maybeSingle();
       myAllianceTag=al?al.tag:'';
     }
+    // Any player (not just leaders) needs their own alliance for the shield reminder.
+    var anyRow=rowsThisState.find(function(p){return p.alliance_id;});
+    if(anyRow){ myPlayerAllianceId=anyRow.alliance_id; myPlayerName=anyRow.name||''; }
     if(isAdmin){
       var{data:als}=await sb.from('alliances').select('id,tag,name').eq('state_id',STATE).order('tag');
       stateAlliances=als||[];
@@ -308,6 +356,7 @@ async function init(){
   await loadData();
   render();
   await renderDiscordBox();
+  await renderShieldBox();
 }
 init();
 </script>
