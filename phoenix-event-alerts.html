@@ -91,6 +91,7 @@
   <div id="shieldBox" style="display:none;"></div>
   <div id="app"></div>
   <div id="discordBox" class="leaderOnly" data-leader="1" style="display:none;"></div>
+  <div id="customAlertBox" class="leaderOnly" data-leader="1" style="display:none;"></div>
   <div id="facilityBox" class="leaderOnly" data-leader="1" style="display:none;"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -103,8 +104,8 @@ var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 var DICT={
-en:{yourTime:"your local time:",facilityTitle:"🏰 Facility rally alerts",facilityHelp:"One-off alerts for Fort/Stronghold rallies from the World Map — posts to Discord 5 minutes before.",facilityNone:"No facility alerts scheduled.",facilityNamePh:"Facility name (e.g. Fort 12)",facilityNotePh:"e.g. Join with Jessie as first hero. Reinforce with Patrick.",facilityAdd:"➕ Add alert",facilityNeedBoth:"Name and time are required",facilityDeleteConfirm:"Delete this facility alert?",cpPickerLabel:"📋 Copy-Paste…",previewOn:"Preview as player",previewOff:"Back to editing",customMsgPh:"Optional note added to the Discord alert (e.g. which hero to use)…",shieldTitle:"🛡️ Shield reminder",shieldHelp:"When you raise your shield, turn this on — a reminder posts to your alliance's Discord every hour until you turn it off.",shieldOn:"Shield reminder ON",shieldOff:"Shield reminder OFF",shieldActivate:"🛡️ Turn on shield reminder",shieldDeactivate:"Turn off",shieldSince:"Active since",back:"◂ Tools",title:"📅 Event Calendar",sub:"Toggle which recurring events remind you — leaders set the real dates below.",auto:"auto",discordTitle:"Discord alerts",discordHelp:"Paste your alliance's Discord webhook URL. In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL. Alerts post to that channel automatically as they come due.",discordSave:"💾 Save webhook",cadenceIrregular:"irregular — update manually",cadenceDaily:"daily",cadence2d:"every ~2 days",cadenceWeekly:"weekly",cadence2w:"every 2 weeks",cadence4w:"every 4 weeks",cadenceMonthly:"monthly",legion1:"Legion 1",legion2:"Legion 2",next:"Next",startSaving:"Start saving",daysBeforeWord:"days before",signInFirst:"Sign in first",leadersOnly:"Leaders only",alertsOn:"Alerts on ✓",alertsOff:"Alerts off",saved:"Saved ✓",dayOf:"(day of)",daysBeforeTag:"({n}d before)"},
-es:{yourTime:"tu hora local:",facilityTitle:"🏰 Alertas de instalaciones (rally)",facilityHelp:"Avisos puntuales para rallies de Fort/Stronghold del World Map — se publica en Discord 5 minutos antes.",facilityNone:"No hay alertas de instalaciones programadas.",facilityNamePh:"Nombre de la instalación (ej. Fort 12)",facilityNotePh:"ej. Únete con Jessie como héroe principal. Refuerza con Patrick.",facilityAdd:"➕ Añadir alerta",facilityNeedBoth:"Hacen falta el nombre y la hora",facilityDeleteConfirm:"¿Borrar esta alerta de instalación?",cpPickerLabel:"📋 Copy-Paste…",previewOn:"Vista previa como jugador",previewOff:"Volver a editar",customMsgPh:"Nota opcional que se añade al aviso de Discord (ej. qué héroe usar)…",shieldTitle:"🛡️ Recordatorio de escudo",shieldHelp:"Cuando actives tu escudo, enciende esto — se publicará un aviso en el Discord de tu alianza cada hora hasta que lo apagues.",shieldOn:"Recordatorio de escudo ACTIVADO",shieldOff:"Recordatorio de escudo APAGADO",shieldActivate:"🛡️ Activar recordatorio de escudo",shieldDeactivate:"Apagar",shieldSince:"Activo desde",back:"◂ Herramientas",title:"📅 Calendario de eventos",sub:"Activa o desactiva qué eventos recurrentes te avisan — los líderes ponen las fechas reales abajo.",auto:"auto",discordTitle:"Alertas en Discord",discordHelp:"Pega la URL del webhook de Discord de tu alianza. En Discord: Ajustes del servidor → Integraciones → Webhooks → Nuevo Webhook → Copiar URL. Los avisos se publicarán solos en ese canal cuando toque.",discordSave:"💾 Guardar webhook",cadenceIrregular:"irregular — actualizar a mano",cadenceDaily:"diario",cadence2d:"cada ~2 días",cadenceWeekly:"semanal",cadence2w:"cada 2 semanas",cadence4w:"cada 4 semanas",cadenceMonthly:"mensual",legion1:"Legión 1",legion2:"Legión 2",next:"Próximo",startSaving:"Empezar a ahorrar",daysBeforeWord:"días antes",signInFirst:"Inicia sesión primero",leadersOnly:"Solo líderes",alertsOn:"Alertas activadas ✓",alertsOff:"Alertas desactivadas",saved:"Guardado ✓",dayOf:"(el mismo día)",daysBeforeTag:"({n}d antes)"},
+en:{customTitle:"📣 Custom alerts",customHelp:"Paste any message, pick a time, and it posts to Discord — optionally repeating every X minutes until you delete it.",customNone:"No custom alerts scheduled.",customMsgPh:"Message to post in Discord…",customRepeatPh:"Repeat every (min) — blank = once",customAdd:"➕ Schedule alert",customNeedBoth:"Message and time are required",customDeleteConfirm:"Delete this alert?",customRepeatTag:"repeats every {n} min",yourTime:"your local time:",facilityTitle:"🏰 Facility rally alerts",facilityHelp:"One-off alerts for Fort/Stronghold rallies from the World Map — posts to Discord 5 minutes before.",facilityNone:"No facility alerts scheduled.",facilityNamePh:"Facility name (e.g. Fort 12)",facilityNotePh:"e.g. Join with Jessie as first hero. Reinforce with Patrick.",facilityAdd:"➕ Add alert",facilityNeedBoth:"Name and time are required",facilityDeleteConfirm:"Delete this facility alert?",cpPickerLabel:"📋 Copy-Paste…",previewOn:"Preview as player",previewOff:"Back to editing",customMsgPh:"Optional note added to the Discord alert (e.g. which hero to use)…",shieldTitle:"🛡️ Shield reminder",shieldHelp:"When you raise your shield, turn this on — a reminder posts to your alliance's Discord every hour until you turn it off.",shieldOn:"Shield reminder ON",shieldOff:"Shield reminder OFF",shieldActivate:"🛡️ Turn on shield reminder",shieldDeactivate:"Turn off",shieldSince:"Active since",back:"◂ Tools",title:"📅 Event Calendar",sub:"Toggle which recurring events remind you — leaders set the real dates below.",auto:"auto",discordTitle:"Discord alerts",discordHelp:"Paste your alliance's Discord webhook URL. In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL. Alerts post to that channel automatically as they come due.",discordSave:"💾 Save webhook",cadenceIrregular:"irregular — update manually",cadenceDaily:"daily",cadence2d:"every ~2 days",cadenceWeekly:"weekly",cadence2w:"every 2 weeks",cadence4w:"every 4 weeks",cadenceMonthly:"monthly",legion1:"Legion 1",legion2:"Legion 2",next:"Next",startSaving:"Start saving",daysBeforeWord:"days before",signInFirst:"Sign in first",leadersOnly:"Leaders only",alertsOn:"Alerts on ✓",alertsOff:"Alerts off",saved:"Saved ✓",dayOf:"(day of)",daysBeforeTag:"({n}d before)"},
+es:{customTitle:"📣 Avisos puntuales",customHelp:"Pega cualquier mensaje, elige una hora, y se publica en Discord — puede repetirse cada X minutos hasta que lo borres.",customNone:"No hay avisos puntuales programados.",customMsgPh:"Mensaje para publicar en Discord…",customRepeatPh:"Repetir cada (min) — vacío = una vez",customAdd:"➕ Programar aviso",customNeedBoth:"Hacen falta el mensaje y la hora",customDeleteConfirm:"¿Borrar este aviso?",customRepeatTag:"se repite cada {n} min",yourTime:"tu hora local:",facilityTitle:"🏰 Alertas de instalaciones (rally)",facilityHelp:"Avisos puntuales para rallies de Fort/Stronghold del World Map — se publica en Discord 5 minutos antes.",facilityNone:"No hay alertas de instalaciones programadas.",facilityNamePh:"Nombre de la instalación (ej. Fort 12)",facilityNotePh:"ej. Únete con Jessie como héroe principal. Refuerza con Patrick.",facilityAdd:"➕ Añadir alerta",facilityNeedBoth:"Hacen falta el nombre y la hora",facilityDeleteConfirm:"¿Borrar esta alerta de instalación?",cpPickerLabel:"📋 Copy-Paste…",previewOn:"Vista previa como jugador",previewOff:"Volver a editar",customMsgPh:"Nota opcional que se añade al aviso de Discord (ej. qué héroe usar)…",shieldTitle:"🛡️ Recordatorio de escudo",shieldHelp:"Cuando actives tu escudo, enciende esto — se publicará un aviso en el Discord de tu alianza cada hora hasta que lo apagues.",shieldOn:"Recordatorio de escudo ACTIVADO",shieldOff:"Recordatorio de escudo APAGADO",shieldActivate:"🛡️ Activar recordatorio de escudo",shieldDeactivate:"Apagar",shieldSince:"Activo desde",back:"◂ Herramientas",title:"📅 Calendario de eventos",sub:"Activa o desactiva qué eventos recurrentes te avisan — los líderes ponen las fechas reales abajo.",auto:"auto",discordTitle:"Alertas en Discord",discordHelp:"Pega la URL del webhook de Discord de tu alianza. En Discord: Ajustes del servidor → Integraciones → Webhooks → Nuevo Webhook → Copiar URL. Los avisos se publicarán solos en ese canal cuando toque.",discordSave:"💾 Guardar webhook",cadenceIrregular:"irregular — actualizar a mano",cadenceDaily:"diario",cadence2d:"cada ~2 días",cadenceWeekly:"semanal",cadence2w:"cada 2 semanas",cadence4w:"cada 4 semanas",cadenceMonthly:"mensual",legion1:"Legión 1",legion2:"Legión 2",next:"Próximo",startSaving:"Empezar a ahorrar",daysBeforeWord:"días antes",signInFirst:"Inicia sesión primero",leadersOnly:"Solo líderes",alertsOn:"Alertas activadas ✓",alertsOff:"Alertas desactivadas",saved:"Guardado ✓",dayOf:"(el mismo día)",daysBeforeTag:"({n}d antes)"},
 ko:{back:"◂ 도구",title:"📅 이벤트 캘린더",sub:"어떤 반복 이벤트가 알림을 보낼지 선택하세요 — 실제 날짜는 리더가 아래에 입력합니다.",auto:"자동",discordTitle:"디스코드 알림",discordHelp:"동맹의 디스코드 웹훅 URL을 붙여넣으세요. 디스코드에서: 서버 설정 → 연동 → 웹후크 → 새 웹후크 → URL 복사. 알림이 때가 되면 자동으로 해당 채널에 게시됩니다.",discordSave:"💾 웹훅 저장",cadenceIrregular:"불규칙 — 직접 업데이트",cadenceDaily:"매일",cadence2d:"약 2일마다",cadenceWeekly:"매주",cadence2w:"2주마다",cadence4w:"4주마다",cadenceMonthly:"매월",legion1:"군단 1",legion2:"군단 2",next:"다음",startSaving:"저축 시작",daysBeforeWord:"일 전",signInFirst:"먼저 로그인하세요",leadersOnly:"리더 전용",alertsOn:"알림 켜짐 ✓",alertsOff:"알림 꺼짐",saved:"저장됨 ✓",dayOf:"(당일)",daysBeforeTag:"({n}일 전)"},
 ja:{back:"◂ ツール",title:"📅 イベントカレンダー",sub:"どの定期イベントで通知するか切り替えます — 実際の日付はリーダーが下で設定します。",auto:"自動",discordTitle:"Discord通知",discordHelp:"同盟のDiscord Webhook URLを貼り付けてください。Discordで：サーバー設定 → 連携サービス → ウェブフック → 新しいウェブフック → URLをコピー。時期が来ると自動的にそのチャンネルに投稿されます。",discordSave:"💾 Webhookを保存",cadenceIrregular:"不定期 — 手動で更新",cadenceDaily:"毎日",cadence2d:"約2日ごと",cadenceWeekly:"毎週",cadence2w:"2週間ごと",cadence4w:"4週間ごと",cadenceMonthly:"毎月",legion1:"軍団1",legion2:"軍団2",next:"次回",startSaving:"貯蓄開始",daysBeforeWord:"日前",signInFirst:"先にサインインしてください",leadersOnly:"リーダー限定",alertsOn:"通知オン ✓",alertsOff:"通知オフ",saved:"保存しました ✓",dayOf:"（当日）",daysBeforeTag:"（{n}日前）"},
 de:{back:"◂ Werkzeuge",title:"📅 Event-Kalender",sub:"Wähle, welche wiederkehrenden Events dich erinnern — Anführer setzen unten die echten Termine.",auto:"auto",discordTitle:"Discord-Benachrichtigungen",discordHelp:"Füge die Discord-Webhook-URL deines Bündnisses ein. In Discord: Servereinstellungen → Integrationen → Webhooks → Neuer Webhook → URL kopieren. Benachrichtigungen werden automatisch in diesen Kanal gepostet, sobald sie fällig sind.",discordSave:"💾 Webhook speichern",cadenceIrregular:"unregelmäßig — manuell aktualisieren",cadenceDaily:"täglich",cadence2d:"alle ~2 Tage",cadenceWeekly:"wöchentlich",cadence2w:"alle 2 Wochen",cadence4w:"alle 4 Wochen",cadenceMonthly:"monatlich",legion1:"Legion 1",legion2:"Legion 2",next:"Nächster",startSaving:"Sparen beginnen",daysBeforeWord:"Tage vorher",signInFirst:"Zuerst anmelden",leadersOnly:"Nur Anführer",alertsOn:"Benachrichtigung an ✓",alertsOff:"Benachrichtigung aus",saved:"Gespeichert ✓",dayOf:"(am selben Tag)",daysBeforeTag:"({n}T vorher)"},
@@ -242,14 +243,23 @@ function render(){
     '</div>';
     html+='</div>';
 
-    html+='<div class="stageList">'+def.stages.map(function(s){
+    var savingDaysForDisplay=(typeof occ0!=='undefined'&&occ0)?occ0.saving_days:null;
+    var stageLines=def.stages.map(function(s){
       var tag;
       if(s.offset==='saving') tag='';
       else if(s.offsetMin!=null) tag=' ('+Math.abs(s.offsetMin)+' min '+(s.offsetMin<0?T('daysBeforeWord').split(' ')[0]||'before':'')+')';
       else if(s.offset===0) tag=' '+T('dayOf');
       else tag=' '+T('daysBeforeTag').replace('{n}',Math.abs(s.offset));
       return '<div>• '+s.label+tag+'</div>';
-    }).join('')+'</div>';
+    });
+    (def.dailyReminders||[]).forEach(function(dr){
+      var fromTxt=dr.fromDays==='saving'?T('startSaving'):(Math.abs(dr.fromDays)+'d');
+      stageLines.push('<div>• '+dr.label+' <span style="opacity:.7;">(daily, '+fromTxt+' → '+Math.abs(dr.toDays)+'d)</span></div>');
+    });
+    (def.intervalReminders||[]).forEach(function(ir){
+      stageLines.push('<div>• '+ir.label+' <span style="opacity:.7;">(every '+ir.everyHours+'h during the event)</span></div>');
+    });
+    html+='<div class="stageList">'+stageLines.join('')+'</div>';
 
     card.innerHTML=html;
     (function(){
@@ -325,9 +335,9 @@ var myAllianceId=null, myAllianceTag=null, isAdmin=false, stateAlliances=[], sel
 var myPlayerAllianceId=null, myPlayerName='', shieldActive=false, shieldActivatedAt=null;
 
 async function loadDiscordWebhook(allianceId){
-  if(!allianceId) return '';
-  var{data}=await sb.from('alliance_discord_webhooks').select('webhook_url').eq('alliance_id',allianceId).maybeSingle();
-  return data?data.webhook_url:'';
+  if(!allianceId) return {url:'',enabled:true};
+  var{data}=await sb.from('alliance_discord_webhooks').select('webhook_url,enabled').eq('alliance_id',allianceId).maybeSingle();
+  return data?{url:data.webhook_url,enabled:data.enabled!==false}:{url:'',enabled:true};
 }
 
 // ── Shield reminder: personal, any player, posts to their alliance's Discord hourly ──
@@ -399,14 +409,31 @@ async function renderDiscordBox(){
 
   var current=await loadDiscordWebhook(selectedAllianceId);
   var tagLabel=allianceTag?(' — ['+allianceTag+']'):'';
+  var toggleHtml=current.url?(
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+
+      '<label class="toggle"><input type="checkbox" id="discordEnabledToggle"'+(current.enabled?' checked':'')+'><span class="toggleSlider"></span></label>'+
+      '<span style="font-size:.8rem;font-weight:600;" id="discordEnabledLabel">'+(current.enabled?T('alertsOn'):T('alertsOff'))+'</span>'+
+    '</div>'
+  ):'';
   box.innerHTML=
     '<div class="evCard">'+
       '<div class="evHead"><div class="evIcon">💬</div><div class="evName">'+T('discordTitle')+tagLabel+'</div></div>'+
       '<p style="font-size:.76rem;color:var(--text-dim);margin:8px 0;">'+T('discordHelp')+'</p>'+
-      '<input type="url" id="discordUrlInput" placeholder="https://discord.com/api/webhooks/…" value="'+(current||'').replace(/"/g,'&quot;')+'" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;font-size:.8rem;font-family:inherit;margin-bottom:8px;">'+
+      toggleHtml+
+      '<input type="url" id="discordUrlInput" placeholder="https://discord.com/api/webhooks/…" value="'+(current.url||'').replace(/"/g,'&quot;')+'" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;font-size:.8rem;font-family:inherit;margin-bottom:8px;">'+
       '<button class="btn fire" id="saveDiscordBtn" style="width:100%;">'+T('discordSave')+'</button>'+
     '</div>';
   document.getElementById('saveDiscordBtn').addEventListener('click',saveDiscordWebhook);
+  var toggleEl=document.getElementById('discordEnabledToggle');
+  if(toggleEl) toggleEl.addEventListener('change',function(){ toggleDiscordEnabled(toggleEl.checked); });
+}
+
+async function toggleDiscordEnabled(newVal){
+  var targetAllianceId=isAdmin?selectedAllianceId:myAllianceId;
+  await sb.from('alliance_discord_webhooks').update({enabled:newVal}).eq('alliance_id',targetAllianceId);
+  var lbl=document.getElementById('discordEnabledLabel');
+  if(lbl) lbl.textContent=newVal?T('alertsOn'):T('alertsOff');
+  toast(T('saved'));
 }
 
 async function saveDiscordWebhook(){
@@ -462,16 +489,77 @@ async function init(){
       pvBtn.onclick=function(){
         previewMode=!previewMode;
         pvBtn.textContent=previewMode?('✏️ '+T('previewOff')):('👁️ '+T('previewOn'));
-        render(); renderDiscordBox(); renderFacilityBox();
+        render(); renderDiscordBox(); renderCustomAlertBox(); renderFacilityBox();
       };
     }
   }
   await loadData();
   render();
   await renderDiscordBox();
+  await renderCustomAlertBox();
   await renderFacilityBox();
   await renderShieldBox();
 }
+// ── Custom alerts — free-text message, any time, optional repeat every X min ──
+var customAlerts=[];
+async function loadCustomAlerts(){
+  var{data}=await sb.from('custom_alerts').select('*').eq('state_id',STATE).eq('active',true).order('send_at');
+  customAlerts=data||[];
+}
+async function renderCustomAlertBox(){
+  var box=document.getElementById('customAlertBox');
+  if(!isLeader || previewMode){ box.style.display='none'; return; }
+  box.style.display='block';
+  await loadCustomAlerts();
+  var listHtml=customAlerts.length?customAlerts.map(function(c){
+    var repeatTxt=c.repeat_every_minutes?(' · '+T('customRepeatTag').replace('{n}',c.repeat_every_minutes)):'';
+    return '<div class="legionRow"><div style="flex:1;"><span style="white-space:pre-wrap;">'+(c.message||'').replace(/</g,'&lt;')+'</span><br><span class="utcHint">'+fmtLocal(c.send_at)+' ('+fmtUTC(c.send_at)+')'+repeatTxt+'</span></div><button class="del-btn" data-cadel="'+c.id+'" style="background:none;border:none;color:var(--bad);font-size:.9rem;cursor:pointer;">✕</button></div>';
+  }).join(''):'<p style="font-size:.8rem;color:var(--text-dim);">'+T('customNone')+'</p>';
+  box.innerHTML='<div class="evCard">'+
+    '<div class="evHead"><div class="evIcon">📣</div><div class="evName">'+T('customTitle')+'</div></div>'+
+    '<p style="font-size:.76rem;color:var(--text-dim);margin:8px 0;">'+T('customHelp')+'</p>'+
+    '<div id="customAlertList" style="margin-bottom:10px;">'+listHtml+'</div>'+
+    '<textarea id="customMsgInput" rows="3" placeholder="'+T('customMsgPh')+'" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:8px 9px;border-radius:8px;font-size:.8rem;font-family:inherit;margin-bottom:6px;resize:vertical;"></textarea>'+
+    '<div class="legionRow" style="margin-top:0;">'+utcInputHTML('newcustom','')+'</div>'+
+    '<input type="number" id="customRepeatInput" min="0" placeholder="'+T('customRepeatPh')+'" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);padding:8px 9px;border-radius:8px;font-size:.8rem;font-family:inherit;margin:8px 0;">'+
+    '<button class="btn fire" id="customAddBtn" style="width:100%;">'+T('customAdd')+'</button>'+
+  '</div>';
+  var custHint=box.querySelector('[data-utclive="newcustom"]');
+  var dEl=box.querySelector('[data-occdate="newcustom"]');
+  var hEl=box.querySelector('[data-occhour="newcustom"]');
+  var mEl=box.querySelector('[data-occmin="newcustom"]');
+  [dEl,hEl,mEl].forEach(function(el){ el.addEventListener('change',function(){
+    if(!dEl.value){ custHint.textContent=''; return; }
+    var iso=utcPartsToIso(dEl.value,hEl.value,mEl.value);
+    custHint.textContent='= '+T('yourTime')+' '+fmtLocal(iso);
+  }); });
+  document.getElementById('customAddBtn').addEventListener('click',addCustomAlert);
+  document.querySelectorAll('[data-cadel]').forEach(function(b){
+    b.addEventListener('click',function(){ deleteCustomAlert(b.dataset.cadel); });
+  });
+}
+async function addCustomAlert(){
+  var msg=document.getElementById('customMsgInput').value.trim();
+  var dEl=document.querySelector('[data-occdate="newcustom"]');
+  var hEl=document.querySelector('[data-occhour="newcustom"]');
+  var mEl=document.querySelector('[data-occmin="newcustom"]');
+  var repeatVal=parseInt(document.getElementById('customRepeatInput').value,10);
+  if(!msg||!dEl.value){ toast(T('customNeedBoth')); return; }
+  var iso=utcPartsToIso(dEl.value,hEl.value,mEl.value);
+  var btn=document.getElementById('customAddBtn'); btn.disabled=true;
+  var{error}=await sb.from('custom_alerts').insert({state_id:STATE,message:msg,send_at:iso,repeat_every_minutes:(repeatVal>0?repeatVal:null),created_by:session?session.user.id:null});
+  btn.disabled=false;
+  if(error){ toast('Error: '+error.message); return; }
+  toast(T('saved'));
+  await renderCustomAlertBox();
+}
+async function deleteCustomAlert(id){
+  if(!window.confirm(T('customDeleteConfirm')))return;
+  await sb.from('custom_alerts').update({active:false}).eq('id',id);
+  toast(T('saved'));
+  await renderCustomAlertBox();
+}
+
 // ── Facility rally alerts (Fort/Stronghold…) — one-off, 5 min before ──
 var facilityAlerts=[];
 async function loadFacilityAlerts(){
