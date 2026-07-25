@@ -45,6 +45,9 @@
   .good{color:var(--good);} .mid{color:var(--mid);} .bad{color:var(--bad);}
   .bgGood{background:var(--good);} .bgMid{background:var(--mid);} .bgBad{background:var(--bad);}
   .sumDmg{width:78px;text-align:right;font-size:.72rem;color:var(--text-dim);}
+  .sumEdit{display:flex;gap:4px;flex:none;margin-left:2px;}
+  .sumEdit button{background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    border-radius:7px;width:26px;height:26px;font-size:.75rem;cursor:pointer;padding:0;line-height:1;}
 
   .sessList{margin-top:6px;}
   .sessItem{display:flex;align-items:center;gap:8px;padding:9px 4px;border-top:1px solid var(--line);font-size:.82rem;}
@@ -283,6 +286,7 @@ async function addAdhocPlayer(){
   var input=document.getElementById('newPlayerName');
   var name=input.value.trim();
   if(!name){ toast('Type a name first'); return; }
+  if(roster.length>=100){ toast('Roster is full (100 max)'); return; }
   if(roster.some(function(p){return p.name.toLowerCase()===name.toLowerCase();})){
     toast('Already on the list'); return;
   }
@@ -347,7 +351,8 @@ async function renderSummary(){
   box.appendChild(wrap);
 }
 
-/* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc. */
+/* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc.
+   Every roster member appears, even with 0 attendance. R4/R5/admin can rename or remove a name inline. */
 async function renderBTSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
@@ -355,39 +360,90 @@ async function renderBTSummary(){
 
   var {data:sessRows}=await sb.from('bt_sessions').select('id,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID);
   sessRows=sessRows||[];
-  if(!sessRows.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
   var trapBySession={};
   sessRows.forEach(function(s){ trapBySession[s.id]=s.trap||'T1'; });
   var sessIds=sessRows.map(function(s){return s.id;});
 
-  var {data:entries}=await sb.from('bt_entries').select('session_id,player_id,player_name,attended').in('session_id',sessIds);
-  entries=entries||[];
+  var entries=[];
+  if(sessIds.length){
+    var er=await sb.from('bt_entries').select('session_id,player_name,attended').in('session_id',sessIds);
+    entries=er.data||[];
+  }
 
   var byPlayer={};
   entries.forEach(function(e){
     if(!e.attended) return;
-    var key=e.player_id||('name:'+e.player_name);
+    var key=(e.player_name||'').toLowerCase();
+    if(!key) return;
     if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0};
     byPlayer[key].total++;
     var trap=trapBySession[e.session_id];
     if(trap==='T1') byPlayer[key].t1++; else if(trap==='T2') byPlayer[key].t2++;
   });
+  // every current roster member shows up, even with 0 attendance
+  roster.forEach(function(p){
+    var key=p.name.toLowerCase();
+    if(!byPlayer[key]) byPlayer[key]={name:p.name,total:0,t1:0,t2:0};
+  });
+
   var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  if(!list.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
   list.sort(function(a,b){ return b.total-a.total || a.name.localeCompare(b.name); });
 
-  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' Bear Trap'+(sessRows.length===1?'':'s')+' logged · sorted by total attendance.</div>';
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' Bear Trap'+(sessRows.length===1?'':'s')+' logged · '+list.length+' player'+(list.length===1?'':'s')+' · sorted by total attendance.</div>';
   var wrap=document.createElement('div');
   list.forEach(function(p){
-    var pref = p.t1===p.t2 ? 'Even' : (p.t1>p.t2 ? 'Trap 1' : 'Trap 2');
+    var pref = p.total===0 ? '—' : (p.t1===p.t2 ? 'Even' : (p.t1>p.t2 ? 'Trap 1' : 'Trap 2'));
     var row=document.createElement('div');
     row.className='sumRow';
+    var editHtml=canEdit?'<div class="sumEdit"><button class="btEditName" title="Rename">✎</button><button class="btDelName" title="Remove">🗑</button></div>':'';
     row.innerHTML=
       '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
       '<div class="sumDmg" style="width:auto;flex:1.2;text-align:left;">T1 '+p.t1+' · T2 '+p.t2+' · prefers '+pref+'</div>'+
-      '<div class="sumPct good">'+p.total+'</div>';
+      '<div class="sumPct '+(p.total>0?'good':'bad')+'">'+p.total+'</div>'+editHtml;
+    if(canEdit){
+      row.querySelector('.btEditName').addEventListener('click',function(){ renameBTPlayer(p.name); });
+      row.querySelector('.btDelName').addEventListener('click',function(){ deleteBTPlayer(p.name); });
+    }
     wrap.appendChild(row);
   });
   box.appendChild(wrap);
+}
+
+async function deleteBTPlayer(name){
+  if(!confirm('Remove "'+name+'" from the Bear Trap tracker? This deletes all their attendance history.')) return;
+  var sessIds=((await sb.from('bt_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[]).map(function(s){return s.id;});
+  if(sessIds.length){
+    var allEntries=(await sb.from('bt_entries').select('id,player_name').in('session_id',sessIds)).data||[];
+    var toDelete=allEntries.filter(function(e){return (e.player_name||'').toLowerCase()===name.toLowerCase();}).map(function(e){return e.id;});
+    if(toDelete.length) await sb.from('bt_entries').delete().in('id',toDelete);
+  }
+  var rnRows=(await sb.from('bt_roster_names').select('id,name').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[];
+  var rnMatch=rnRows.find(function(r){return (r.name||'').toLowerCase()===name.toLowerCase();});
+  if(rnMatch) await sb.from('bt_roster_names').delete().eq('id',rnMatch.id);
+  roster=roster.filter(function(p){return p.name.toLowerCase()!==name.toLowerCase();});
+  toast('Removed ✓');
+  renderBTSummary();
+}
+
+async function renameBTPlayer(oldName){
+  var newName=prompt('New name for "'+oldName+'":', oldName);
+  if(!newName) return;
+  newName=newName.trim();
+  if(!newName||newName.toLowerCase()===oldName.toLowerCase()) return;
+  var sessIds=((await sb.from('bt_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[]).map(function(s){return s.id;});
+  if(sessIds.length){
+    var allEntries=(await sb.from('bt_entries').select('id,player_name').in('session_id',sessIds)).data||[];
+    var toUpdate=allEntries.filter(function(e){return (e.player_name||'').toLowerCase()===oldName.toLowerCase();}).map(function(e){return e.id;});
+    if(toUpdate.length) await sb.from('bt_entries').update({player_name:newName}).in('id',toUpdate);
+  }
+  var rnRows=(await sb.from('bt_roster_names').select('id,name').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[];
+  var rnMatch=rnRows.find(function(r){return (r.name||'').toLowerCase()===oldName.toLowerCase();});
+  if(rnMatch) await sb.from('bt_roster_names').update({name:newName}).eq('id',rnMatch.id);
+  var idx=roster.findIndex(function(p){return p.name.toLowerCase()===oldName.toLowerCase();});
+  if(idx>=0) roster[idx].name=newName;
+  toast('Renamed ✓');
+  renderBTSummary();
 }
 function fmtNum(n){ n=n||0; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
