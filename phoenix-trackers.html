@@ -80,14 +80,16 @@
   <header>
     <div class="eyebrow">Phoenix · PXR</div>
     <h1>📊 Attendance Trackers</h1>
-    <p class="sub">Bear Trap damage &amp; Foundry/Canyon participation — R4/R5 only</p>
+    <p class="sub">Mark who showed up — Bear Trap by T1/T2, plus Foundry/Canyon — R4/R5 only</p>
   </header>
 
   <div class="tabs">
-    <div class="tab on" data-t="bt">🐻 Bear Trap</div>
-    <div class="tab" data-t="foundry">🏭 Foundry</div>
-    <div class="tab" data-t="canyon">🏞️ Canyon</div>
+    <div class="tab mainTab on" data-t="bt">🐻 Bear Trap</div>
+    <div class="tab mainTab" data-t="foundry">🏭 Foundry</div>
+    <div class="tab mainTab" data-t="canyon">🏞️ Canyon</div>
   </div>
+
+
 
   <div class="panel">
     <div class="panel-title" id="summaryTitle">Attendance summary</div>
@@ -109,12 +111,22 @@
   <div class="panel">
     <div class="panel-title" id="entryTitle">New session</div>
     <div class="field"><label>Date</label><input type="date" id="fDate"></div>
-    <div class="field"><label>Label (optional — e.g. "BT2", "Foundry vs SNO")</label><input id="fLabel" placeholder="Optional"></div>
+    <div class="field" id="fTrapField"><label>Trap</label>
+      <div class="tabs" id="entryTrapTabs">
+        <div class="tab trapTab on" data-trap="T1">Trap 1</div>
+        <div class="tab trapTab" data-trap="T2">Trap 2</div>
+      </div>
+    </div>
+    <div class="field"><label>Label (optional — e.g. "Foundry vs SNO")</label><input id="fLabel" placeholder="Optional"></div>
   </div>
   <div class="panel">
     <div class="panel-title" id="rosterTitle">Roster</div>
     <input id="rosterSearch" placeholder="🔍 Filter roster…" style="margin-bottom:8px;">
     <div id="rosterList"></div>
+    <div class="row" id="addPlayerRow" style="margin-top:10px;">
+      <input id="newPlayerName" placeholder="Add a name not on the list…" style="flex:1;">
+      <button class="btn" id="addPlayerBtn">＋ Add</button>
+    </div>
   </div>
   <div class="row">
     <button class="btn fire" id="saveSessionBtn" style="flex:1;">💾 Save session</button>
@@ -125,13 +137,19 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ── ACCESS GATE: admin anywhere, or R4/R5 ONLY if their alliance is PXR ── */
+/* ── ACCESS GATE ──────────────────────────────────────────────────
+   · admin (Hestelae/TMQ): sees & edits every alliance in the state, via a picker
+   · R4/R5: sees & edits their OWN alliance only
+   · any other registered player: VIEW-ONLY on their own alliance's rankings
+   · not signed in / no alliance: sign-in message
+──────────────────────────────────────────────────────────────────── */
 var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-var sb=null, PXR_ALLIANCE_ID=null;
+var sb=null, ACTIVE_ALLIANCE_ID=null, canEdit=false, isGlobalAdmin=false, allianceChoices=[];
 function gmsg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;}
-function unlock(allianceId){
-  PXR_ALLIANCE_ID=allianceId;
+function unlock(allianceId, editRights){
+  ACTIVE_ALLIANCE_ID=allianceId;
+  canEdit=editRights;
   var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);
   boot();
 }
@@ -147,28 +165,43 @@ function getState(){
     sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
-      if(!s){gmsg('🔒 Sign in to Phoenix first.<br><br>This tool is only for PXR leaders.');return;}
+      if(!s){gmsg('🔒 Sign in to Phoenix first to see attendance rankings.');return;}
       sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
         var rows=res.data||[];
-        var isAdmin=rows.some(function(p){return p.role==='admin';});
+        isGlobalAdmin=rows.some(function(p){return p.role==='admin';});
         var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
-        function findPXR(cb){
-          sb.from('alliances').select('id,tag').eq('state_id',getState()).then(function(ar){
-            var pxr=(ar.data||[]).find(function(a){return (a.tag||'').toUpperCase().indexOf('PXR')===0;});
-            cb(pxr);
+        var anyRow=rows.find(function(p){return p.alliance_id;});
+
+        if(isGlobalAdmin){
+          sb.from('alliances').select('id,tag,name').eq('state_id',getState()).order('tag').then(function(ar){
+            allianceChoices=ar.data||[];
+            if(!allianceChoices.length){gmsg('No alliances found in this state.');return;}
+            renderAdminPicker();
+            unlock(allianceChoices[0].id, true);
           });
+          return;
         }
-        if(isAdmin){ findPXR(function(pxr){ if(pxr) unlock(pxr.id); else gmsg('No PXR alliance found in this state.'); }); return; }
-        if(!leaderRow){gmsg('🔒 This tool is only for PXR leaders (R4/R5).');return;}
-        sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
-          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
-          if(tag.indexOf('PXR')===0){unlock(ar.data.id);}
-          else{gmsg('🔒 This tool is only for PXR leaders.');}
-        }).catch(function(){gmsg('Error checking your alliance.');});
+        if(leaderRow){ unlock(leaderRow.alliance_id, true); return; }
+        if(anyRow){ unlock(anyRow.alliance_id, false); return; }
+        gmsg('🔒 You need to be a registered player in an alliance to view this.');
       }).catch(function(){gmsg('Error checking permissions.');});
     }).catch(function(){gmsg('Session error.');});
   }catch(e){gmsg('Access error.');}
 })();
+function renderAdminPicker(){
+  var bar=document.createElement('div');
+  bar.className='row';
+  bar.style.marginBottom='10px';
+  bar.innerHTML='<select id="adminAllianceSelect" style="flex:1;">'+
+    allianceChoices.map(function(a){return '<option value="'+a.id+'">['+ (a.tag||'') +'] '+(a.name||'')+'</option>';}).join('')+
+  '</select>';
+  var wrap=document.querySelector('.wrap');
+  wrap.insertBefore(bar, wrap.children[1]);
+  document.getElementById('adminAllianceSelect').addEventListener('change', async function(){
+    ACTIVE_ALLIANCE_ID=this.value; canEdit=true;
+    await loadRoster(); showSummaryScreen();
+  });
+}
 (function(){
   var q=new URLSearchParams(location.search).get('s');
   var s=q; if(!s){try{s=localStorage.getItem('phx_state');}catch(e){}}
@@ -178,6 +211,7 @@ function getState(){
 
 /* ── STATE ─────────────────────────────────────────────────────── */
 var currentTab='bt'; // bt | foundry | canyon
+var entryTrap='T1';   // which trap the open session-entry form is for (bt only)
 var roster=[];        // [{id,name}]
 var editingSessionId=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
@@ -186,11 +220,19 @@ function entryTable(){return currentTab==='bt'?'bt_entries':'event_entries';}
 function tabLabel(){return currentTab==='bt'?'Bear Trap':(currentTab==='foundry'?'Foundry':'Canyon');}
 
 async function boot(){
-  document.querySelectorAll('.tab').forEach(function(t){
-    t.addEventListener('click',function(){
-      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+  document.querySelectorAll('.mainTab').forEach(function(t){
+    t.addEventListener('click',async function(){
+      document.querySelectorAll('.mainTab').forEach(function(x){x.classList.remove('on');});
       t.classList.add('on'); currentTab=t.dataset.t;
+      document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
+      await loadRoster();
       showSummaryScreen();
+    });
+  });
+  document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on'); entryTrap=t.dataset.trap;
     });
   });
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
@@ -198,14 +240,61 @@ async function boot(){
   document.getElementById('saveSessionBtn').addEventListener('click',saveSession);
   document.getElementById('deleteSessionBtn').addEventListener('click',deleteSession);
   document.getElementById('rosterSearch').addEventListener('input',function(){renderRoster(this.value);});
+  document.getElementById('addPlayerBtn').addEventListener('click',addAdhocPlayer);
+  document.getElementById('newPlayerName').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addAdhocPlayer();}});
+  document.getElementById('addPlayerRow').style.display='flex';
+  if(!canEdit){
+    document.getElementById('newSessionBtn').style.display='none';
+    document.getElementById('addPlayerRow').style.display='none';
+    var note=document.createElement('p');
+    note.className='instructions';
+    note.style.textAlign='center';
+    note.textContent='👀 View only — ask an R4/R5 to log attendance.';
+    document.querySelector('header').insertAdjacentElement('afterend', note);
+  }
 
   await loadRoster();
   showSummaryScreen();
 }
 
+/* Bear Trap roster = confirmed PXR members ∪ any ad-hoc names ever used in bt_entries
+   (covers people who play but never made a Phoenix profile — very common). */
 async function loadRoster(){
-  var {data,error}=await sb.from('players').select('id,name').eq('alliance_id',PXR_ALLIANCE_ID).order('name');
-  roster=(data||[]).filter(function(p){return p.name;});
+  if(currentTab!=='bt'){
+    var {data}=await sb.from('players').select('id,name').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('name');
+    roster=(data||[]).filter(function(p){return p.name;});
+    return;
+  }
+  var confirmed=(await sb.from('players').select('id,name').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[];
+  var adhoc=(await sb.from('bt_roster_names').select('id,name').eq('alliance_id',ACTIVE_ALLIANCE_ID)).data||[];
+  var seen={}, merged=[];
+  confirmed.concat(adhoc).forEach(function(p){
+    if(!p.name) return;
+    var key=p.name.toLowerCase();
+    if(seen[key]) return;
+    seen[key]=true;
+    merged.push({id:p.id, name:p.name});
+  });
+  merged.sort(function(a,b){return a.name.localeCompare(b.name);});
+  roster=merged;
+}
+
+async function addAdhocPlayer(){
+  var input=document.getElementById('newPlayerName');
+  var name=input.value.trim();
+  if(!name){ toast('Type a name first'); return; }
+  if(roster.some(function(p){return p.name.toLowerCase()===name.toLowerCase();})){
+    toast('Already on the list'); return;
+  }
+  var {data,error}=await sb.from('bt_roster_names').insert({alliance_id:ACTIVE_ALLIANCE_ID,name:name}).select('id,name').single();
+  if(error){ toast('Error: '+error.message); return; }
+  roster.push({id:data.id,name:data.name,adhoc:true});
+  roster.sort(function(a,b){return a.name.localeCompare(b.name);});
+  input.value='';
+  // mark them present immediately in the currently-open entry form
+  currentEntries[data.name.toLowerCase()]={attended:true,requested:false,damage:0,name:data.name};
+  renderRoster(document.getElementById('rosterSearch').value);
+  toast('Added ✓');
 }
 
 /* ── SUMMARY SCREEN ───────────────────────────────────────────── */
@@ -218,36 +307,23 @@ async function showSummaryScreen(){
 }
 
 async function renderSummary(){
+  if(currentTab==='bt') return renderBTSummary();
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
-  var sessQ=await sb.from(sessTable()).select('id').eq('alliance_id',PXR_ALLIANCE_ID)
-    .then(function(r){return currentTab==='bt'?r:{data:(r.data||[])};});
-  var sessRows;
-  if(currentTab==='bt'){
-    var r=await sb.from('bt_sessions').select('id').eq('alliance_id',PXR_ALLIANCE_ID);
-    sessRows=r.data||[];
-  }else{
-    var r=await sb.from('event_sessions').select('id').eq('alliance_id',PXR_ALLIANCE_ID).eq('event_type',currentTab);
-    sessRows=r.data||[];
-  }
+  var r=await sb.from('event_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var sessRows=r.data||[];
   var totalSessions=sessRows.length;
   if(!totalSessions){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
   var sessIds=sessRows.map(function(s){return s.id;});
 
-  var entries;
-  if(currentTab==='bt'){
-    var er=await sb.from('bt_entries').select('player_id,player_name,attended,damage').in('session_id',sessIds);
-    entries=er.data||[];
-  }else{
-    var er=await sb.from('event_entries').select('player_id,player_name,requested,attended').in('session_id',sessIds);
-    entries=er.data||[];
-  }
+  var er=await sb.from('event_entries').select('player_id,player_name,requested,attended').in('session_id',sessIds);
+  var entries=er.data||[];
 
   var byPlayer={};
   entries.forEach(function(e){
     var key=e.player_id||('name:'+e.player_name);
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,attended:0,requested:0,damage:0};
-    if(e.attended){ byPlayer[key].attended++; byPlayer[key].damage+=(e.damage||0); }
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,attended:0,requested:0};
+    if(e.attended) byPlayer[key].attended++;
     if(e.requested) byPlayer[key].requested++;
   });
   var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
@@ -259,15 +335,56 @@ async function renderSummary(){
   list.forEach(function(p){
     var cls = p.pct>=80?'good':(p.pct>=50?'mid':'bad');
     var bg = p.pct>=80?'bgGood':(p.pct>=50?'bgMid':'bgBad');
-    var extra = currentTab==='bt'
-      ? '<div class="sumDmg">'+fmtNum(p.damage)+' dmg</div>'
-      : '<div class="sumDmg">'+p.requested+' req.</div>';
+    var extra='<div class="sumDmg">'+p.requested+' req.</div>';
     var row=document.createElement('div');
     row.className='sumRow';
     row.innerHTML=
       '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
       '<div class="barTrack"><div class="barFill '+bg+'" style="width:'+p.pct+'%"></div></div>'+
       '<div class="sumPct '+cls+'">'+p.pct+'%</div>'+extra;
+    wrap.appendChild(row);
+  });
+  box.appendChild(wrap);
+}
+
+/* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc. */
+async function renderBTSummary(){
+  var box=document.getElementById('summaryBox');
+  box.innerHTML='Loading…';
+  document.getElementById('summaryTitle').textContent='Bear Trap — ranking (all traps combined)';
+
+  var {data:sessRows}=await sb.from('bt_sessions').select('id,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID);
+  sessRows=sessRows||[];
+  if(!sessRows.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
+  var trapBySession={};
+  sessRows.forEach(function(s){ trapBySession[s.id]=s.trap||'T1'; });
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var {data:entries}=await sb.from('bt_entries').select('session_id,player_id,player_name,attended').in('session_id',sessIds);
+  entries=entries||[];
+
+  var byPlayer={};
+  entries.forEach(function(e){
+    if(!e.attended) return;
+    var key=e.player_id||('name:'+e.player_name);
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0};
+    byPlayer[key].total++;
+    var trap=trapBySession[e.session_id];
+    if(trap==='T1') byPlayer[key].t1++; else if(trap==='T2') byPlayer[key].t2++;
+  });
+  var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  list.sort(function(a,b){ return b.total-a.total || a.name.localeCompare(b.name); });
+
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' Bear Trap'+(sessRows.length===1?'':'s')+' logged · sorted by total attendance.</div>';
+  var wrap=document.createElement('div');
+  list.forEach(function(p){
+    var pref = p.t1===p.t2 ? 'Even' : (p.t1>p.t2 ? 'Trap 1' : 'Trap 2');
+    var row=document.createElement('div');
+    row.className='sumRow';
+    row.innerHTML=
+      '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
+      '<div class="sumDmg" style="width:auto;flex:1.2;text-align:left;">T1 '+p.t1+' · T2 '+p.t2+' · prefers '+pref+'</div>'+
+      '<div class="sumPct good">'+p.total+'</div>';
     wrap.appendChild(row);
   });
   box.appendChild(wrap);
@@ -281,10 +398,10 @@ async function renderSessionsList(){
   box.innerHTML='Loading…';
   var rows;
   if(currentTab==='bt'){
-    var r=await sb.from('bt_sessions').select('id,session_date,label').eq('alliance_id',PXR_ALLIANCE_ID).order('session_date',{ascending:false});
+    var r=await sb.from('bt_sessions').select('id,session_date,label,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('session_date',{ascending:false});
     rows=r.data||[];
   }else{
-    var r=await sb.from('event_sessions').select('id,session_date,label').eq('alliance_id',PXR_ALLIANCE_ID).eq('event_type',currentTab).order('session_date',{ascending:false});
+    var r=await sb.from('event_sessions').select('id,session_date,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab).order('session_date',{ascending:false});
     rows=r.data||[];
   }
   if(!rows.length){box.innerHTML='<div class="instructions">No sessions yet.</div>';return;}
@@ -292,8 +409,9 @@ async function renderSessionsList(){
   rows.forEach(function(s){
     var d=document.createElement('div');
     d.className='sessItem';
-    d.innerHTML='<b>'+s.session_date+'</b><span class="sp">'+(s.label?escapeHtml(s.label):'')+'</span><button>Edit</button>';
-    d.querySelector('button').addEventListener('click',function(){openEntry(s.id);});
+    var trapTag=(currentTab==='bt')?('<b style="color:var(--ice-dim);margin-right:4px;">'+(s.trap||'T1')+'</b>'):'';
+    d.innerHTML=trapTag+'<b>'+s.session_date+'</b><span class="sp">'+(s.label?escapeHtml(s.label):'')+'</span>'+(canEdit?'<button>Edit</button>':'');
+    if(canEdit) d.querySelector('button').addEventListener('click',function(){openEntry(s.id);});
     box.appendChild(d);
   });
 }
@@ -306,6 +424,8 @@ async function openEntry(sessionId){
   document.getElementById('entryScreen').style.display='';
   document.getElementById('entryTitle').textContent=(sessionId?'Edit ':'New ')+tabLabel()+' session';
   document.getElementById('deleteSessionBtn').style.display=sessionId?'':'none';
+  document.getElementById('fTrapField').style.display=(currentTab==='bt')?'block':'none';
+  document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
   currentEntries={};
 
   if(sessionId){
@@ -319,14 +439,19 @@ async function openEntry(sessionId){
     }
     document.getElementById('fDate').value=sRow?sRow.session_date:'';
     document.getElementById('fLabel').value=sRow?(sRow.label||''):'';
+    entryTrap=(sRow&&sRow.trap)||'T1';
     eRows.forEach(function(e){
-      var key=e.player_id||('name:'+e.player_name);
+      var key=(currentTab==='bt')?(e.player_name||'').toLowerCase():(e.player_id||('name:'+e.player_name));
       currentEntries[key]={attended:!!e.attended,requested:!!e.requested,damage:e.damage||0,name:e.player_name};
     });
   }else{
     document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
     document.getElementById('fLabel').value='';
+    entryTrap='T1';
   }
+  document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(t){
+    t.classList.toggle('on', t.dataset.trap===entryTrap);
+  });
   document.getElementById('rosterSearch').value='';
   renderRoster('');
 }
@@ -336,14 +461,13 @@ function renderRoster(filter){
   box.innerHTML='';
   var f=(filter||'').toLowerCase();
   roster.filter(function(p){return !f||p.name.toLowerCase().indexOf(f)>=0;}).forEach(function(p){
-    var e=currentEntries[p.id]||{attended:false,requested:false,damage:0};
+    var e=currentEntries[(currentTab==='bt')?p.name.toLowerCase():p.id]||{attended:false,requested:false,damage:0};
     var row=document.createElement('div');
     row.className='rosterRow';
     if(currentTab==='bt'){
       row.innerHTML=
         '<div class="rosterName">'+escapeHtml(p.name)+'</div>'+
-        '<label class="rosterChk"><input type="checkbox" class="rAttended" '+(e.attended?'checked':'')+'> Attended</label>'+
-        '<input type="number" class="rDamage" placeholder="Damage" value="'+(e.damage||'')+'" inputmode="numeric">';
+        '<label class="rosterChk" style="font-size:.8rem;"><input type="checkbox" class="rAttended" '+(e.attended?'checked':'')+'> Attended</label>';
     }else{
       row.innerHTML=
         '<div class="rosterName">'+escapeHtml(p.name)+'</div>'+
@@ -365,18 +489,17 @@ async function saveSession(){
     var sessionId=editingSessionId;
     if(currentTab==='bt'){
       if(sessionId){
-        await sb.from('bt_sessions').update({session_date:date,label:label}).eq('id',sessionId);
+        await sb.from('bt_sessions').update({session_date:date,label:label,trap:entryTrap}).eq('id',sessionId);
         await sb.from('bt_entries').delete().eq('session_id',sessionId);
       }else{
-        var ins=await sb.from('bt_sessions').insert({alliance_id:PXR_ALLIANCE_ID,session_date:date,label:label}).select('id').single();
+        var ins=await sb.from('bt_sessions').insert({alliance_id:ACTIVE_ALLIANCE_ID,session_date:date,label:label,trap:entryTrap}).select('id').single();
         sessionId=ins.data.id;
       }
       var rows=[];
       document.querySelectorAll('#rosterList .rosterRow').forEach(function(row){
         var attended=row.querySelector('.rAttended').checked;
-        var damage=parseInt(row.querySelector('.rDamage').value,10)||0;
-        if(attended||damage>0){
-          rows.push({session_id:sessionId,player_id:row.dataset.pid,player_name:row.dataset.pname,attended:attended,damage:damage});
+        if(attended){
+          rows.push({session_id:sessionId,player_name:row.dataset.pname,attended:true});
         }
       });
       if(rows.length) await sb.from('bt_entries').insert(rows);
@@ -385,7 +508,7 @@ async function saveSession(){
         await sb.from('event_sessions').update({session_date:date,label:label}).eq('id',sessionId);
         await sb.from('event_entries').delete().eq('session_id',sessionId);
       }else{
-        var ins=await sb.from('event_sessions').insert({alliance_id:PXR_ALLIANCE_ID,event_type:currentTab,session_date:date,label:label}).select('id').single();
+        var ins=await sb.from('event_sessions').insert({alliance_id:ACTIVE_ALLIANCE_ID,event_type:currentTab,session_date:date,label:label}).select('id').single();
         sessionId=ins.data.id;
       }
       var rows=[];

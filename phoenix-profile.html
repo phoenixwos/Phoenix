@@ -1063,6 +1063,25 @@ function renderFramePicker(p){
   });
 }
 
+// ── Bear Trap attendance chip (auto-computed, no manual badge involved) ──
+// Matches by player name (case-insensitive) within the player's own alliance's
+// bt_entries. If names don't line up exactly with what's logged in the
+// tracker, the count will read 0 — that's a naming-consistency issue, not a bug.
+async function bearTrapCount(p){
+  if(!p||!p.alliance_id||!p.name) return 0;
+  try{
+    const{data,count}=await sb.from('bt_entries')
+      .select('id, bt_sessions!inner(alliance_id)',{count:'exact',head:false})
+      .eq('bt_sessions.alliance_id',p.alliance_id)
+      .ilike('player_name',p.name.trim());
+    return count!=null?count:(data?data.length:0);
+  }catch(e){ console.warn('Bear Trap count failed:',e); return 0; }
+}
+async function addBearTrapChip(metaEl,p){
+  const n=await bearTrapCount(p);
+  if(n>0) metaEl.innerHTML+=`<span class="chip">🐻 ${n} Bear Trap${n===1?'':'s'}</span>`;
+}
+
 // ── RENDER OWN PROFILE ────────────────────────────────────────
 function renderView(p){
   setAvatarEl($('#vAvatar'),p.avatar,(p.name||'?').slice(0,2).toUpperCase());
@@ -1075,6 +1094,7 @@ function renderView(p){
   if(p.alliance_id){const lbl=myAlliance?`[${myAlliance.tag}] ${myAlliance.name}`:'—';meta.innerHTML+=p.alliance_confirmed?`<span class="chip alliance">🔥 ${lbl}</span>`:`<span class="chip pending">⏳ ${lbl} · ${T('pending')}</span>`;}
   if(p.languages)meta.innerHTML+=`<span class="chip">🗣️ ${p.languages}</span>`;
   if(p.country)meta.innerHTML+=`<span class="chip">🕓 ${p.country}</span>`;
+  addBearTrapChip(meta,p);
   if(p.bio){$('#vBioWrap').classList.remove('hidden');$('#vBio').textContent=p.bio;}else $('#vBioWrap').classList.add('hidden');
   if(p.help_with){$('#vHelpWrap').classList.remove('hidden');$('#vHelp').textContent=p.help_with;}else $('#vHelpWrap').classList.add('hidden');
   // Governor-style: first 6 badges go into slots (3 left, 3 right). Rest go to extra grid.
@@ -1170,6 +1190,7 @@ async function loadPublicProfile(playerId){
   if(p.alliance_id){const a=alliances.find(x=>x.id===p.alliance_id);const lbl=a?`[${a.tag}] ${a.name}`:'—';meta.innerHTML+=p.alliance_confirmed?`<span class="chip alliance">🔥 ${lbl}</span>`:`<span class="chip pending">⏳ ${lbl}</span>`;}
   if(p.languages)meta.innerHTML+=`<span class="chip">🗣️ ${p.languages}</span>`;
   if(p.country)meta.innerHTML+=`<span class="chip">🕓 ${p.country}</span>`;
+  addBearTrapChip(meta,p);
   if(p.bio){$('#pBioWrap').classList.remove('hidden');$('#pBio').textContent=p.bio;}else $('#pBioWrap').classList.add('hidden');
   if(p.help_with){$('#pHelpWrap').classList.remove('hidden');$('#pHelp').textContent=p.help_with;}else $('#pHelpWrap').classList.add('hidden');
   renderGovBadges($('#pBadgesLeft'),$('#pBadgesRight'),$('#pBadgesExtra'),$('#pBadgesExtraGrid'),earnedIds);
