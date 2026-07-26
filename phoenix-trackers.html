@@ -230,7 +230,7 @@ async function boot(){
       document.querySelectorAll('.mainTab').forEach(function(x){x.classList.remove('on');});
       t.classList.add('on'); currentTab=t.dataset.t;
       document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
-      document.getElementById('exportBtnBT').style.display=(currentTab==='bt')?'':'none';
+      document.getElementById('exportBtnBT').textContent='⬇ Excel';
       await loadRoster();
       showSummaryScreen();
     });
@@ -242,7 +242,9 @@ async function boot(){
     });
   });
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
-  document.getElementById('exportBtnBT').addEventListener('click',exportBTExcel);
+  document.getElementById('exportBtnBT').addEventListener('click',function(){
+    if(currentTab==='bt') exportBTExcel(); else exportEventExcel();
+  });
   document.getElementById('entryBack').addEventListener('click',function(e){e.preventDefault();showSummaryScreen();});
   document.getElementById('saveSessionBtn').addEventListener('click',saveSession);
   document.getElementById('deleteSessionBtn').addEventListener('click',deleteSession);
@@ -486,7 +488,73 @@ async function renameBTPlayer(oldName){
   toast('Renamed ✓');
   renderBTSummary();
 }
-function fmtNum(n){ n=n||0; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }
+/* Exports the full Foundry/Canyon history as an .xlsx: one column per session (date + label).
+   "X" = attended, "R" = requested but no-showed, blank = wasn't in that session at all.
+   Plus Requested / Attended / No-show / Rate% summary columns. */
+async function exportEventExcel(){
+  if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
+  toast('Building Excel…');
+  var {data:sessRows}=await sb.from('event_sessions').select('id,session_date,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  sessRows=sessRows||[];
+  sessRows.sort(function(a,b){ return a.session_date.localeCompare(b.session_date); });
+  if(!sessRows.length){ toast('No sessions to export yet'); return; }
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var {data:entries}=await sb.from('event_entries').select('session_id,player_id,player_name,requested,attended').in('session_id',sessIds);
+  entries=entries||[];
+
+  var byPlayer={};
+  roster.forEach(function(p){ byPlayer[p.id]={name:p.name,requested:0,attendedCount:0,noShow:0,cells:{}}; });
+  entries.forEach(function(e){
+    var key=e.player_id||('name:'+e.player_name);
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,requested:0,attendedCount:0,noShow:0,cells:{}};
+    var p=byPlayer[key];
+    if(e.requested){
+      p.requested++;
+      if(e.attended){ p.attendedCount++; p.cells[e.session_id]='X'; }
+      else { p.noShow++; p.cells[e.session_id]='R'; }
+    }else if(e.attended){
+      p.cells[e.session_id]='X';
+    }
+  });
+
+  var players=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  players.forEach(function(p){ p.rate = p.requested>0 ? Math.round(p.attendedCount/p.requested*100) : -1; });
+  players.sort(function(a,b){
+    if(a.requested===0 && b.requested===0) return a.name.localeCompare(b.name);
+    if(a.requested===0) return 1;
+    if(b.requested===0) return -1;
+    return a.rate-b.rate || b.requested-a.requested;
+  });
+
+  var header=['Player'];
+  sessRows.forEach(function(s){
+    var d=s.session_date;
+    var dm=d.slice(8,10)+'/'+d.slice(5,7);
+    header.push(dm+(s.label?(' '+s.label):''));
+  });
+  header.push('Requested','Attended','No-show','Rate%');
+
+  var aoa=[header];
+  players.forEach(function(p){
+    var row=[p.name];
+    sessRows.forEach(function(s){ row.push(p.cells[s.id]||''); });
+    row.push(p.requested,p.attendedCount,p.noShow, p.requested>0?p.rate:'—');
+    aoa.push(row);
+  });
+
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  var colWidths=[{wch:22}];
+  sessRows.forEach(function(){colWidths.push({wch:13});});
+  colWidths.push({wch:10},{wch:9},{wch:9},{wch:8});
+  ws['!cols']=colWidths;
+
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,tabLabel());
+  var today=new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,currentTab+'_attendance_'+today+'.xlsx');
+  toast('Downloaded ✓');
+}
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 
 /* Exports the full Bear Trap history as an .xlsx: one column per session (date + trap),
