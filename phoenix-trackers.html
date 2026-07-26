@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Trackers — Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -103,6 +104,7 @@
     <div class="panel-title">Sessions</div>
     <div class="row" style="margin-bottom:4px;">
       <button class="btn fire" id="newSessionBtn" style="flex:1;">＋ New session</button>
+      <button class="btn" id="exportBtnBT" style="flex:none;">⬇ Excel</button>
     </div>
     <div id="sessList" class="sessList"></div>
   </div>
@@ -228,6 +230,7 @@ async function boot(){
       document.querySelectorAll('.mainTab').forEach(function(x){x.classList.remove('on');});
       t.classList.add('on'); currentTab=t.dataset.t;
       document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
+      document.getElementById('exportBtnBT').style.display=(currentTab==='bt')?'':'none';
       await loadRoster();
       showSummaryScreen();
     });
@@ -239,6 +242,7 @@ async function boot(){
     });
   });
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
+  document.getElementById('exportBtnBT').addEventListener('click',exportBTExcel);
   document.getElementById('entryBack').addEventListener('click',function(e){e.preventDefault();showSummaryScreen();});
   document.getElementById('saveSessionBtn').addEventListener('click',saveSession);
   document.getElementById('deleteSessionBtn').addEventListener('click',deleteSession);
@@ -312,8 +316,17 @@ async function showSummaryScreen(){
 
 async function renderSummary(){
   if(currentTab==='bt') return renderBTSummary();
+  return renderEventSummary();
+}
+
+/* Foundry/Canyon summary: "requested battle" and "showed up" are tracked separately.
+   Players who never request aren't penalized — they're listed at the bottom, unflagged.
+   Players who requested and then no-showed sort to the top (worst first). */
+async function renderEventSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
+  document.getElementById('summaryTitle').textContent=tabLabel()+' — battle requests & attendance';
+
   var r=await sb.from('event_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
   var sessRows=r.data||[];
   var totalSessions=sessRows.length;
@@ -326,27 +339,55 @@ async function renderSummary(){
   var byPlayer={};
   entries.forEach(function(e){
     var key=e.player_id||('name:'+e.player_name);
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,attended:0,requested:0};
-    if(e.attended) byPlayer[key].attended++;
-    if(e.requested) byPlayer[key].requested++;
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,requested:0,showedUp:0,noShow:0,bonus:0};
+    if(e.requested){
+      byPlayer[key].requested++;
+      if(e.attended) byPlayer[key].showedUp++; else byPlayer[key].noShow++;
+    }else if(e.attended){
+      byPlayer[key].bonus++; // showed up without requesting — doesn't hurt or help the rate
+    }
   });
-  var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
-  list.forEach(function(p){ p.pct=totalSessions?Math.round(p.attended/totalSessions*100):0; });
-  list.sort(function(a,b){return a.pct-b.pct;}); // worst attendance first — easiest to spot who's slacking
+  // every roster member appears, even if they've never requested a battle
+  roster.forEach(function(p){
+    if(!byPlayer[p.id]) byPlayer[p.id]={name:p.name,requested:0,showedUp:0,noShow:0,bonus:0};
+  });
 
-  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+totalSessions+' session'+(totalSessions===1?'':'s')+' logged.</div>';
+  var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  list.forEach(function(p){ p.rate = p.requested>0 ? Math.round(p.showedUp/p.requested*100) : null; });
+  list.sort(function(a,b){
+    if(a.requested===0 && b.requested===0) return a.name.localeCompare(b.name);
+    if(a.requested===0) return 1;
+    if(b.requested===0) return -1;
+    return a.rate-b.rate || b.requested-a.requested;
+  });
+
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+totalSessions+' session'+(totalSessions===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.</div>';
   var wrap=document.createElement('div');
   list.forEach(function(p){
-    var cls = p.pct>=80?'good':(p.pct>=50?'mid':'bad');
-    var bg = p.pct>=80?'bgGood':(p.pct>=50?'bgMid':'bgBad');
-    var extra='<div class="sumDmg">'+p.requested+' req.</div>';
     var row=document.createElement('div');
     row.className='sumRow';
-    row.innerHTML=
-      '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
-      '<div class="barTrack"><div class="barFill '+bg+'" style="width:'+p.pct+'%"></div></div>'+
-      '<div class="sumPct '+cls+'">'+p.pct+'%</div>'+extra;
+    var detailDiv=null;
+    if(p.requested===0){
+      row.innerHTML=
+        '<div class="sumName" style="color:var(--text-dim);">'+escapeHtml(p.name)+'</div>'+
+        '<div class="sumDmg" style="width:auto;flex:1.6;text-align:left;">Never requested battle</div>'+
+        '<div class="sumPct" style="color:var(--text-dim);">—</div>';
+    }else{
+      var cls = p.rate>=80?'good':(p.rate>=50?'mid':'bad');
+      var bg = p.rate>=80?'bgGood':(p.rate>=50?'bgMid':'bgBad');
+      row.innerHTML=
+        '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
+        '<div class="barTrack"><div class="barFill '+bg+'" style="width:'+p.rate+'%"></div></div>'+
+        '<div class="sumPct '+cls+'">'+p.rate+'%</div>';
+      detailDiv=document.createElement('div');
+      detailDiv.className='instructions';
+      detailDiv.style.cssText='margin:-4px 0 8px 2px;';
+      var detail='Requested '+p.requested+' · Showed up '+p.showedUp+' · No-show '+p.noShow;
+      if(p.bonus) detail+=' · +'+p.bonus+' extra (attended without requesting)';
+      detailDiv.textContent=detail;
+    }
     wrap.appendChild(row);
+    if(detailDiv) wrap.appendChild(detailDiv);
   });
   box.appendChild(wrap);
 }
@@ -447,6 +488,70 @@ async function renameBTPlayer(oldName){
 }
 function fmtNum(n){ n=n||0; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+/* Exports the full Bear Trap history as an .xlsx: one column per session (date + trap),
+   one row per roster member, "X" where they attended, plus Total/T1/T2/Prefers at the end. */
+async function exportBTExcel(){
+  if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
+  toast('Building Excel…');
+  var {data:sessRows}=await sb.from('bt_sessions').select('id,session_date,trap,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('session_date',{ascending:true});
+  sessRows=sessRows||[];
+  sessRows.sort(function(a,b){ return a.session_date.localeCompare(b.session_date) || (a.trap||'T1').localeCompare(b.trap||'T1'); });
+  if(!sessRows.length){ toast('No sessions to export yet'); return; }
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var {data:entries}=await sb.from('bt_entries').select('session_id,player_name,attended').in('session_id',sessIds);
+  entries=entries||[];
+
+  var trapBySession={}; sessRows.forEach(function(s){ trapBySession[s.id]=s.trap||'T1'; });
+  var attendKey={};
+  entries.forEach(function(e){ if(e.attended) attendKey[(e.player_name||'').toLowerCase()+'|'+e.session_id]=true; });
+
+  var byPlayer={};
+  roster.forEach(function(p){ byPlayer[p.name.toLowerCase()]={name:p.name,total:0,t1:0,t2:0}; });
+  entries.forEach(function(e){
+    if(!e.attended) return;
+    var key=(e.player_name||'').toLowerCase();
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0}; // historical name, no longer on roster
+    byPlayer[key].total++;
+    var trap=trapBySession[e.session_id];
+    if(trap==='T1') byPlayer[key].t1++; else if(trap==='T2') byPlayer[key].t2++;
+  });
+
+  var players=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
+  players.sort(function(a,b){ return b.total-a.total || a.name.localeCompare(b.name); });
+
+  var header=['Player'];
+  sessRows.forEach(function(s){
+    var d=s.session_date;
+    var dm=d.slice(8,10)+'/'+d.slice(5,7);
+    header.push(dm+' '+(s.trap||'T1')+(s.label?(' ('+s.label+')'):''));
+  });
+  header.push('Total','T1','T2','Prefers');
+
+  var aoa=[header];
+  players.forEach(function(p){
+    var row=[p.name];
+    sessRows.forEach(function(s){
+      row.push(attendKey[p.name.toLowerCase()+'|'+s.id] ? 'X' : '');
+    });
+    var pref = p.total===0?'—':(p.t1===p.t2?'Even':(p.t1>p.t2?'Trap 1':'Trap 2'));
+    row.push(p.total,p.t1,p.t2,pref);
+    aoa.push(row);
+  });
+
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  var colWidths=[{wch:22}];
+  sessRows.forEach(function(){colWidths.push({wch:13});});
+  colWidths.push({wch:8},{wch:6},{wch:6},{wch:10});
+  ws['!cols']=colWidths;
+
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Bear Trap');
+  var today=new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,'bear_trap_attendance_'+today+'.xlsx');
+  toast('Downloaded ✓');
+}
 
 /* ── SESSIONS LIST ─────────────────────────────────────────────── */
 async function renderSessionsList(){
