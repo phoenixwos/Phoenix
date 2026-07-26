@@ -335,8 +335,10 @@ async function renderSummary(){
 }
 
 /* Foundry/Canyon summary: "requested battle" and "showed up" are tracked separately.
-   Players who never request aren't penalized. Foundry shows Legión 1 and Legión 2
-   as two separate ranked blocks; Canyon (no legions) shows one combined ranking. */
+   One combined ranking, same as Bear Trap does with T1/T2 — Foundry rows also show
+   the Legión 1 / Legión 2 split, since a player isn't locked to one legion forever.
+   Players who never request aren't penalized. R4/R5/admin can remove a player's
+   history here directly once they've left PXR. */
 async function renderEventSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
@@ -346,59 +348,30 @@ async function renderEventSummary(){
   var sessRows=r.data||[];
   if(!sessRows.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
   var sessIds=sessRows.map(function(s){return s.id;});
+  var labelBySession={}; sessRows.forEach(function(s){ labelBySession[s.id]=s.label||''; });
 
   var er=await sb.from('event_entries').select('session_id,player_id,player_name,requested,attended').in('session_id',sessIds);
-  var allEntries=er.data||[];
+  var entries=er.data||[];
 
-  box.innerHTML='';
-
-  if(currentTab==='foundry'){
-    var l1=sessRows.filter(function(s){return s.label==='Legión 1';});
-    var l2=sessRows.filter(function(s){return s.label==='Legión 2';});
-    var other=sessRows.filter(function(s){return s.label!=='Legión 1' && s.label!=='Legión 2';});
-    var groups=[{title:'Legión 1',sessions:l1},{title:'Legión 2',sessions:l2}];
-    if(other.length) groups.push({title:'Other sessions (no legion set)',sessions:other});
-    groups.forEach(function(g){
-      var h=document.createElement('div');
-      h.className='panel-title';
-      h.style.cssText='margin:14px 0 6px;';
-      h.textContent=g.title+' — '+g.sessions.length+' session'+(g.sessions.length===1?'':'s');
-      box.appendChild(h);
-      if(!g.sessions.length){
-        var e=document.createElement('div');
-        e.className='instructions';
-        e.textContent='No sessions logged yet for this legion.';
-        box.appendChild(e);
-        return;
-      }
-      var gIds=g.sessions.map(function(s){return s.id;});
-      var gEntries=allEntries.filter(function(e){return gIds.indexOf(e.session_id)>=0;});
-      renderEventRankingInto(box, gEntries);
-    });
-  }else{
-    var h=document.createElement('div');
-    h.className='instructions'; h.style.marginBottom='8px';
-    h.textContent=sessRows.length+' session'+(sessRows.length===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.';
-    box.appendChild(h);
-    renderEventRankingInto(box, allEntries);
-  }
-}
-
-function renderEventRankingInto(box, entries){
+  var isFoundry=(currentTab==='foundry');
   var byPlayer={};
   entries.forEach(function(e){
     var key=e.player_id||('name:'+e.player_name);
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,requested:0,showedUp:0,noShow:0,bonus:0};
+    if(!byPlayer[key]) byPlayer[key]={key:key,name:e.player_name,requested:0,showedUp:0,noShow:0,bonus:0,l1req:0,l1show:0,l2req:0,l2show:0};
+    var p=byPlayer[key];
+    var lbl=labelBySession[e.session_id];
     if(e.requested){
-      byPlayer[key].requested++;
-      if(e.attended) byPlayer[key].showedUp++; else byPlayer[key].noShow++;
+      p.requested++;
+      if(e.attended) p.showedUp++; else p.noShow++;
+      if(lbl==='Legión 1'){ p.l1req++; if(e.attended) p.l1show++; }
+      else if(lbl==='Legión 2'){ p.l2req++; if(e.attended) p.l2show++; }
     }else if(e.attended){
-      byPlayer[key].bonus++; // showed up without requesting — doesn't hurt or help the rate
+      p.bonus++; // showed up without requesting — doesn't hurt or help the rate
     }
   });
   // every roster member appears, even if they've never requested a battle
   roster.forEach(function(p){
-    if(!byPlayer[p.id]) byPlayer[p.id]={name:p.name,requested:0,showedUp:0,noShow:0,bonus:0};
+    if(!byPlayer[p.id]) byPlayer[p.id]={key:p.id,name:p.name,requested:0,showedUp:0,noShow:0,bonus:0,l1req:0,l1show:0,l2req:0,l2show:0};
   });
 
   var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
@@ -410,32 +383,58 @@ function renderEventRankingInto(box, entries){
     return a.rate-b.rate || b.requested-a.requested;
   });
 
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' session'+(sessRows.length===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.</div>';
+  var wrap=document.createElement('div');
   list.forEach(function(p){
     var row=document.createElement('div');
     row.className='sumRow';
     var detailDiv=null;
+    var editHtml=canEdit?'<div class="sumEdit"><button class="evDelName" title="Remove">🗑</button></div>':'';
     if(p.requested===0){
       row.innerHTML=
         '<div class="sumName" style="color:var(--text-dim);">'+escapeHtml(p.name)+'</div>'+
         '<div class="sumDmg" style="width:auto;flex:1.6;text-align:left;">Never requested battle</div>'+
-        '<div class="sumPct" style="color:var(--text-dim);">—</div>';
+        '<div class="sumPct" style="color:var(--text-dim);">—</div>'+editHtml;
     }else{
       var cls = p.rate>=80?'good':(p.rate>=50?'mid':'bad');
       var bg = p.rate>=80?'bgGood':(p.rate>=50?'bgMid':'bgBad');
       row.innerHTML=
         '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
         '<div class="barTrack"><div class="barFill '+bg+'" style="width:'+p.rate+'%"></div></div>'+
-        '<div class="sumPct '+cls+'">'+p.rate+'%</div>';
+        '<div class="sumPct '+cls+'">'+p.rate+'%</div>'+editHtml;
       detailDiv=document.createElement('div');
       detailDiv.className='instructions';
       detailDiv.style.cssText='margin:-4px 0 8px 2px;';
       var detail='Requested '+p.requested+' · Showed up '+p.showedUp+' · No-show '+p.noShow;
+      if(isFoundry) detail+=' · L1 '+p.l1show+'/'+p.l1req+' · L2 '+p.l2show+'/'+p.l2req;
       if(p.bonus) detail+=' · +'+p.bonus+' extra (attended without requesting)';
       detailDiv.textContent=detail;
     }
-    box.appendChild(row);
-    if(detailDiv) box.appendChild(detailDiv);
+    var delBtn=row.querySelector('.evDelName');
+    if(delBtn) delBtn.addEventListener('click',function(){ deleteEventPlayer(p.key,p.name); });
+    wrap.appendChild(row);
+    if(detailDiv) wrap.appendChild(detailDiv);
   });
+  box.appendChild(wrap);
+}
+
+/* Removes a player's entire attendance history for the active tab (Foundry or Canyon) —
+   for when they've left PXR. Doesn't touch the other tab's history. */
+async function deleteEventPlayer(key, name){
+  if(!confirm('Remove "'+name+'" from '+tabLabel()+'? This deletes all their request/attendance history for this tab.')) return;
+  var r=await sb.from('event_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var sessIds=(r.data||[]).map(function(s){return s.id;});
+  if(sessIds.length){
+    var er=await sb.from('event_entries').select('id,player_id,player_name').in('session_id',sessIds);
+    var toDelete=(er.data||[]).filter(function(e){
+      var k=e.player_id||('name:'+e.player_name);
+      return k===key;
+    }).map(function(e){return e.id;});
+    if(toDelete.length) await sb.from('event_entries').delete().in('id',toDelete);
+  }
+  roster=roster.filter(function(p){return p.id!==key;});
+  toast('Removed ✓');
+  renderEventSummary();
 }
 
 /* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc.
