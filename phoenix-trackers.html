@@ -122,7 +122,13 @@
         <div class="tab trapTab" data-trap="T2">Trap 2</div>
       </div>
     </div>
-    <div class="field"><label>Label (optional — e.g. "Foundry vs SNO")</label><input id="fLabel" placeholder="Optional"></div>
+    <div class="field" id="fLegionField" style="display:none;"><label>Legion</label>
+      <div class="tabs" id="entryLegionTabs">
+        <div class="tab legionTab on" data-legion="L1">Legión 1</div>
+        <div class="tab legionTab" data-legion="L2">Legión 2</div>
+      </div>
+    </div>
+    <div class="field" id="fLabelField"><label>Label (optional — e.g. "Foundry vs SNO")</label><input id="fLabel" placeholder="Optional"></div>
   </div>
   <div class="panel">
     <div class="panel-title" id="rosterTitle">Roster</div>
@@ -217,6 +223,7 @@ function renderAdminPicker(){
 /* ── STATE ─────────────────────────────────────────────────────── */
 var currentTab='bt'; // bt | foundry | canyon
 var entryTrap='T1';   // which trap the open session-entry form is for (bt only)
+var entryLegion='L1'; // which legion the open session-entry form is for (foundry only)
 var roster=[];        // [{id,name}]
 var editingSessionId=null;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
@@ -239,6 +246,12 @@ async function boot(){
     t.addEventListener('click',function(){
       document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(x){x.classList.remove('on');});
       t.classList.add('on'); entryTrap=t.dataset.trap;
+    });
+  });
+  document.querySelectorAll('#entryLegionTabs .legionTab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('#entryLegionTabs .legionTab').forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on'); entryLegion=t.dataset.legion;
     });
   });
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
@@ -322,22 +335,56 @@ async function renderSummary(){
 }
 
 /* Foundry/Canyon summary: "requested battle" and "showed up" are tracked separately.
-   Players who never request aren't penalized — they're listed at the bottom, unflagged.
-   Players who requested and then no-showed sort to the top (worst first). */
+   Players who never request aren't penalized. Foundry shows Legión 1 and Legión 2
+   as two separate ranked blocks; Canyon (no legions) shows one combined ranking. */
 async function renderEventSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
   document.getElementById('summaryTitle').textContent=tabLabel()+' — battle requests & attendance';
 
-  var r=await sb.from('event_sessions').select('id').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var r=await sb.from('event_sessions').select('id,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
   var sessRows=r.data||[];
-  var totalSessions=sessRows.length;
-  if(!totalSessions){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
+  if(!sessRows.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
   var sessIds=sessRows.map(function(s){return s.id;});
 
-  var er=await sb.from('event_entries').select('player_id,player_name,requested,attended').in('session_id',sessIds);
-  var entries=er.data||[];
+  var er=await sb.from('event_entries').select('session_id,player_id,player_name,requested,attended').in('session_id',sessIds);
+  var allEntries=er.data||[];
 
+  box.innerHTML='';
+
+  if(currentTab==='foundry'){
+    var l1=sessRows.filter(function(s){return s.label==='Legión 1';});
+    var l2=sessRows.filter(function(s){return s.label==='Legión 2';});
+    var other=sessRows.filter(function(s){return s.label!=='Legión 1' && s.label!=='Legión 2';});
+    var groups=[{title:'Legión 1',sessions:l1},{title:'Legión 2',sessions:l2}];
+    if(other.length) groups.push({title:'Other sessions (no legion set)',sessions:other});
+    groups.forEach(function(g){
+      var h=document.createElement('div');
+      h.className='panel-title';
+      h.style.cssText='margin:14px 0 6px;';
+      h.textContent=g.title+' — '+g.sessions.length+' session'+(g.sessions.length===1?'':'s');
+      box.appendChild(h);
+      if(!g.sessions.length){
+        var e=document.createElement('div');
+        e.className='instructions';
+        e.textContent='No sessions logged yet for this legion.';
+        box.appendChild(e);
+        return;
+      }
+      var gIds=g.sessions.map(function(s){return s.id;});
+      var gEntries=allEntries.filter(function(e){return gIds.indexOf(e.session_id)>=0;});
+      renderEventRankingInto(box, gEntries);
+    });
+  }else{
+    var h=document.createElement('div');
+    h.className='instructions'; h.style.marginBottom='8px';
+    h.textContent=sessRows.length+' session'+(sessRows.length===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.';
+    box.appendChild(h);
+    renderEventRankingInto(box, allEntries);
+  }
+}
+
+function renderEventRankingInto(box, entries){
   var byPlayer={};
   entries.forEach(function(e){
     var key=e.player_id||('name:'+e.player_name);
@@ -363,8 +410,6 @@ async function renderEventSummary(){
     return a.rate-b.rate || b.requested-a.requested;
   });
 
-  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+totalSessions+' session'+(totalSessions===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.</div>';
-  var wrap=document.createElement('div');
   list.forEach(function(p){
     var row=document.createElement('div');
     row.className='sumRow';
@@ -388,10 +433,9 @@ async function renderEventSummary(){
       if(p.bonus) detail+=' · +'+p.bonus+' extra (attended without requesting)';
       detailDiv.textContent=detail;
     }
-    wrap.appendChild(row);
-    if(detailDiv) wrap.appendChild(detailDiv);
+    box.appendChild(row);
+    if(detailDiv) box.appendChild(detailDiv);
   });
-  box.appendChild(wrap);
 }
 
 /* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc.
@@ -654,6 +698,8 @@ async function openEntry(sessionId){
   document.getElementById('entryTitle').textContent=(sessionId?'Edit ':'New ')+tabLabel()+' session';
   document.getElementById('deleteSessionBtn').style.display=sessionId?'':'none';
   document.getElementById('fTrapField').style.display=(currentTab==='bt')?'block':'none';
+  document.getElementById('fLegionField').style.display=(currentTab==='foundry')?'block':'none';
+  document.getElementById('fLabelField').style.display=(currentTab==='foundry')?'none':'block';
   document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
   currentEntries={};
 
@@ -669,6 +715,7 @@ async function openEntry(sessionId){
     document.getElementById('fDate').value=sRow?sRow.session_date:'';
     document.getElementById('fLabel').value=sRow?(sRow.label||''):'';
     entryTrap=(sRow&&sRow.trap)||'T1';
+    entryLegion=(sRow&&sRow.label==='Legión 2')?'L2':'L1';
     eRows.forEach(function(e){
       var key=(currentTab==='bt')?(e.player_name||'').toLowerCase():(e.player_id||('name:'+e.player_name));
       currentEntries[key]={attended:!!e.attended,requested:!!e.requested,damage:e.damage||0,name:e.player_name};
@@ -677,9 +724,13 @@ async function openEntry(sessionId){
     document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
     document.getElementById('fLabel').value='';
     entryTrap='T1';
+    entryLegion='L1';
   }
   document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(t){
     t.classList.toggle('on', t.dataset.trap===entryTrap);
+  });
+  document.querySelectorAll('#entryLegionTabs .legionTab').forEach(function(t){
+    t.classList.toggle('on', t.dataset.legion===entryLegion);
   });
   document.getElementById('rosterSearch').value='';
   renderRoster('');
@@ -711,7 +762,7 @@ function renderRoster(filter){
 async function saveSession(){
   var date=document.getElementById('fDate').value;
   if(!date){toast('Pick a date');return;}
-  var label=document.getElementById('fLabel').value.trim()||null;
+  var label=(currentTab==='foundry')?(entryLegion==='L2'?'Legión 2':'Legión 1'):(document.getElementById('fLabel').value.trim()||null);
   var btn=document.getElementById('saveSessionBtn'); btn.textContent='Saving…'; btn.disabled=true;
 
   try{
