@@ -104,7 +104,12 @@
     <div class="panel-title">Sessions</div>
     <div class="row" style="margin-bottom:4px;">
       <button class="btn fire" id="newSessionBtn" style="flex:1;">＋ New session</button>
-      <button class="btn" id="exportBtnBT" style="flex:none;">⬇ Excel</button>
+    </div>
+    <div class="row" style="margin-bottom:4px;">
+      <button class="btn" id="exportBtnBT" style="flex:1;">⬇ Excel</button>
+      <button class="btn" id="templateBtn" style="flex:1;">⬇ Template</button>
+      <button class="btn" id="importBtn" style="flex:1;">⬆ Import</button>
+      <input type="file" id="importFile" accept=".xlsx" style="display:none;">
     </div>
     <div id="sessList" class="sessList"></div>
   </div>
@@ -258,6 +263,29 @@ async function boot(){
   document.getElementById('exportBtnBT').addEventListener('click',function(){
     if(currentTab==='bt') exportBTExcel(); else exportEventExcel();
   });
+  document.getElementById('templateBtn').addEventListener('click',downloadTemplate);
+  document.getElementById('importBtn').addEventListener('click',function(){
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change',function(ev){
+    var file=ev.target.files[0];
+    ev.target.value='';
+    if(!file) return;
+    if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
+    var reader=new FileReader();
+    reader.onload=function(evt){
+      try{
+        var data=new Uint8Array(evt.target.result);
+        var wb=XLSX.read(data,{type:'array'});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        handleImportedAOA(aoa);
+      }catch(err){
+        toast('Could not read that file');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
   document.getElementById('entryBack').addEventListener('click',function(e){e.preventDefault();showSummaryScreen();});
   document.getElementById('saveSessionBtn').addEventListener('click',saveSession);
   document.getElementById('deleteSessionBtn').addEventListener('click',deleteSession);
@@ -268,6 +296,8 @@ async function boot(){
   if(!canEdit){
     document.getElementById('newSessionBtn').style.display='none';
     document.getElementById('addPlayerRow').style.display='none';
+    document.getElementById('templateBtn').style.display='none';
+    document.getElementById('importBtn').style.display='none';
     var note=document.createElement('p');
     note.className='instructions';
     note.style.textAlign='center';
@@ -604,6 +634,118 @@ async function exportEventExcel(){
   toast('Downloaded ✓');
 }
 function escapeHtml(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+/* ── TEMPLATE / IMPORT — lets a non-tech person fill attendance in Excel,
+   no Supabase or SQL needed. Layout is fixed on purpose so import can find it. */
+function tmplMetaLabel(){
+  if(currentTab==='bt') return 'Trap (T1 or T2)';
+  if(currentTab==='foundry') return 'Legion (L1 or L2)';
+  return 'Label (optional)';
+}
+
+async function downloadTemplate(){
+  if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
+  toast('Building template…');
+  await loadRoster();
+  var aoa=[
+    ['PHOENIX — '+tabLabel()+' import template'],
+    ['Fill in the cells below, save the file, then tap ⬆ Import on the page.'],
+    [],
+    ['Date (YYYY-MM-DD)',''],
+    [tmplMetaLabel(), currentTab==='bt'?'T1':(currentTab==='foundry'?'L1':'')],
+    []
+  ];
+  if(currentTab==='bt'){
+    aoa.push(['Player','Attended (mark X)']);
+    roster.forEach(function(p){ aoa.push([p.name,'']); });
+  }else{
+    aoa.push(['Player','Requested (mark X)','Attended (mark X)']);
+    roster.forEach(function(p){ aoa.push([p.name,'','']); });
+  }
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:24},{wch:20},{wch:20}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,tabLabel());
+  XLSX.writeFile(wb, currentTab+'_template.xlsx');
+  toast('Downloaded ✓');
+}
+
+/* Reads a filled-in template, pre-fills the New Session form (date, trap/legion/label,
+   and every checkbox), then leaves it open for a final check before ＋ Save. */
+async function handleImportedAOA(aoa){
+  var dateVal=null, metaVal=null, headerRowIdx=-1;
+  for(var i=0;i<aoa.length;i++){
+    var row=aoa[i]||[];
+    var label=(row[0]||'').toString().trim().toLowerCase();
+    if(label.indexOf('date')===0) dateVal=(row[1]||'').toString().trim();
+    if(label.indexOf('trap')===0 || label.indexOf('legion')===0 || label.indexOf('label')===0) metaVal=(row[1]||'').toString().trim();
+    if((row[0]||'').toString().trim()==='Player'){ headerRowIdx=i; break; }
+  }
+  if(headerRowIdx<0){ toast("This doesn't look like a template file"); return; }
+  if(!dateVal){ toast('No date found in the file'); return; }
+  var d=new Date(dateVal);
+  var isoDate=/^\d{4}-\d{2}-\d{2}$/.test(dateVal) ? dateVal : (isNaN(d)?null:d.toISOString().slice(0,10));
+  if(!isoDate){ toast('Could not read the date — use YYYY-MM-DD'); return; }
+
+  var marks={};
+  for(var j=headerRowIdx+1;j<aoa.length;j++){
+    var r=aoa[j]||[];
+    var name=(r[0]||'').toString().trim();
+    if(!name) continue;
+    if(currentTab==='bt'){
+      marks[name]={attended:!!(r[1]||'').toString().trim()};
+    }else{
+      marks[name]={requested:!!(r[1]||'').toString().trim(), attended:!!(r[2]||'').toString().trim()};
+    }
+  }
+
+  await openEntry(null);
+  document.getElementById('fDate').value=isoDate;
+  if(currentTab==='bt'){
+    entryTrap=(metaVal&&metaVal.toUpperCase().indexOf('2')>=0)?'T2':'T1';
+    document.querySelectorAll('#entryTrapTabs .trapTab').forEach(function(t){ t.classList.toggle('on', t.dataset.trap===entryTrap); });
+  }else if(currentTab==='foundry'){
+    entryLegion=(metaVal&&metaVal.toUpperCase().indexOf('2')>=0)?'L2':'L1';
+    document.querySelectorAll('#entryLegionTabs .legionTab').forEach(function(t){ t.classList.toggle('on', t.dataset.legion===entryLegion); });
+  }else{
+    document.getElementById('fLabel').value=metaVal||'';
+  }
+
+  // add any name that isn't on the roster yet (Bear Trap only — Foundry/Canyon rosters
+  // come from registered player profiles, managed elsewhere)
+  var names=Object.keys(marks);
+  var missing=[];
+  for(var k=0;k<names.length;k++){
+    var name=names[k];
+    var exists=roster.some(function(p){return p.name.toLowerCase()===name.toLowerCase();});
+    if(!exists && currentTab==='bt' && roster.length<100){
+      var ins=await sb.from('bt_roster_names').insert({alliance_id:ACTIVE_ALLIANCE_ID,name:name}).select('id,name').single();
+      if(!ins.error){ roster.push({id:ins.data.id,name:ins.data.name,adhoc:true}); exists=true; }
+    }
+    if(!exists) missing.push(name);
+  }
+  roster.sort(function(a,b){return a.name.localeCompare(b.name);});
+  renderRoster('');
+
+  var marksLower={};
+  names.forEach(function(n){ marksLower[n.toLowerCase()]=marks[n]; });
+  document.querySelectorAll('#rosterList .rosterRow').forEach(function(row){
+    var m=marksLower[row.dataset.pname.toLowerCase()];
+    if(!m) return;
+    if(currentTab==='bt'){
+      row.querySelector('.rAttended').checked=!!m.attended;
+    }else{
+      row.querySelector('.rRequested').checked=!!m.requested;
+      row.querySelector('.rAttended').checked=!!m.attended;
+    }
+  });
+
+  if(missing.length){
+    toast(missing.length+' name(s) not found — add manually: '+missing.slice(0,3).join(', ')+(missing.length>3?'…':''));
+  }else{
+    toast('Imported ✓ — review and tap Save');
+  }
+}
 
 /* Exports the full Bear Trap history as an .xlsx: one column per session (date + trap),
    one row per roster member, "X" where they attended, plus Total/T1/T2/Prefers at the end. */
