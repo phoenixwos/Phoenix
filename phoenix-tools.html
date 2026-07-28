@@ -65,15 +65,28 @@
 <div class="wrap">
   <p class="lead">State utilities for leaders and players. <b>Donate</b> to help keep building useful tools for the state's growth.</p>
 
-  <!-- ════ PXR TOOLS ════ -->
-  <div class="grp" id="grpPXR" style="display:none;">🔥 PXR tools <span>· admin or R4/R5 of PXR</span></div>
+  <!-- ════ PXR / SNO ONLY — shared library, affects every alliance ════ -->
+  <div class="grp" id="grpPXR" style="display:none;">🔥 PXR &amp; SNO only <span>· shared alliance content</span></div>
+
+  <a class="card gold" id="cardCopyPaste" style="display:none;">
+    <div class="emoji">📋</div>
+    <div class="body">
+      <h3>Copy-Paste Hub</h3>
+      <p>Shared library of ready-to-paste alliance messages, organized by event.</p>
+      <span class="tag leaders">PXR / SNO · R4 / R5</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <!-- ════ LEADER TOOLS ════ -->
+  <div class="grp" id="grpLeader" style="display:none;">🛡️ Leader tools <span>· R4 / R5, view free · save needs trial or sub</span></div>
 
   <a class="card" id="cardHive" style="display:none;">
     <div class="emoji">🐝</div>
     <div class="body">
       <h3>Hive Designer</h3>
       <p>Plan the alliance hive: bear traps, ringed cities, banners &amp; obstacles.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
+      <span class="tag leaders">R4 / R5 · save = trial/sub</span>
     </div>
     <div class="arr">›</div>
   </a>
@@ -83,7 +96,7 @@
     <div class="body">
       <h3>World Map</h3>
       <p>Drop a saved hive on your local map, plan banner chains and see which alliance farms you cover.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
+      <span class="tag leaders">R4 / R5 · save = trial/sub</span>
     </div>
     <div class="arr">›</div>
   </a>
@@ -93,17 +106,7 @@
     <div class="body">
       <h3>Rally Sync</h3>
       <p>Calculate when each leader needs to send so everyone lands at the same time.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
-    </div>
-    <div class="arr">›</div>
-  </a>
-
-  <a class="card gold" id="cardTrackers" style="display:none;">
-    <div class="emoji">📊</div>
-    <div class="body">
-      <h3>Attendance Trackers</h3>
-      <p>Bear Trap damage &amp; attendance, plus Foundry/Canyon participation — see who shows up at a glance.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
+      <span class="tag leaders">R4 / R5 · link = trial/sub</span>
     </div>
     <div class="arr">›</div>
   </a>
@@ -113,23 +116,11 @@
     <div class="body">
       <h3>VP Schedule</h3>
       <p>48 half-hour slots, 24 hours — fill in who's on farm duty and when, then export by alliance.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
+      <span class="tag leaders">R4 / R5 · free</span>
     </div>
     <div class="arr">›</div>
   </a>
 
-  <a class="card gold" id="cardCopyPaste" style="display:none;">
-    <div class="emoji">📋</div>
-    <div class="body">
-      <h3>Copy-Paste Hub</h3>
-      <p>Shared library of ready-to-paste alliance messages, organized by event.</p>
-      <span class="tag leaders">PXR · R4 / R5</span>
-    </div>
-    <div class="arr">›</div>
-  </a>
-
-  <!-- ════ LEADER TOOLS ════ -->
-  <div class="grp" id="grpLeader" style="display:none;">🛡️ Leader tools <span>· R4 / R5</span></div>
 
   <a class="card" id="cardMap" style="display:none;">
     <div class="emoji">🏰</div>
@@ -173,6 +164,26 @@
 
   <!-- ════ FOR EVERYONE ════ -->
   <div class="grp">🌍 For everyone</div>
+
+  <a class="card gold" id="cardGuide">
+    <div class="emoji">📘</div>
+    <div class="body">
+      <h3>Leader's Guide</h3>
+      <p>What's free, what's premium, and how to get the most out of every tool below.</p>
+      <span class="tag everyone">Everyone · start here</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
+  <a class="card gold" id="cardTrackers">
+    <div class="emoji">📊</div>
+    <div class="body">
+      <h3>Attendance Trackers</h3>
+      <p>Bear Trap damage &amp; attendance, plus Foundry/Canyon participation — see who shows up at a glance.</p>
+      <span class="tag everyone">Everyone · always free</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
 
   <a class="card" id="cardAlerts">
     <div class="emoji">📅</div>
@@ -251,7 +262,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardAlerts:'phoenix-event-alerts.html'};
+  var dest={cardGuide:'phoenix-leader-guide.html', cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardAlerts:'phoenix-event-alerts.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });
@@ -266,15 +277,19 @@
 })();
 </script>
 <script>
-/* Everyone can open this hub — the Ratio Calculator is public.
-   Leader-only tools (map, numbers, redeem, rally sync) only reveal
-   their cards for admin/R4/R5; each tool page also re-checks on its own. */
+/* Everyone can open this hub — the free tools and the Leader's Guide are always visible.
+   Leader-only tools (map, numbers, redeem, milestones, hive, world, rally, VP) reveal
+   their cards for any admin/R4/R5; each tool page also re-checks on its own and gates
+   the actual save/deliver step behind PXR/SNO, a free trial, or a paid sub.
+   Copy-Paste Hub is the one exception — it's a single shared library that affects every
+   alliance at once, so its card stays exclusive to PXR/SNO. */
 (function(){
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+  var FREE_TAGS=['PXR','SNO'];
   function show(ids){ ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; }); }
-  function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem','cardMilestones']); }        // any R4/R5/admin
-  function revealPXR(){ show(['grpPXR','cardHive','cardWorld','cardRally','cardCopyPaste','cardTrackers','cardVP']); }  // admin OR R4/R5 of PXR
+  function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem','cardMilestones','cardHive','cardWorld','cardRally','cardVP']); } // any R4/R5/admin
+  function revealPXR(){ show(['grpPXR','cardCopyPaste']); } // admin OR R4/R5 of PXR/SNO
   try{
     if(!(window.supabase&&window.supabase.createClient)) return;
     var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
@@ -288,13 +303,16 @@
         if(staff) revealLeader();
         var isAdmin=rows.some(function(p){return p.role==='admin';});
         if(isAdmin){ revealPXR(); return; }
-        // R4/R5 only unlock PXR tools if one of their alliances is PXR
+        // R4/R5 only unlock the shared Copy-Paste library if one of their alliances is PXR or SNO
         var ids=[];
         rows.forEach(function(p){ if((p.role==='r4'||p.role==='r5')&&p.alliance_id&&ids.indexOf(p.alliance_id)<0) ids.push(p.alliance_id); });
         if(!ids.length) return;
         sb.from('alliances').select('id,tag').in('id',ids).then(function(ar){
-          var pxr=(ar.data||[]).some(function(a){return ((a.tag||'').toUpperCase()).indexOf('PXR')===0;});
-          if(pxr) revealPXR();
+          var free=(ar.data||[]).some(function(a){
+            var tag=(a.tag||'').toUpperCase();
+            return FREE_TAGS.some(function(t){ return tag.indexOf(t)===0; });
+          });
+          if(free) revealPXR();
         }).catch(function(){});
       }).catch(function(){});
     }).catch(function(){});

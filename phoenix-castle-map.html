@@ -532,7 +532,7 @@ async function loadDraft(){
 document.getElementById('saveBtn').addEventListener('click', async () => {
   PhxAccess.check(async function(granted, reason){
     if(!granted){
-      toast('🔒 Saving is a premium feature. ' + PhxAccess.message(reason));
+      toast('🔒 Saving is a premium feature — subscribe on Ko-fi ($5/mo) or ask your R4/R5 to start the free 7-day trial.');
       return;
     }
     toast(t('saving'));

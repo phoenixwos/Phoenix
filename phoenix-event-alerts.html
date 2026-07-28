@@ -446,7 +446,7 @@ async function saveDiscordWebhook(){
   }else{
     var proceed=await new Promise(function(resolve){
       PhxAccess.check(function(granted, reason){
-        if(!granted){ toast('🔒 Discord alerts are a premium feature. '+PhxAccess.message(reason)); resolve(false); }
+        if(!granted){ toast('🔒 Discord alerts are a premium feature — subscribe on Ko-fi ($5/mo) or ask your R4/R5 to start the free 7-day trial.'); resolve(false); }
         else{ resolve(true); }
       });
     });

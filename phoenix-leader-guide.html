@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phoenix — Leader Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@400;500;600&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#dff0fa; --sky2:#c8e8f8; --ice:#a0d4f0; --ice-deep:#4a9fd4;
+  --panel:#f0f8ff; --panel-edge:#c0dff0; --ink:#1e3a52; --ink-soft:#4a6a86; --muted:#7fa0b8;
+  --gold:#ffb938; --gold-deep:#f59e0b; --green:#56c98a; --green-d:#3da76e;
+  --acc:#ff7a2e; --acc-d:#e85a18; --acc-sh:#c2470f; --white:#fff;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{
+  margin:0; min-height:100vh; font-family:'Fredoka',sans-serif; color:var(--ink);
+  background:linear-gradient(180deg,var(--sky),var(--sky2) 60%);
+  padding-bottom:40px;
+}
+.top{
+  position:sticky; top:0; z-index:20; background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.85));
+  backdrop-filter:blur(8px); border-bottom:2px solid var(--panel-edge); padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.top a.back{color:var(--ink-soft); text-decoration:none; font-weight:600; font-size:14px;}
+.brand{font-family:'Cinzel',serif; font-weight:700; font-size:17px;}
+.brand b{color:var(--acc);}
+
+.hero{padding:26px 16px 18px; text-align:center;}
+.hero h1{font-family:'Baloo 2',cursive; font-weight:800; font-size:25px; margin:0 0 6px;
+  background:linear-gradient(90deg,var(--ice-deep),var(--acc)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.hero p{color:var(--ink-soft); font-size:14px; margin:0 auto; max-width:460px; line-height:1.5;}
+
+.wrap{max-width:640px; margin:0 auto; padding:0 14px;}
+
+.statusBox{max-width:480px;margin:0 auto 14px;padding:14px 16px;border-radius:14px;
+  background:var(--panel);border:2px solid var(--panel-edge);text-align:center;font-size:13.5px;color:var(--ink-soft);}
+.statusBox b{color:var(--ink);}
+.statusBox a{color:var(--acc-d);font-weight:700;text-decoration:none;}
+
+.tabs{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0;}
+.tab{padding:8px 13px; border-radius:999px; border:2px solid var(--panel-edge); background:var(--panel);
+  color:var(--ink-soft); font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Fredoka';}
+.tab.on{background:var(--ice-deep); border-color:var(--ice-deep); color:#fff;}
+
+.pane{display:none;}
+.pane.on{display:block;}
+
+.gSection{background:var(--panel); border:2px solid var(--panel-edge); border-radius:16px; padding:16px 17px; margin-bottom:14px;}
+.gSection h3{font-family:'Baloo 2';font-size:16px; color:var(--ink); margin:0 0 8px;}
+.gSection p{font-size:13.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 9px;}
+.gSection p:last-child{margin-bottom:0;}
+.gSection ul{margin:0 0 9px; padding-left:19px;}
+.gSection li{font-size:13.5px; color:var(--ink-soft); line-height:1.6; margin-bottom:5px;}
+.gSection b{color:var(--ink);}
+.gSection a.inline{color:var(--acc-d); font-weight:700; text-decoration:none;}
+.gStep{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+.gStep:last-child{margin-bottom:0;}
+.gNum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--ice-deep);color:#fff;font-weight:800;
+  font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka';}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;margin-left:6px;vertical-align:middle;}
+.badge.free{background:rgba(61,167,110,.15);color:var(--green-d);}
+.badge.premium{background:rgba(255,122,46,.15);color:var(--acc-d);}
+.linkCard{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(255,122,46,.08),rgba(255,185,56,.08));
+  border:2px solid var(--gold-deep);border-radius:14px;padding:13px 15px;text-decoration:none;margin-bottom:14px;}
+.linkCard .em{font-size:26px;}
+.linkCard .tx b{display:block;color:var(--ink);font-size:14.5px;font-family:'Baloo 2';font-weight:700;}
+.linkCard .tx span{color:var(--ink-soft);font-size:12px;}
+.linkCard .go{margin-left:auto;color:var(--acc-d);font-size:20px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="back" id="backLink" href="phoenix-tools.html">‹ Tools</a>
+  <div class="brand">📘 <b>Leader's</b> Guide</div>
+  <span></span>
+</div>
+
+<div class="hero">
+  <h1>Get the most out of Phoenix</h1>
+  <p>A quick tour of every tool built for alliance leaders — what's always free, what's premium, and the tricks that make each one worth using every week.</p>
+</div>
+
+<div class="statusBox" id="statusBox">Checking your access…</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab on" data-t="start">🎯 Start here</div>
+    <div class="tab" data-t="rally">⏱️ Rally Sync</div>
+    <div class="tab" data-t="planning">🏰 Castle &amp; Hive Planning</div>
+    <div class="tab" data-t="redeem">🎁 Gift Codes</div>
+    <div class="tab" data-t="discord">📣 Discord Alerts</div>
+    <div class="tab" data-t="free">🐻 Trackers &amp; free tools</div>
+  </div>
+
+  <!-- START HERE -->
+  <div class="pane on" id="p-start">
+    <div class="gSection">
+      <h3>🆓 What's always free</h3>
+      <p>No login tier needed — every alliance gets these forever: <b>Bear Trap / Foundry / Canyon Trackers</b>, the <b>Beginner's Guide</b>, the <b>Hero Guide</b>, the <b>VP Tracker</b>, and the ratio/capacity calculators. Using them costs nothing and never expires.</p>
+    </div>
+    <div class="gSection">
+      <h3>🔒 What's premium</h3>
+      <p>A handful of tools have one feature locked behind a subscription — the tool itself is always usable, only the "save" or "deliver" step needs it:</p>
+      <ul>
+        <li><b>Rally Sync</b> — the shareable live countdown link</li>
+        <li><b>Castle Map / Castle Numbers</b> — saving your layout</li>
+        <li><b>Hive Designer</b> — saving your Bear Trap design</li>
+        <li><b>World Map</b> — saving your world plan</li>
+        <li><b>Discord Alerts</b> — turning on delivery to your server</li>
+        <li><b>Gift Code Redemption</b> — the whole tool (no free tier here)</li>
+      </ul>
+      <p>Everything else — planning, building, previewing — is free even without a subscription.</p>
+    </div>
+    <div class="gSection">
+      <h3>⏳ The 7-day trial</h3>
+      <div class="gStep"><div class="gNum">1</div><p>The first time anyone from your alliance opens a premium tool, a 7-day full-access trial starts automatically — no card, no signup step.</p></div>
+      <div class="gStep"><div class="gNum">2</div><p>Everything above unlocks immediately for your whole alliance, not just the person who triggered it.</p></div>
+      <div class="gStep"><div class="gNum">3</div><p>When it ends, tools drop back to free/view-only until you subscribe — nothing you already saved gets deleted.</p></div>
+    </div>
+    <a class="linkCard" href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener">
+      <div class="em">☕</div>
+      <div class="tx"><b>Subscribe on Ko-fi — $5/mo</b><span>Keeps every premium tool unlocked for your whole alliance</span></div>
+      <div class="go">›</div>
+    </a>
+  </div>
+
+  <!-- RALLY SYNC -->
+  <div class="pane" id="p-rally">
+    <div class="gSection">
+      <h3>⏱️ Rally Sync <span class="badge free">Free to use</span></h3>
+      <p>Each rally leader enters their march time to the target. The tool works backward from the impact time and tells each one exactly when to send — always keeping the 1️⃣2️⃣3️⃣ landing order intact.</p>
+      <ul>
+        <li>Toggle "Set a start time" on if you want exact clock times instead of just gaps between sends.</li>
+        <li>Use "+ Add Rally 3" for triple-rally coordination.</li>
+        <li>Tap "Copy message" to paste the send-time breakdown straight into your alliance chat.</li>
+      </ul>
+    </div>
+    <div class="gSection">
+      <h3>🔗 Live countdown link <span class="badge premium">Premium</span></h3>
+      <p>Instead of typing times manually, share the countdown link in Discord. It updates live with sound, and anyone can watch it without needing access to Phoenix at all — great for rally leaders who don't have accounts.</p>
+    </div>
+  </div>
+
+  <!-- PLANNING TOOLS -->
+  <div class="pane" id="p-planning">
+    <div class="gSection">
+      <h3>🏰 Castle Map <span class="badge free">View free</span><span class="badge premium">Save premium</span></h3>
+      <p>Paint the shared castle grid zone by zone, one color per alliance, so everyone can see who holds what at a glance. Build and edit freely — saving your layout for next time is the part that needs a subscription.</p>
+    </div>
+    <div class="gSection">
+      <h3>🔢 Castle Numbers <span class="badge free">View free</span><span class="badge premium">Save premium</span></h3>
+      <p>Same castle grid, but using the mathematical cell-numbering system instead of colors — useful for rally-leader cell assignments. Same rule: building is free, saving needs a subscription.</p>
+    </div>
+    <div class="gSection">
+      <h3>🐝 Hive Designer <span class="badge free">View free</span><span class="badge premium">Save premium</span></h3>
+      <p>Plan Bear Trap city placement in rings around the two traps, color-coded by proximity. Design as many layouts as you want for free — saving one to come back to later is the premium part.</p>
+    </div>
+    <div class="gSection">
+      <h3>🗺️ World Map <span class="badge free">Explore free</span><span class="badge premium">Save premium</span></h3>
+      <p>The full state map with real terrain, facility markers, and banner routing between resource points. Explore and plan freely — saving a world plan for your alliance needs a subscription.</p>
+    </div>
+  </div>
+
+  <!-- REDEEM -->
+  <div class="pane" id="p-redeem">
+    <div class="gSection">
+      <h3>🎁 Gift Code Redemption <span class="badge premium">Premium</span></h3>
+      <p>Paste a gift code once and the tool walks your entire roster's Governor IDs through redemption one by one — you just type each captcha as it appears, the rest is automatic. This is the one tool with no free tier, since the whole point is saving you from typing every ID by hand.</p>
+      <div class="gStep"><div class="gNum">1</div><p>Make sure your roster's Governor IDs are filled in first — <b>Admin → Members</b>. No ID, no redemption for that player.</p></div>
+      <div class="gStep"><div class="gNum">2</div><p>Paste the code, tap Start, and work through the captchas as they come up.</p></div>
+      <div class="gStep"><div class="gNum">3</div><p>The summary at the end shows who succeeded, who was already redeemed, and who failed so you can retry just those.</p></div>
+    </div>
+  </div>
+
+  <!-- DISCORD -->
+  <div class="pane" id="p-discord">
+    <div class="gSection">
+      <h3>📣 Discord Alerts <span class="badge free">Configure free</span><span class="badge premium">Delivery premium</span></h3>
+      <p>Connects your alliance's Discord server so recurring events, shield reminders, and one-off custom alerts post automatically — nobody has to remember to check Phoenix.</p>
+      <div class="gStep"><div class="gNum">1</div><p>In Discord: <b>Server Settings → Integrations → Webhooks → New Webhook → Copy URL.</b></p></div>
+      <div class="gStep"><div class="gNum">2</div><p>Paste it into the Discord Alerts tool and save. Saving/activating delivery is the premium step — everything up to that point is free to set up and preview.</p></div>
+      <div class="gStep"><div class="gNum">3</div><p>Once active: recurring event reminders, a shield-up hourly reminder you can toggle yourself, custom one-off messages, and Fort/Stronghold rally calls all post to that channel automatically.</p></div>
+    </div>
+  </div>
+
+  <!-- FREE TOOLS -->
+  <div class="pane" id="p-free">
+    <div class="gSection">
+      <h3>🐻 Bear Trap / Foundry / Canyon Trackers <span class="badge free">Always free</span></h3>
+      <p>Attendance tracking for all three events — who showed up, who requested but no-showed, ranked automatically. Export the full history to Excel any time, or hand a leader a blank template to fill in and import back — no Phoenix account needed for whoever fills it out.</p>
+    </div>
+    <div class="gSection">
+      <h3>📅 VP Tracker <span class="badge free">Always free</span></h3>
+      <p>A 48-slot daily schedule for VP farm duty, so your alliance's coverage doesn't have gaps.</p>
+    </div>
+    <div class="gSection">
+      <h3>🦸 Hero Guide &amp; 🔰 Beginner's Guide <span class="badge free">Always free</span></h3>
+      <p>Hero skill numbers pulled from real screenshots, gear priority by troop type, and the fundamentals every new player needs — furnace focus, construction speed stacking, Chief Orders, and SvS savings.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function getState(){
+  var q=new URLSearchParams(location.search).get('s');
+  if(q) return q;
+  try{var ls=localStorage.getItem('phx_state'); if(ls) return ls;}catch(e){}
+  return '3139';
+}
+(function(){
+  var s=getState();
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.pane').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    document.getElementById('p-'+t.dataset.t).classList.add('on');
+  });
+});
+
+/* Status box: shows where this alliance actually stands right now, if PhxAccess is available */
+(function(){
+  var box=document.getElementById('statusBox');
+  if(!(window.supabase && window.supabase.createClient)){ box.textContent='Sign in on Phoenix to see your alliance\'s status here.'; return; }
+  var s=document.createElement('script');
+  s.src='phx-access.js';
+  s.onload=function(){
+    PhxAccess.check(function(granted, reason, ctx){
+      if(reason==='pxr'||reason==='free_alliance') box.innerHTML='✅ <b>Your alliance always has full access</b> — nothing to unlock.';
+      else if(reason==='admin') box.innerHTML='✅ <b>Full access</b> (Phoenix admin).';
+      else if(granted && reason==='trial') box.innerHTML='⏳ <b>Free trial active</b> — '+ctx.daysLeft+' day'+(ctx.daysLeft===1?'':'s')+' left, everything premium unlocked.';
+      else if(reason==='paid') box.innerHTML='✅ <b>Subscribed</b> — every premium tool is unlocked.';
+      else if(reason==='trialexpired') box.innerHTML='🔒 Your trial has ended. <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener">Subscribe on Ko-fi</a> to unlock premium tools again.';
+      else if(reason==='notleader') box.innerHTML='👀 You\'re signed in, but only R4/R5/admin can unlock premium tools for the alliance.';
+      else box.innerHTML='🔒 <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener">Subscribe on Ko-fi</a> or ask your R4/R5 to start the free 7-day trial.';
+    });
+  };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

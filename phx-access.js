@@ -46,9 +46,10 @@
     KOFI_URL:KOFI_URL,
 
     message:function(reason){
-      if(reason==='trialexpired') return 'Your '+TRIAL_DAYS+'-day free trial has ended — <a href="'+KOFI_URL+'" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">subscribe on Ko-fi</a> ('+PRICE_TEXT+') to keep full access.';
-      if(reason==='notleader') return 'Ask your alliance R4/R5 to start the free trial or subscribe on Ko-fi.';
-      return '<a href="'+KOFI_URL+'" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">Subscribe on Ko-fi</a> ('+PRICE_TEXT+') to unlock it — or ask your R4/R5 to start the free '+TRIAL_DAYS+'-day trial.';
+      var guide=' <a href="phoenix-leader-guide.html" target="_blank" rel="noopener" style="color:#7fd9ee;">See the leader guide</a>.';
+      if(reason==='trialexpired') return 'Your '+TRIAL_DAYS+'-day free trial has ended — <a href="'+KOFI_URL+'" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">subscribe on Ko-fi</a> ('+PRICE_TEXT+') to keep full access.'+guide;
+      if(reason==='notleader') return 'Ask your alliance R4/R5 to start the free trial or subscribe on Ko-fi.'+guide;
+      return '<a href="'+KOFI_URL+'" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">Subscribe on Ko-fi</a> ('+PRICE_TEXT+') to unlock it — or ask your R4/R5 to start the free '+TRIAL_DAYS+'-day trial.'+guide;
     },
 
     check:function(cb){
