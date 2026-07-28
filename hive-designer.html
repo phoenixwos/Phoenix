@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Hive Designer</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -613,22 +614,16 @@ function loadDesign(d){
   }catch(e){ toast('Could not load design'); }
 }
 
-// ── ACCESS LEVEL: PXR = full, subscribed alliance = full, everyone else = demo ──
+// ── ACCESS LEVEL: PXR/SNO = full, trial or subscribed alliance = full, everyone else = demo ──
 // (view/build freely either way — this only gates the persistent "Saved designs" panel)
 async function resolveAccessLevel(){
   const {data:{session}} = await _sb.auth.getSession();
   if(!session) return {level:'demo', signedIn:false};
-  const {data:rows} = await _sb.from('players').select('role,alliance_id').eq('owner',session.user.id);
-  const isAdmin=(rows||[]).some(p=>p.role==='admin');
-  if(isAdmin) return {level:'full', signedIn:true, user:session.user};
-  const leaderRow=(rows||[]).find(p=>(p.role==='r4'||p.role==='r5')&&p.alliance_id);
-  if(!leaderRow) return {level:'demo', signedIn:true, user:session.user};
-  const {data:al}=await _sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle();
-  const tag=((al&&al.tag)||'').toUpperCase();
-  if(tag.indexOf('PXR')===0) return {level:'full', signedIn:true, user:session.user, tag};
-  const {data:sub}=await _sb.from('alliance_subscriptions').select('paid_through').eq('alliance_id',al.id).maybeSingle();
-  const active = sub && new Date(sub.paid_through) > new Date();
-  return {level: active?'full':'demo', signedIn:true, user:session.user, tag};
+  return await new Promise(function(resolve){
+    PhxAccess.check(function(granted, reason, ctx){
+      resolve({level: granted?'full':'demo', signedIn:true, user:session.user, reason:reason});
+    });
+  });
 }
 
 async function initSaved(){
@@ -644,7 +639,7 @@ async function initSaved(){
   }
   if(access.level!=='full'){
     note.style.display='block';
-    note.innerHTML='🔒 Saving hive designs is a PXR feature. Your alliance can unlock it with a <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--ice);font-weight:700;">Ko-fi membership</a> — ask your R4/R5. You can still design freely here, it just won\'t be saved.';
+    note.innerHTML='🔒 Saving hive designs is a premium feature. '+PhxAccess.message(access.reason||'demo');
     area.style.display='none';
     return;
   }

@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Rally Sync · Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -137,44 +138,23 @@
 </div>
 
 <script>
-/* ── ACCESS: everyone can use the calculator (demo). Only PXR, or another
-   alliance's active Ko-fi subscription, unlocks the shareable countdown link
+/* ── ACCESS: everyone can use the calculator (demo). PXR, an active trial,
+   or a paid Ko-fi subscription unlocks the shareable countdown link
    (window.__raSb + window.__raUid — saveAndShare() already no-ops without them). ── */
-(function(){
-  var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
-  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
-  function showDemoBanner(){var b=document.getElementById('phxDemoBanner');if(b)b.style.display='block';}
-  function getState(){
-    var q=new URLSearchParams(location.search).get('s');
-    if(q) return q;
-    try{var ls=localStorage.getItem('phx_state'); if(ls) return ls;}catch(e){}
-    return '3139';
+PhxAccess.check(function(granted, reason, ctx){
+  if(granted){
+    window.__raSb=ctx.sb; window.__raUid=ctx.uid;
+    if(reason==='trial' && ctx.daysLeft<=3){
+      var b=document.getElementById('phxDemoBanner');
+      b.innerHTML='⏳ '+ctx.daysLeft+' day'+(ctx.daysLeft===1?'':'s')+' left in your free trial — '+PhxAccess.message('trial')+' after that to keep the countdown link.';
+      b.style.display='block';
+    }
+  }else{
+    var b=document.getElementById('phxDemoBanner');
+    b.innerHTML='🔒 You\'re using the free calculator. Sharing a live countdown link with your alliance is a premium feature — '+PhxAccess.message(reason);
+    b.style.display='block';
   }
-  try{
-    if(!(window.supabase&&window.supabase.createClient)){showDemoBanner();return;}
-    var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-    sb.auth.getSession().then(function(r){
-      var s=r&&r.data&&r.data.session;
-      if(!s){showDemoBanner();return;}
-      sb.from('players').select('role,alliance_id').eq('owner',s.user.id).eq('state_id',getState()).then(function(res){
-        var rows=res.data||[];
-        var isAdmin=rows.some(function(p){return p.role==='admin';});
-        function grant(){ window.__raSb=sb; window.__raUid=s.user.id; }
-        if(isAdmin){ grant(); return; }
-        var leaderRow=rows.find(function(p){return (p.role==='r4'||p.role==='r5')&&p.alliance_id;});
-        if(!leaderRow){ showDemoBanner(); return; } // regular members: demo only
-        sb.from('alliances').select('id,tag').eq('id',leaderRow.alliance_id).maybeSingle().then(function(ar){
-          var tag=(ar.data&&ar.data.tag||'').toUpperCase();
-          if(tag.indexOf('PXR')===0){ grant(); return; }
-          sb.from('alliance_subscriptions').select('paid_through').eq('alliance_id',ar.data.id).maybeSingle().then(function(sr){
-            var active = sr.data && new Date(sr.data.paid_through) > new Date();
-            if(active){ grant(); } else { showDemoBanner(); }
-          }).catch(function(){ showDemoBanner(); });
-        }).catch(function(){ showDemoBanner(); });
-      }).catch(function(){ showDemoBanner(); });
-    }).catch(function(){ showDemoBanner(); });
-  }catch(e){ showDemoBanner(); }
-})();
+});
 
 /* ── State-aware back link ───────────────────────────────────── */
 (function(){

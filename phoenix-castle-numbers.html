@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Castle Map · By Numbers</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -528,13 +529,16 @@ document.getElementById('saveMapBtn').addEventListener('click', async ()=>{
   if(!mapUser){ toast('Sign in first'); return; }
   const name=document.getElementById('mapName').value.trim();
   if(!name){ toast('Type a map name'); return; }
-  const payload={ owner:mapUser.id, name, margin_depth:marginDepth, cell_display:cellDisplay, assignments, updated_at:new Date().toISOString() };
-  const{data,error}=await sb.from('castle_maps').insert(payload).select('id').single();
-  if(error){ toast('⚠️ '+error.message); return; }
-  currentMapId=data.id;
-  document.getElementById('mapName').value='';
-  toast('Saved ✓');
-  loadSavedList();
+  PhxAccess.check(async function(granted, reason){
+    if(!granted){ toast('🔒 Saving is a premium feature. '+PhxAccess.message(reason)); return; }
+    const payload={ owner:mapUser.id, name, margin_depth:marginDepth, cell_display:cellDisplay, assignments, updated_at:new Date().toISOString() };
+    const{data,error}=await sb.from('castle_maps').insert(payload).select('id').single();
+    if(error){ toast('⚠️ '+error.message); return; }
+    currentMapId=data.id;
+    document.getElementById('mapName').value='';
+    toast('Saved ✓');
+    loadSavedList();
+  });
 });
 
 async function loadMap(id){

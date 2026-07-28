@@ -156,7 +156,10 @@
 </div>
 
 <script>
-/* ── ACCESS GATE: admin en cualquier estado, o R4/R5 SOLO si su alianza es PXR ─── */
+/* ── ACCESS GATE: admin en cualquier estado, o R4/R5 SOLO si su alianza es PXR ───
+   copy_pastes es una tabla GLOBAL (sin alliance_id) — cualquiera que edite aquí
+   cambia lo que ven todas las alianzas. Por eso esta herramienta no sigue el
+   modelo de pago general: se queda exclusiva de PXR, ni siquiera SNO entra. ── */
 var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 var sb=null;

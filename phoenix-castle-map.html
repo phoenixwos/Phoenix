@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Castle Map · Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -529,21 +530,27 @@ async function loadDraft(){
 }
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
-  toast(t('saving'));
-  try{
-    const payload = {
-      owner: currentUser.id,
-      grid_config: { noTeleportSide, marginDepth, alliances, paintOrder },
-      assignments,
-      updated_at: new Date().toISOString()
-    };
-    const {error} = await sb.from('castle_map_drafts').upsert(payload, {onConflict:'owner'});
-    if(error) throw error;
-    toast(t('saved'));
-  }catch(e){
-    console.error(e);
-    toast('⚠️ ' + (e.message || 'Error'));
-  }
+  PhxAccess.check(async function(granted, reason){
+    if(!granted){
+      toast('🔒 Saving is a premium feature. ' + PhxAccess.message(reason));
+      return;
+    }
+    toast(t('saving'));
+    try{
+      const payload = {
+        owner: currentUser.id,
+        grid_config: { noTeleportSide, marginDepth, alliances, paintOrder },
+        assignments,
+        updated_at: new Date().toISOString()
+      };
+      const {error} = await sb.from('castle_map_drafts').upsert(payload, {onConflict:'owner'});
+      if(error) throw error;
+      toast(t('saved'));
+    }catch(e){
+      console.error(e);
+      toast('⚠️ ' + (e.message || 'Error'));
+    }
+  });
 });
 
 /* ---------- Access check + init ---------- */

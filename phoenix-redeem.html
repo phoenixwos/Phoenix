@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Canjeo de Códigos · Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -126,6 +127,11 @@ document.getElementById('startBtn').addEventListener('click', async()=>{
   code = document.getElementById('codeInput').value.trim();
   const errEl=document.getElementById('setupErr'); errEl.textContent='';
   if(!code){errEl.textContent='Escribe un código.';return;}
+  PhxAccess.check(async function(granted, reason){
+    if(!granted){
+      errEl.innerHTML='🔒 Bulk redeeming for your whole roster is a premium feature. '+PhxAccess.message(reason);
+      return;
+    }
   const btn=document.getElementById('startBtn'); btn.disabled=true; btn.textContent='Cargando roster…';
 
   const{data:players,error}=await sb.from('players').select('governor_id,name').eq('alliance_id',allianceId).not('governor_id','is',null);
@@ -138,6 +144,7 @@ document.getElementById('startBtn').addEventListener('click', async()=>{
   document.getElementById('setupPanel').classList.add('hidden');
   document.getElementById('runPanel').classList.remove('hidden');
   processNext();
+  });
 });
 
 async function processNext(){

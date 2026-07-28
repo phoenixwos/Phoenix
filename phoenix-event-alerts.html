@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Event Calendar — Phoenix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="phx-access.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -440,6 +441,17 @@ async function saveDiscordWebhook(){
   var val=document.getElementById('discordUrlInput').value.trim();
   var targetAllianceId=isAdmin?selectedAllianceId:myAllianceId;
   var btn=document.getElementById('saveDiscordBtn');
+  if(isAdmin){
+    // admin managing another alliance's webhook — no payment gate for admin actions
+  }else{
+    var proceed=await new Promise(function(resolve){
+      PhxAccess.check(function(granted, reason){
+        if(!granted){ toast('🔒 Discord alerts are a premium feature. '+PhxAccess.message(reason)); resolve(false); }
+        else{ resolve(true); }
+      });
+    });
+    if(!proceed) return;
+  }
   btn.disabled=true;
   if(!val){
     await sb.from('alliance_discord_webhooks').delete().eq('alliance_id',targetAllianceId);
