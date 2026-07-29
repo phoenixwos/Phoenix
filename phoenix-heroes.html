@@ -556,6 +556,7 @@ const HEROES = [
 ];
 
 const CLASS_ICON = {inf:"🛡️", lan:"🔱", mar:"🏹", gat:"⛏️", sup:"🎵"};
+function T(key){ return PhxI18N.t(key); }
 function classLabel(cls){ return T('cls_'+cls); }
 function roleLabel(role){ return T('role_'+role.replace('-','_')); }
 const STAT_ICON = {dmg:"⚔️", buff:"💪", debuff:"🌀", econ:"⛏️", heal:"➕"};
