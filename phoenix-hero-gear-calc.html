@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Hero Gear Calculator · Phoenix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="phx-i18n.js"></script>
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--fire:#ff7a3c;--fire-deep:#e85a18;--gold:#f0b93d;
+    --green:#4ade80;--green-deep:#22c55e;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    min-height:100vh;color:var(--text);font-family:'Inter',sans-serif;padding-bottom:50px;}
+  h1,h2,.num{font-family:'Rajdhani',sans-serif;}
+  .wrap{max-width:480px;margin:0 auto;padding:16px;}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;justify-content:space-between;}
+  .back{font-size:.8rem;font-weight:600;color:var(--text-dim);text-decoration:none;}
+  h1{font-size:1.15rem;font-weight:700;}
+  .lead{font-size:.8rem;color:var(--text-dim);line-height:1.5;margin-bottom:16px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{flex:1;text-align:center;padding:10px 6px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--panel);color:var(--text-dim);font-weight:700;font-size:.82rem;cursor:pointer;}
+  .tab.on{border-color:var(--fire);background:linear-gradient(180deg,#2a1a10,#1c1108);color:var(--fire);}
+
+  .classRow{display:flex;gap:8px;margin-bottom:16px;}
+  .classBtn{flex:1;text-align:center;padding:10px 4px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--panel);color:var(--text-dim);font-weight:700;font-size:.78rem;cursor:pointer;}
+  .classBtn.on{border-color:var(--ice);background:linear-gradient(180deg,#0f2a33,#0a1c22);color:var(--ice);}
+
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:16px;padding:16px;margin-bottom:14px;}
+  .panel h2{font-size:.95rem;color:var(--text);margin-bottom:4px;}
+  .panel .sub{font-size:.72rem;color:var(--text-dim);margin-bottom:12px;}
+
+  .targetRow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .targetRow label{font-size:.78rem;color:var(--text-dim);font-weight:600;flex:1;}
+  .targetRow input{width:80px;background:var(--bg-deep);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font-family:'Rajdhani';font-weight:700;font-size:1.15rem;padding:8px;text-align:center;outline:none;}
+  .targetRow input:focus{border-color:var(--ice);}
+
+  .pieceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .pieceBox{background:var(--bg-deep);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  .pieceBox.tier1{border-color:var(--fire-deep);}
+  .pieceBox label{display:block;font-size:.7rem;color:var(--text-dim);font-weight:700;margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:.03em;}
+  .pieceBox .tierTag{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:6px;
+    margin-left:5px;vertical-align:middle;}
+  .tier1 .tierTag{background:rgba(255,122,60,.18);color:var(--fire);}
+  .tier2 .tierTag{background:rgba(240,185,61,.15);color:var(--gold);}
+  .tier3 .tierTag{background:rgba(134,160,183,.15);color:var(--text-dim);}
+  .pieceBox input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    color:var(--text);font-family:'Rajdhani';font-weight:700;font-size:1.1rem;padding:7px;text-align:center;outline:none;}
+  .pieceBox input:focus{border-color:var(--ice);}
+
+  .calcBtn{width:100%;margin-top:16px;padding:14px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,var(--fire),var(--fire-deep));color:#fff;font-weight:700;
+    font-size:.95rem;font-family:'Inter';cursor:pointer;}
+
+  .resultsBox{display:none;}
+  .resultsBox.show{display:block;}
+  .totalCard{background:linear-gradient(180deg,#1c2f1c,#12200f);border:1px solid var(--green-deep);
+    border-radius:16px;padding:18px;text-align:center;margin-bottom:14px;}
+  .totalCard .lbl{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .totalCard .amt{font-family:'Rajdhani';font-weight:700;font-size:2rem;color:var(--green);}
+
+  .orderList{display:flex;flex-direction:column;gap:8px;}
+  .orderStep{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;}
+  .orderStep .stepNum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--fire);color:#fff;
+    font-family:'Rajdhani';font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+  .orderStep .stepInfo{flex:1;min-width:0;}
+  .orderStep .stepName{font-size:.85rem;font-weight:600;color:var(--text);}
+  .orderStep .stepDetail{font-size:.7rem;color:var(--text-dim);}
+  .orderStep .stepXp{font-family:'Rajdhani';font-weight:700;font-size:1.05rem;color:var(--gold);flex:none;}
+
+  .note{font-size:.72rem;color:var(--text-dim);line-height:1.5;margin-top:14px;padding:12px 14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;}
+  .note b{color:var(--text);}
+
+  .lang-box{position:relative;}
+  #langBtn{background:var(--panel);border:1.5px solid var(--line);color:var(--text-dim);
+    border-radius:10px;padding:7px 11px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter';}
+  .lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:12px;padding:6px;max-height:280px;overflow-y:auto;z-index:30;
+    min-width:130px;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+  .lang-menu.open{display:block;}
+  .lang-menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);
+    padding:8px 10px;border-radius:8px;font-size:.82rem;cursor:pointer;font-family:'Inter';}
+  .lang-menu button:hover{background:var(--panel);}
+  .lang-menu button.active{color:var(--ice);font-weight:700;}
+
+  .ctaBanner{display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,#1c2f1c,#12200f);
+    border:1px solid var(--green-deep);border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:center;}
+  .ctaBanner p{font-size:.75rem;color:var(--text-dim);margin:0;}
+  .ctaRow{display:flex;gap:8px;}
+  .ctaRow a{flex:1;text-decoration:none;padding:9px 8px;border-radius:10px;font-size:.78rem;font-weight:700;
+    text-align:center;}
+  .ctaSignup{background:var(--panel);border:1.5px solid var(--ice);color:var(--ice);}
+  .ctaDonate{background:linear-gradient(135deg,var(--fire),var(--fire-deep));color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" id="backLink" href="phoenix-tools.html" data-i18n="backLink">‹ Tools</a>
+    <h1 data-i18n="heroGearCalc">🎖️ Hero Gear Calculator</h1>
+    <div class="lang-box">
+      <button id="langBtn">🌐 <span id="langLabel">EN</span></button>
+      <div id="langMenu" class="lang-menu"></div>
+    </div>
+  </div>
+  <p class="lead" data-i18n="lead">Type your hero's name, pick their troop type, enter each piece's current level, and get the exact costs — in the right order.</p>
+
+  <div class="ctaBanner">
+    <p data-i18n="ctaText">This calculator is free for everyone, no account needed.</p>
+    <div class="ctaRow">
+      <a class="ctaSignup" href="phoenix-state.html" data-i18n="ctaSignup">📱 Sign up for Phoenix</a>
+      <a class="ctaDonate" href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" data-i18n="ctaDonate">☕ Support on Ko-fi</a>
+    </div>
+  </div>
+
+  <div class="panel" style="padding:14px 16px;">
+    <div class="targetRow" style="margin-bottom:0;">
+      <label data-i18n="heroNameLabel">Hero name</label>
+      <input type="text" id="heroName" list="heroList" data-i18n-ph="heroNamePh" placeholder="e.g. Jeronimo" style="width:150px;text-align:left;font-size:.95rem;">
+      <datalist id="heroList"></datalist>
+    </div>
+    <div class="sub" id="heroClassHint" style="margin-top:8px;margin-bottom:0;"></div>
+  </div>
+
+  <div class="classRow">
+    <div class="classBtn on" data-c="marksman" data-i18n="classMarksman">🏹 Marksman</div>
+    <div class="classBtn" data-c="lancer" data-i18n="classLancer">⚔️ Lancer</div>
+    <div class="classBtn" data-c="infantry" data-i18n="classInfantry">🛡️ Infantry</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-t="enh" data-i18n="tabEnh">⚙️ Enhancement (Lv 1–100)</div>
+    <div class="tab" data-t="mas" data-i18n="tabMas">💎 Mastery (Gold, Lv 1–20)</div>
+  </div>
+  <div class="tabs">
+    <div class="tab" data-t="myth" data-i18n="tabMyth">✨ Legendary → Mythic (Lv 1–100)</div>
+    <div class="tab" data-t="excl" data-i18n="tabExcl">🗡️ Exclusive Gear (Lv 1–10)</div>
+  </div>
+
+  <!-- ENHANCEMENT PANE -->
+  <div id="paneEnh">
+    <div class="panel">
+      <h2 data-i18n="enhH2">Current level per piece</h2>
+      <div class="sub" data-i18n="enhSub">Headgear (Goggles), Gloves, Belt, Boots. 0 = not crafted yet. Max 100.</div>
+      <div class="targetRow">
+        <label data-i18n="enhTargetLabel">Target level for all pieces</label>
+        <input type="number" id="enhTarget" min="0" max="100" value="40">
+      </div>
+      <div class="pieceGrid" id="enhGrid"></div>
+      <button class="calcBtn" id="enhCalcBtn" data-i18n="enhBtn">Calculate</button>
+    </div>
+
+    <div class="resultsBox" id="enhResults">
+      <div class="totalCard">
+        <div class="lbl" id="enhTotalLbl" data-i18n="enhTotalLbl">Total Enhancement XP needed</div>
+        <div class="amt" id="enhTotal">0</div>
+      </div>
+      <div class="orderList" id="enhOrder"></div>
+      <div class="note" data-i18n-html="enhNote">
+        <b>Upgrade order:</b> level Tier 1 pieces on every hero of this troop type first, then Tier 2 — don't push one piece far ahead of the rest. XP shown is per-level cost from the game's own Enhancement chart, added up from your current level to the target.
+      </div>
+    </div>
+  </div>
+
+  <!-- MASTERY PANE -->
+  <div id="paneMas" style="display:none;">
+    <div class="panel">
+      <h2 data-i18n="masH2">Current Mastery level per piece</h2>
+      <div class="sub" data-i18n="masSub">Only for Gold-quality gear already at Enhancement Lv.100 + Mastery unlocked (Furnace Lv.20). 0 = not started.</div>
+      <div class="targetRow">
+        <label data-i18n="masTargetLabel">Target Mastery level</label>
+        <input type="number" id="masTarget" min="0" max="20" value="10">
+      </div>
+      <div class="pieceGrid" id="masGrid"></div>
+      <button class="calcBtn" id="masCalcBtn" data-i18n="masBtn">Calculate</button>
+    </div>
+
+    <div class="resultsBox" id="masResults">
+      <div class="totalCard">
+        <div class="lbl" id="masTotalLbl" data-i18n="masTotalLbl">Total Essence Stones needed</div>
+        <div class="amt" id="masTotal">0</div>
+      </div>
+      <div class="orderList" id="masOrder"></div>
+      <div class="note" data-i18n-html="masNote">
+        <b>Heads up:</b> from Mastery level 11 onward each level also costs Legendary Gear pieces (1 at Lv.11, up to 10 at Lv.20) on top of Essence Stones — check the breakdown below per piece.
+      </div>
+    </div>
+  </div>
+
+  <!-- MYTHIC PANE -->
+  <div id="paneMyth" style="display:none;">
+    <div class="panel">
+      <h2 data-i18n="mythH2">Current Mythic level per piece</h2>
+      <div class="sub" data-i18n="mythSub">Only for Legendary gear already imbued to Mythic (needs Legendary Lv.100 + Mastery Lv.10 + 2 Mythic pieces to imbue). 0 = just imbued.</div>
+      <div class="targetRow">
+        <label data-i18n="mythTargetLabel">Target Mythic level</label>
+        <input type="number" id="mythTarget" min="0" max="100" value="20">
+      </div>
+      <div class="pieceGrid" id="mythGrid"></div>
+      <button class="calcBtn" id="mythCalcBtn" data-i18n="mythBtn">Calculate</button>
+    </div>
+
+    <div class="resultsBox" id="mythResults">
+      <div class="totalCard">
+        <div class="lbl" id="mythTotalLbl" data-i18n="mythTotalLbl">Total XP needed</div>
+        <div class="amt" id="mythTotal">0</div>
+      </div>
+      <div class="orderList" id="mythOrder"></div>
+      <div class="note" data-i18n-html="mythNote">
+        <b>Mithril / Mythic Hero Gear</b> are only spent at levels 20, 40, 60, 80 and 100 (shown per piece below when your target crosses one of those). A full 4-piece Mythic set (Lv.100 on all) costs 600 Mithril, 140 Mythic Hero Gear, and 2,008,000 XP total.
+      </div>
+    </div>
+  </div>
+
+  <!-- EXCLUSIVE GEAR PANE -->
+  <div id="paneExcl" style="display:none;">
+    <div class="panel">
+      <h2 data-i18n="exclH2">Current Exclusive Gear level</h2>
+      <div class="sub" data-i18n="exclSub">Only for Gold-quality heroes, 1★ Ascension. One weapon per hero, not one per piece — unlocking it costs 5 Hero-specific Widgets first, then 5/10/15/20/25/30/35/40/45/50 Widgets for levels 1–10.</div>
+      <div class="targetRow">
+        <label data-i18n="exclCurLabel">Current level</label>
+        <input type="number" id="exclCur" min="0" max="10" value="0">
+      </div>
+      <div class="targetRow">
+        <label data-i18n="exclTargetLabel">Target level</label>
+        <input type="number" id="exclTarget" min="0" max="10" value="5">
+      </div>
+      <button class="calcBtn" id="exclCalcBtn" data-i18n="exclBtn">Calculate</button>
+    </div>
+
+    <div class="resultsBox" id="exclResults">
+
+      <div class="totalCard">
+        <div class="lbl" id="exclTotalLbl" data-i18n="exclTotalLbl">Widgets needed</div>
+        <div class="amt" id="exclTotal">0</div>
+      </div>
+      <div class="note" data-i18n="exclNote">
+        Widgets are hero-specific — you can't use one hero's Widgets on another's gear. The only reliable source is the Mystery Shop or the Enigma Event.
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:4px;" data-i18n="footerNote">
+    Priorities come from Phoenix's hero gear guide (Copy-Paste Hub). Numbers are from the game's published Enhancement, Mastery Forging, Legendary→Mythic and Exclusive Gear charts.
+  </div>
+</div>
+
+<script>
+var PIECES=['Headgear','Gloves','Belt','Boots'];
+
+// tier 1 = level first. tier 2 = level second.
+var PRIORITY={
+  marksman:{Headgear:1,Boots:1,Gloves:2,Belt:2},
+  lancer:  {Headgear:1,Boots:1,Gloves:2,Belt:2},
+  infantry:{Gloves:1,Belt:1,Headgear:2,Boots:2}
+};
+var currentClass='marksman';
+var currentTab='enh';
+
+// Heroes by troop type, Gen 1-16 (from the game's official generation rollout) plus
+// the early free-tier heroes available before/alongside Gen 1. Typing a known name
+// auto-picks the right troop type — anything not on this list, pick it yourself.
+var HERO_CLASS={
+  infantry:['Jeronimo','Natalia','Sergey','Flint','Logan','Ahmose','Hector','Wu Ming','Edith','Gatot','Magnus','Gregory','Eleonora','Hervor','Gisela','Elif','Hank','Seigel'],
+  lancer:['Molly','Jessie','Patrick','Philly','Mia','Reina','Norah','Renee','Gordon','Sonya','Fred','Freya','Lloyd','Karol','Flora','Dominic','Estrella','Ursar'],
+  marksman:['Zinman','Gina','Bahiti','Seo-Yoon','Jasser','Alonso','Greg','Lynn','Gwen','Wayne','Bradley','Hendrik','Xura','Blanchette','Rufus','Ligeia','Vulcanus','Cara','Viveca','Aisling']
+};
+var HERO_LOOKUP={};
+Object.keys(HERO_CLASS).forEach(function(cls){
+  HERO_CLASS[cls].forEach(function(name){ HERO_LOOKUP[name.toLowerCase()]=cls; });
+});
+
+(function(){
+  var dl=document.getElementById('heroList');
+  Object.keys(HERO_CLASS).forEach(function(cls){
+    HERO_CLASS[cls].forEach(function(name){
+      var opt=document.createElement('option');
+      opt.value=name;
+      dl.appendChild(opt);
+    });
+  });
+})();
+
+document.getElementById('heroName').addEventListener('input',function(){
+  var val=this.value.trim().toLowerCase();
+  var hint=document.getElementById('heroClassHint');
+  var cls=HERO_LOOKUP[val];
+  if(cls){
+    switchClass(cls);
+    hint.textContent=PhxI18N.t('hintRecognized');
+  }else if(val){
+    hint.textContent=PhxI18N.t('hintUnknown');
+  }else{
+    hint.textContent='';
+  }
+});
+
+// Enhancement XP cost to REACH each level (level 1..100), from the game's Enhancement chart.
+var ENH_XP=[0,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,
+160,170,180,190,200,210,220,230,240,250,270,290,310,330,350,370,390,410,430,450,470,490,510,530,550,570,590,610,630,650,
+680,710,740,770,800,830,860,890,920,950,990,1030,1070,1110,1150,1190,1230,1270,1310,1350,1400,1450,1500,1550,1600,1650,1700,1750,1800,1850,1900,
+1950,2000,2050,2100,2150,2200,2250,2300,2350,2400];
+
+// Mastery Forging: Essence Stones to reach each level 1..20, and Legendary Gear pieces needed at that level (0 before Lv.11).
+var MAS_STONES=[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200];
+var MAS_LG=    [0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10];
+
+// Legendary → Mythic: XP cost per level (1..100), plus Mithril/Mythic Hero Gear spent at checkpoints 1,20,40,60,80,100.
+var MYTH_XP=[0,0,2500,2550,2600,2650,2700,2750,2800,2850,2900,2950,3000,3050,3100,3150,3200,3250,3300,3350,0,
+3500,3550,3600,3650,3700,3750,3800,3850,3900,3950,4000,4050,4100,4150,4200,4250,4300,4350,4400,0,
+4450,4500,4550,4600,4650,4700,4750,4800,4850,4900,4950,5000,5050,5100,5150,5200,5250,5300,5350,0,
+5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,7300,0,
+7500,7600,7700,7800,7900,8000,8100,8200,8300,8400,8500,8600,8700,8800,8900,9000,9100,9200,9300,0];
+var MYTH_MITHRIL={1:0,20:10,40:20,60:30,80:40,100:50};
+var MYTH_MHG={1:2,20:3,40:5,60:5,80:10,100:10};
+
+// Exclusive Gear: Widgets to reach each level 1..10 (same across every Gold hero checked).
+var EXCL_WIDGET=[0,5,10,15,20,25,30,35,40,45,50];
+
+function cumCost(table, from, to){
+  var sum=0;
+  for(var lv=from+1; lv<=to; lv++) sum += table[lv]||0;
+  return sum;
+}
+
+function buildGrid(gridId, max){
+  var grid=document.getElementById(gridId);
+  grid.innerHTML='';
+  PIECES.forEach(function(p){
+    var tier=PRIORITY[currentClass][p];
+    var box=document.createElement('div');
+    box.className='pieceBox tier'+tier;
+    box.innerHTML='<label>'+p+'<span class="tierTag">Tier '+tier+'</span></label>'+
+      '<input type="number" class="lvlInput" data-piece="'+p+'" min="0" max="'+max+'" value="0">';
+    grid.appendChild(box);
+  });
+}
+
+function switchClass(c){
+  currentClass=c;
+  document.querySelectorAll('.classBtn').forEach(function(b){b.classList.toggle('on', b.dataset.c===c);});
+  buildGrid('enhGrid',100);
+  buildGrid('masGrid',20);
+  buildGrid('mythGrid',100);
+  document.getElementById('enhResults').classList.remove('show');
+  document.getElementById('masResults').classList.remove('show');
+  document.getElementById('mythResults').classList.remove('show');
+}
+
+document.querySelectorAll('.classBtn').forEach(function(b){
+  b.addEventListener('click',function(){ switchClass(b.dataset.c); });
+});
+
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    currentTab=t.dataset.t;
+    document.getElementById('paneEnh').style.display = currentTab==='enh' ? 'block':'none';
+    document.getElementById('paneMas').style.display = currentTab==='mas' ? 'block':'none';
+    document.getElementById('paneMyth').style.display = currentTab==='myth' ? 'block':'none';
+    document.getElementById('paneExcl').style.display = currentTab==='excl' ? 'block':'none';
+  });
+});
+
+function heroLabel(key){
+  var base=PhxI18N.t(key);
+  var name=document.getElementById('heroName').value.trim();
+  return name ? (name+' — '+base) : base;
+}
+
+function runCalc(table, gridId, target, totalElId, orderElId, unitLabel, extraFn){
+  var target=parseInt(target,10)||0;
+  var rows=[];
+  document.querySelectorAll('#'+gridId+' .lvlInput').forEach(function(inp){
+    var piece=inp.dataset.piece;
+    var cur=parseInt(inp.value,10)||0;
+    if(cur>target){ cur=target; } // don't show negative cost if already past target
+    var cost=cumCost(table, cur, target);
+    var extra=extraFn?extraFn(cur,target):null;
+    rows.push({piece:piece, tier:PRIORITY[currentClass][piece], cur:cur, cost:cost, extra:extra});
+  });
+  rows.sort(function(a,b){ return a.tier-b.tier || b.cost-a.cost; });
+
+  var total=rows.reduce(function(s,r){return s+r.cost;},0);
+  document.getElementById(totalElId).textContent=total.toLocaleString();
+
+  var orderEl=document.getElementById(orderElId);
+  orderEl.innerHTML='';
+  rows.forEach(function(r,i){
+    var step=document.createElement('div');
+    step.className='orderStep';
+    var detail='Tier '+r.tier+' · from Lv.'+r.cur+' to Lv.'+target;
+    if(r.extra) detail+=' · '+r.extra;
+    step.innerHTML=
+      '<div class="stepNum">'+(i+1)+'</div>'+
+      '<div class="stepInfo"><div class="stepName">'+r.piece+'</div><div class="stepDetail">'+detail+'</div></div>'+
+      '<div class="stepXp">'+(r.cost>0? r.cost.toLocaleString(): '✓')+'</div>';
+    orderEl.appendChild(step);
+  });
+}
+
+document.getElementById('enhCalcBtn').addEventListener('click',function(){
+  document.getElementById('enhTotalLbl').textContent=heroLabel('enhTotalLbl');
+  runCalc(ENH_XP, 'enhGrid', document.getElementById('enhTarget').value, 'enhTotal', 'enhOrder', 'XP');
+  document.getElementById('enhResults').classList.add('show');
+});
+
+document.getElementById('masCalcBtn').addEventListener('click',function(){
+  document.getElementById('masTotalLbl').textContent=heroLabel('masTotalLbl');
+  runCalc(MAS_STONES, 'masGrid', document.getElementById('masTarget').value, 'masTotal', 'masOrder', 'Essence Stone',
+    function(cur,target){
+      var lg = (MAS_LG[target]||0) - (MAS_LG[cur]||0);
+      return lg>0 ? ('+'+lg+' Legendary Gear') : null;
+    });
+  document.getElementById('masResults').classList.add('show');
+});
+
+document.getElementById('mythCalcBtn').addEventListener('click',function(){
+  document.getElementById('mythTotalLbl').textContent=heroLabel('mythTotalLbl');
+  var target=parseInt(document.getElementById('mythTarget').value,10)||0;
+  var rows=[];
+  document.querySelectorAll('#mythGrid .lvlInput').forEach(function(inp){
+    var piece=inp.dataset.piece;
+    var cur=parseInt(inp.value,10)||0;
+    if(cur>target) cur=target;
+    var xp=0, mithril=0, mhg=0;
+    for(var lv=cur+1; lv<=target; lv++){
+      xp += MYTH_XP[lv]||0;
+      mithril += MYTH_MITHRIL[lv]||0;
+      mhg += MYTH_MHG[lv]||0;
+    }
+    rows.push({piece:piece, tier:PRIORITY[currentClass][piece], cur:cur, xp:xp, mithril:mithril, mhg:mhg});
+  });
+  rows.sort(function(a,b){ return a.tier-b.tier || b.xp-a.xp; });
+
+  var totalXp=rows.reduce(function(s,r){return s+r.xp;},0);
+  document.getElementById('mythTotal').textContent=totalXp.toLocaleString();
+
+  var orderEl=document.getElementById('mythOrder');
+  orderEl.innerHTML='';
+  rows.forEach(function(r,i){
+    var detail='Tier '+r.tier+' · from Lv.'+r.cur+' to Lv.'+target;
+    var extras=[];
+    if(r.mithril>0) extras.push(r.mithril+' Mithril');
+    if(r.mhg>0) extras.push(r.mhg+' Mythic Hero Gear');
+    if(extras.length) detail+=' · '+extras.join(' · ');
+    var step=document.createElement('div');
+    step.className='orderStep';
+    step.innerHTML=
+      '<div class="stepNum">'+(i+1)+'</div>'+
+      '<div class="stepInfo"><div class="stepName">'+r.piece+'</div><div class="stepDetail">'+detail+'</div></div>'+
+      '<div class="stepXp">'+(r.xp>0? r.xp.toLocaleString(): '✓')+'</div>';
+    orderEl.appendChild(step);
+  });
+  document.getElementById('mythResults').classList.add('show');
+});
+
+document.getElementById('exclCalcBtn').addEventListener('click',function(){
+  document.getElementById('exclTotalLbl').textContent=heroLabel('exclTotalLbl');
+  var cur=parseInt(document.getElementById('exclCur').value,10)||0;
+  var target=parseInt(document.getElementById('exclTarget').value,10)||0;
+  if(cur>target) cur=target;
+  var total=0;
+  for(var lv=cur+1; lv<=target; lv++) total += EXCL_WIDGET[lv]||0;
+  document.getElementById('exclTotal').textContent=total.toLocaleString();
+  document.getElementById('exclResults').classList.add('show');
+});
+
+buildGrid('enhGrid',100);
+buildGrid('masGrid',20);
+buildGrid('mythGrid',100);
+
+
+var DICT={
+  en:{
+    backLink:'‹ Tools', heroGearCalc:'🎖️ Hero Gear Calculator',
+    lead:"Type your hero's name, pick their troop type, enter each piece's current level, and get the exact costs — in the right order.",
+    ctaText:'This calculator is free for everyone, no account needed.',
+    ctaSignup:'📱 Sign up for Phoenix', ctaDonate:'☕ Support on Ko-fi',
+    heroNameLabel:'Hero name', heroNamePh:'e.g. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Enhancement (Lv 1–100)', tabMas:'💎 Mastery (Gold, Lv 1–20)',
+    tabMyth:'✨ Legendary → Mythic (Lv 1–100)', tabExcl:'🗡️ Exclusive Gear (Lv 1–10)',
+    enhH2:'Current level per piece', enhSub:'Headgear (Goggles), Gloves, Belt, Boots. 0 = not crafted yet. Max 100.',
+    enhTargetLabel:'Target level for all pieces', enhBtn:'Calculate', enhTotalLbl:'Total Enhancement XP needed',
+    enhNote:"<b>Upgrade order:</b> level Tier 1 pieces on every hero of this troop type first, then Tier 2 — don't push one piece far ahead of the rest. XP shown is per-level cost from the game's own Enhancement chart, added up from your current level to the target.",
+    masH2:'Current Mastery level per piece', masSub:'Only for Gold-quality gear already at Enhancement Lv.100 + Mastery unlocked (Furnace Lv.20). 0 = not started.',
+    masTargetLabel:'Target Mastery level', masBtn:'Calculate', masTotalLbl:'Total Essence Stones needed',
+    masNote:'<b>Heads up:</b> from Mastery level 11 onward each level also costs Legendary Gear pieces (1 at Lv.11, up to 10 at Lv.20) on top of Essence Stones — check the breakdown below per piece.',
+    mythH2:'Current Mythic level per piece', mythSub:'Only for Legendary gear already imbued to Mythic (needs Legendary Lv.100 + Mastery Lv.10 + 2 Mythic pieces to imbue). 0 = just imbued.',
+    mythTargetLabel:'Target Mythic level', mythBtn:'Calculate', mythTotalLbl:'Total XP needed',
+    mythNote:'<b>Mithril / Mythic Hero Gear</b> are only spent at levels 20, 40, 60, 80 and 100 (shown per piece below when your target crosses one of those). A full 4-piece Mythic set (Lv.100 on all) costs 600 Mithril, 140 Mythic Hero Gear, and 2,008,000 XP total.',
+    exclH2:'Current Exclusive Gear level', exclSub:'Only for Gold-quality heroes, 1★ Ascension. One weapon per hero, not one per piece — unlocking it costs 5 Hero-specific Widgets first, then 5/10/15/20/25/30/35/40/45/50 Widgets for levels 1–10.',
+    exclCurLabel:'Current level', exclTargetLabel:'Target level', exclBtn:'Calculate', exclTotalLbl:'Widgets needed',
+    exclNote:"Widgets are hero-specific — you can't use one hero's Widgets on another's gear. The only reliable source is the Mystery Shop or the Enigma Event.",
+    footerNote:"Priorities come from Phoenix's hero gear guide (Copy-Paste Hub). Numbers are from the game's published Enhancement, Mastery Forging, Legendary→Mythic and Exclusive Gear charts.",
+    hintRecognized:'✓ Troop type set automatically.', hintUnknown:"Not in Phoenix's hero list yet — pick the troop type yourself below."
+  },
+  es:{
+    backLink:'‹ Herramientas', heroGearCalc:'🎖️ Calculadora de Gear de Héroes',
+    lead:'Escribe el nombre de tu héroe, elige su tipo de tropa, indica el nivel actual de cada pieza y obtén los costes exactos — en el orden correcto.',
+    ctaText:'Esta calculadora es gratis para todo el mundo, no hace falta cuenta.',
+    ctaSignup:'📱 Regístrate en Phoenix', ctaDonate:'☕ Apoya en Ko-fi',
+    heroNameLabel:'Nombre del héroe', heroNamePh:'ej. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Mejora (Niv 1–100)', tabMas:'💎 Maestría (Dorado, Niv 1–20)',
+    tabMyth:'✨ Legendario → Mítico (Niv 1–100)', tabExcl:'🗡️ Arma Especial (Niv 1–10)',
+    enhH2:'Nivel actual por pieza', enhSub:'Casco (Gafas), Guantes, Cinturón, Botas. 0 = aún sin fabricar. Máximo 100.',
+    enhTargetLabel:'Nivel objetivo para todas las piezas', enhBtn:'Calcular', enhTotalLbl:'XP de Mejora total necesaria',
+    enhNote:'<b>Orden de mejora:</b> sube primero las piezas de Nivel 1 en todos los héroes de esta tropa, luego las de Nivel 2 — no dejes una pieza muy por delante del resto. El XP mostrado es el coste por nivel de la tabla oficial del juego, sumado desde tu nivel actual hasta el objetivo.',
+    masH2:'Nivel de Maestría actual por pieza', masSub:'Solo para gear dorado que ya esté en Mejora Niv.100 + Maestría desbloqueada (Horno Niv.20). 0 = sin empezar.',
+    masTargetLabel:'Nivel de Maestría objetivo', masBtn:'Calcular', masTotalLbl:'Piedras de Esencia totales necesarias',
+    masNote:'<b>Aviso:</b> desde el nivel de Maestría 11 en adelante, cada nivel también cuesta piezas de Gear Legendario (1 en el Niv.11, hasta 10 en el Niv.20) además de Piedras de Esencia — mira el desglose de cada pieza abajo.',
+    mythH2:'Nivel Mítico actual por pieza', mythSub:'Solo para gear Legendario ya imbuido a Mítico (necesita Legendario Niv.100 + Maestría Niv.10 + 2 piezas Míticas para imbuir). 0 = recién imbuido.',
+    mythTargetLabel:'Nivel Mítico objetivo', mythBtn:'Calcular', mythTotalLbl:'XP total necesario',
+    mythNote:'<b>Mithril y Gear Mítico de Héroe</b> solo se gastan en los niveles 20, 40, 60, 80 y 100 (se muestra por pieza abajo cuando tu objetivo cruza alguno). Un set Mítico completo de 4 piezas (Niv.100 en todas) cuesta 600 Mithril, 140 Gear Mítico de Héroe y 2.008.000 XP en total.',
+    exclH2:'Nivel actual del Arma Especial', exclSub:'Solo para héroes dorados, Ascensión 1★. Un arma por héroe, no una por pieza — desbloquearla cuesta primero 5 Widgets específicos del héroe, luego 5/10/15/20/25/30/35/40/45/50 Widgets para los niveles 1–10.',
+    exclCurLabel:'Nivel actual', exclTargetLabel:'Nivel objetivo', exclBtn:'Calcular', exclTotalLbl:'Widgets necesarios',
+    exclNote:'Los Widgets son específicos de cada héroe — no puedes usar los Widgets de un héroe en el gear de otro. La única fuente fiable es la Tienda Misteriosa o el Evento Enigma.',
+    footerNote:'Las prioridades vienen de la guía de gear de héroes de Phoenix (Copy-Paste Hub). Los números son de las tablas oficiales de Mejora, Maestría, Legendario→Mítico y Arma Especial publicadas por el juego.',
+    hintRecognized:'✓ Tipo de tropa puesto automáticamente.', hintUnknown:'Aún no está en la lista de héroes de Phoenix — elige tú el tipo de tropa abajo.'
+  },
+  ko:{
+    backLink:'‹ 도구', heroGearCalc:'🎖️ 영웅 장비 계산기',
+    lead:'영웅 이름을 입력하고 병종을 선택한 뒤 각 부위의 현재 레벨을 입력하면 정확한 비용을 순서대로 알려드립니다.',
+    ctaText:'이 계산기는 누구나 무료로 사용할 수 있으며, 계정이 필요하지 않습니다.',
+    ctaSignup:'📱 Phoenix 가입하기', ctaDonate:'☕ Ko-fi에서 후원하기',
+    heroNameLabel:'영웅 이름', heroNamePh:'예: 제로니모',
+    classMarksman:'🏹 마크맨', classLancer:'⚔️ 랜서', classInfantry:'🛡️ 보병',
+    tabEnh:'⚙️ 강화 (Lv 1–100)', tabMas:'💎 숙련 (골드, Lv 1–20)',
+    tabMyth:'✨ 레전더리 → 신화 (Lv 1–100)', tabExcl:'🗡️ 전용 장비 (Lv 1–10)',
+    enhH2:'부위별 현재 레벨', enhSub:'헤드기어(고글), 장갑, 벨트, 부츠. 0 = 아직 제작 안 함. 최대 100.',
+    enhTargetLabel:'모든 부위의 목표 레벨', enhBtn:'계산하기', enhTotalLbl:'필요한 총 강화 경험치',
+    enhNote:'<b>강화 순서:</b> 이 병종의 모든 영웅에서 1티어 부위를 먼저 올리고, 그다음 2티어를 올리세요 — 한 부위만 너무 앞서가지 않게 하세요. 표시된 경험치는 게임의 공식 강화표 기준으로, 현재 레벨부터 목표 레벨까지 합산한 값입니다.',
+    masH2:'부위별 현재 숙련 레벨', masSub:'이미 강화 Lv.100에 도달하고 숙련이 해금된(요새 Lv.20) 골드 등급 장비에만 해당. 0 = 아직 시작 안 함.',
+    masTargetLabel:'목표 숙련 레벨', masBtn:'계산하기', masTotalLbl:'필요한 총 에센스 스톤',
+    masNote:'<b>참고:</b> 숙련 레벨 11부터는 에센스 스톤 외에도 레벨마다 레전더리 장비 조각이 필요합니다 (Lv.11에 1개, Lv.20까지 최대 10개) — 아래 부위별 내역을 확인하세요.',
+    mythH2:'부위별 현재 신화 레벨', mythSub:'이미 신화로 승화된 레전더리 장비에만 해당 (레전더리 Lv.100 + 숙련 Lv.10 + 신화 조각 2개 필요). 0 = 방금 승화함.',
+    mythTargetLabel:'목표 신화 레벨', mythBtn:'계산하기', mythTotalLbl:'필요한 총 경험치',
+    mythNote:'<b>미스릴/신화 영웅 장비</b>는 레벨 20, 40, 60, 80, 100에서만 소모됩니다 (목표가 그 지점을 넘으면 아래 부위별로 표시됩니다). 4부위 신화 세트 전체(모두 Lv.100)는 미스릴 600개, 신화 영웅 장비 140개, 경험치 총 2,008,000이 필요합니다.',
+    exclH2:'현재 전용 장비 레벨', exclSub:'골드 등급 영웅, 1성 각성 전용. 부위별이 아닌 영웅당 무기 1개 — 해금에 영웅 전용 위젯 5개가 먼저 필요하고, 이후 1~10레벨에 각각 5/10/15/20/25/30/35/40/45/50개의 위젯이 필요합니다.',
+    exclCurLabel:'현재 레벨', exclTargetLabel:'목표 레벨', exclBtn:'계산하기', exclTotalLbl:'필요한 위젯',
+    exclNote:'위젯은 영웅 전용입니다 — 한 영웅의 위젯을 다른 영웅 장비에 쓸 수 없습니다. 유일하게 안정적인 획득처는 미스터리 상점 또는 에니그마 이벤트입니다.',
+    footerNote:'우선순위는 Phoenix의 영웅 장비 가이드(Copy-Paste Hub)를 기준으로 합니다. 수치는 게임에서 공개한 강화, 숙련, 레전더리→신화, 전용 장비 표를 기준으로 합니다.',
+    hintRecognized:'✓ 병종이 자동으로 설정되었습니다.', hintUnknown:'아직 Phoenix 영웅 목록에 없습니다 — 아래에서 직접 병종을 선택하세요.'
+  },
+  zh:{
+    backLink:'‹ 工具', heroGearCalc:'🎖️ 英雄装备计算器',
+    lead:'输入英雄名字，选择兵种，填入每个部位的当前等级，即可按正确顺序获得精确花费。',
+    ctaText:'这个计算器完全免费，人人可用，无需注册账号。',
+    ctaSignup:'📱 注册 Phoenix', ctaDonate:'☕ 在 Ko-fi 上支持我们',
+    heroNameLabel:'英雄名字', heroNamePh:'例如：杰罗尼莫',
+    classMarksman:'🏹 射手', classLancer:'⚔️ 骑兵', classInfantry:'🛡️ 步兵',
+    tabEnh:'⚙️ 强化 (Lv 1–100)', tabMas:'💎 精通 (金色, Lv 1–20)',
+    tabMyth:'✨ 传说 → 神话 (Lv 1–100)', tabExcl:'🗡️ 专属装备 (Lv 1–10)',
+    enhH2:'各部位当前等级', enhSub:'头盔（护目镜）、手套、腰带、靴子。0 = 尚未制作。最高 100 级。',
+    enhTargetLabel:'所有部位的目标等级', enhBtn:'计算', enhTotalLbl:'所需强化经验总量',
+    enhNote:'<b>强化顺序：</b>先把该兵种所有英雄的一级部位升到位，再升二级部位——不要让某个部位远远领先其他部位。经验数值来自游戏官方强化表，为从当前等级到目标等级的累计值。',
+    masH2:'各部位当前精通等级', masSub:'仅适用于已达到强化 Lv.100 且已解锁精通（要塞 Lv.20）的金色装备。0 = 尚未开始。',
+    masTargetLabel:'目标精通等级', masBtn:'计算', masTotalLbl:'所需精华石总量',
+    masNote:'<b>提示：</b>从精通等级 11 开始，除了精华石外，每级还需要传说装备（Lv.11 需要 1 个，到 Lv.20 最多需要 10 个）——请查看下方各部位明细。',
+    mythH2:'各部位当前神话等级', mythSub:'仅适用于已升华为神话的传说装备（需要传说 Lv.100 + 精通 Lv.10 + 2 个神话部件才能升华）。0 = 刚升华。',
+    mythTargetLabel:'目标神话等级', mythBtn:'计算', mythTotalLbl:'所需经验总量',
+    mythNote:'<b>秘银/神话英雄装备</b>仅在等级 20、40、60、80 和 100 消耗（当目标跨过这些节点时会在下方按部位显示）。全套 4 件神话装备（全部 Lv.100）总共需要 600 秘银、140 个神话英雄装备，以及 2,008,000 经验。',
+    exclH2:'当前专属装备等级', exclSub:'仅适用于金色英雄，1★觉醒后解锁。每位英雄一件武器，而非每个部位一件——解锁需要先消耗 5 个该英雄专属的零件，随后 1–10 级各需要 5/10/15/20/25/30/35/40/45/50 个零件。',
+    exclCurLabel:'当前等级', exclTargetLabel:'目标等级', exclBtn:'计算', exclTotalLbl:'所需零件数',
+    exclNote:'零件是英雄专属的——不能把一个英雄的零件用在另一个英雄的装备上。唯一可靠的获取途径是神秘商店或谜题活动。',
+    footerNote:'优先级来自 Phoenix 的英雄装备指南（Copy-Paste Hub）。数值来自游戏官方公布的强化、精通、传说→神话及专属装备表。',
+    hintRecognized:'✓ 已自动设置兵种。', hintUnknown:'还不在 Phoenix 的英雄列表中——请在下方自行选择兵种。'
+  }
+};
+
+PhxI18N.init(DICT, function(){
+  document.getElementById('heroClassHint').textContent='';
+});
+
+(function(){
+  var q=new URLSearchParams(location.search).get('s');
+  var s=q; try{ if(!s) s=localStorage.getItem('phx_state'); }catch(e){}
+  var bl=document.getElementById('backLink');
+  if(bl && s && s!=='3139') bl.href='phoenix-tools.html?s='+s;
+})();
+</script>
+</body>
+</html>

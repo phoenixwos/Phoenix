@@ -16,7 +16,7 @@
 (function(){
   const LANGS=[
     {code:'en',name:'English'},{code:'es',name:'Español'},{code:'ko',name:'한국어'},
-    {code:'ja',name:'日本語'},{code:'de',name:'Deutsch'},{code:'fr',name:'Français'},
+    {code:'zh',name:'中文'},{code:'ja',name:'日本語'},{code:'de',name:'Deutsch'},{code:'fr',name:'Français'},
     {code:'ar',name:'العربية'},{code:'ru',name:'Русский'},{code:'tr',name:'Türkçe'},
     {code:'it',name:'Italiano'},{code:'pl',name:'Polski'},{code:'pt',name:'Português'},
     {code:'th',name:'ไทย'},{code:'id',name:'Indonesia'}
