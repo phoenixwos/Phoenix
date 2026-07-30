@@ -554,14 +554,17 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
 });
 
 /* ---------- Access check + init ---------- */
+var PROMO_END = new Date('2026-08-02T23:59:59Z'); // 3-day open preview — remove after the promo
 async function init(){
   const {data:{session}} = await sb.auth.getSession();
   if(!session){ document.getElementById('gate').textContent = t('accessDenied'); return; }
   currentUser = session.user;
 
-  const {data:rows} = await sb.from('players').select('role').eq('owner', currentUser.id).order('created_at',{ascending:false});
-  const isStaff = (rows||[]).some(p => p.role==='admin' || p.role==='r4' || p.role==='r5');
-  if(!isStaff){ document.getElementById('gate').textContent = t('accessDenied'); return; }
+  if(new Date() >= PROMO_END){
+    const {data:rows} = await sb.from('players').select('role').eq('owner', currentUser.id).order('created_at',{ascending:false});
+    const isStaff = (rows||[]).some(p => p.role==='admin' || p.role==='r4' || p.role==='r5');
+    if(!isStaff){ document.getElementById('gate').textContent = t('accessDenied'); return; }
+  }
 
   document.getElementById('gate').style.display = 'none';
   document.getElementById('app').style.display = 'block';

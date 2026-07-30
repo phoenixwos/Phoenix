@@ -101,6 +101,14 @@
     text-align:center;}
   .ctaSignup{background:var(--panel);border:1.5px solid var(--ice);color:var(--ice);}
   .ctaDonate{background:linear-gradient(135deg,var(--fire),var(--fire-deep));color:#fff;}
+
+  .howToBox{background:linear-gradient(180deg,#0f2a33,#0a1c22);border:1.5px solid var(--ice-dim);
+    border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:.82rem;line-height:1.85;color:var(--text);}
+  .howToBox b{color:var(--ice);}
+  .disclaimerBox{background:linear-gradient(180deg,#332510,#221807);border:1.5px solid var(--gold);
+    border-radius:14px;padding:12px 16px;margin-bottom:14px;font-size:.76rem;line-height:1.55;color:var(--text-dim);}
+  .tipBox{background:linear-gradient(180deg,#16281c,#0f1c14);border:1.5px solid var(--green-deep);
+    border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:.8rem;line-height:1.55;color:var(--text);}
 </style>
 </head>
 <body>
@@ -114,6 +122,10 @@
     </div>
   </div>
   <p class="lead" data-i18n="lead">Type your hero's name, pick their troop type, enter each piece's current level, and get the exact costs — in the right order.</p>
+
+  <div class="howToBox" data-i18n-html="howToText">
+    <b>How to use this:</b><br>1️⃣ Type your hero's name, pick their troop type.<br>2️⃣ Pick the tab matching your gear's current stage.<br>3️⃣ Enter each piece's current level.<br>4️⃣ Set your target level, tap Calculate.<br>5️⃣ Follow the order below — Tier 1 first, then Tier 2.
+  </div>
 
   <div class="ctaBanner">
     <p data-i18n="ctaText">This calculator is free for everyone, no account needed.</p>
@@ -137,6 +149,10 @@
     <div class="classBtn" data-c="lancer" data-i18n="classLancer">⚔️ Lancer</div>
     <div class="classBtn" data-c="infantry" data-i18n="classInfantry">🛡️ Infantry</div>
   </div>
+
+  <div class="tipBox" id="tipBox" data-i18n="tipDmg">💡 Marksman and Lancer heroes deal damage, so Headgear and Boots (Attack & Lethality) come first — Gloves and Belt (Defense & Health) follow.</div>
+
+  <div class="disclaimerBox" data-i18n="disclaimerText">⚠️ This priority order is a recommendation pulled together from several community guides and the game's own data — it isn't an official rule from the game. Different guides suggest slightly different orders, so treat this as a solid starting point, not gospel.</div>
 
   <div class="tabs">
     <div class="tab on" data-t="enh" data-i18n="tabEnh">⚙️ Enhancement (Lv 1–100)</div>
@@ -349,6 +365,10 @@ function buildGrid(gridId, max){
 function switchClass(c){
   currentClass=c;
   document.querySelectorAll('.classBtn').forEach(function(b){b.classList.toggle('on', b.dataset.c===c);});
+  var tipKey = (c==='infantry') ? 'tipTank' : 'tipDmg';
+  var tipEl = document.getElementById('tipBox');
+  tipEl.setAttribute('data-i18n', tipKey);
+  tipEl.textContent = PhxI18N.t(tipKey);
   buildGrid('enhGrid',100);
   buildGrid('masGrid',20);
   buildGrid('mythGrid',100);
@@ -484,6 +504,10 @@ buildGrid('mythGrid',100);
 
 var DICT={
   en:{
+    howToText:'<b>How to use this:</b><br>1⃣ Type your hero\'s name, pick their troop type.<br>2⃣ Pick the tab matching your gear\'s current stage.<br>3⃣ Enter each piece\'s current level.<br>4⃣ Set your target level, tap Calculate.<br>5⃣ Follow the order below — Tier 1 first, then Tier 2.',
+    disclaimerText:'⚠️ This priority order is a recommendation pulled together from several community guides and the game\'s own data — it isn\'t an official rule from the game. Different guides suggest slightly different orders, so treat this as a solid starting point, not gospel.',
+    tipDmg:'💡 Marksman and Lancer heroes deal damage, so Headgear and Boots (Attack & Lethality) come first — Gloves and Belt (Defense & Health) follow.',
+    tipTank:'💡 Infantry heroes tank damage, so Gloves and Belt (Defense & Health) come first — Headgear and Boots (Attack & Lethality) follow.',
     backLink:'‹ Tools', heroGearCalc:'🎖️ Hero Gear Calculator',
     lead:"Type your hero's name, pick their troop type, enter each piece's current level, and get the exact costs — in the right order.",
     ctaText:'This calculator is free for everyone, no account needed.',
@@ -508,6 +532,10 @@ var DICT={
     hintRecognized:'✓ Troop type set automatically.', hintUnknown:"Not in Phoenix's hero list yet — pick the troop type yourself below."
   },
   es:{
+    howToText:'<b>Cómo usar esto:</b><br>1⃣ Escribe el nombre de tu héroe y elige su tipo de tropa.<br>2⃣ Elige la pestaña que corresponda a la etapa actual de tu gear.<br>3⃣ Indica el nivel actual de cada pieza.<br>4⃣ Pon el nivel objetivo y pulsa Calcular.<br>5⃣ Sigue el orden de abajo — primero Nivel 1, luego Nivel 2.',
+    disclaimerText:'⚠️ Este orden de prioridad es una recomendación reunida a partir de varias guías de la comunidad y los datos propios del juego — no es una norma oficial del juego. Distintas guías sugieren órdenes ligeramente distintos, así que tómalo como un buen punto de partida, no como una ley.',
+    tipDmg:'💡 Marksman y Lancer hacen daño, así que Casco y Botas (Ataque y Letalidad) van primero — Guantes y Cinturón (Defensa y Vida) después.',
+    tipTank:'💡 Infantry aguanta el daño, así que Guantes y Cinturón (Defensa y Vida) van primero — Casco y Botas (Ataque y Letalidad) después.',
     backLink:'‹ Herramientas', heroGearCalc:'🎖️ Calculadora de Gear de Héroes',
     lead:'Escribe el nombre de tu héroe, elige su tipo de tropa, indica el nivel actual de cada pieza y obtén los costes exactos — en el orden correcto.',
     ctaText:'Esta calculadora es gratis para todo el mundo, no hace falta cuenta.',
@@ -532,6 +560,10 @@ var DICT={
     hintRecognized:'✓ Tipo de tropa puesto automáticamente.', hintUnknown:'Aún no está en la lista de héroes de Phoenix — elige tú el tipo de tropa abajo.'
   },
   ko:{
+    howToText:'<b>사용 방법:</b><br>1⃣ 영웅 이름을 입력하고 병종을 선택하세요.<br>2⃣ 장비의 현재 단계에 맞는 탭을 선택하세요.<br>3⃣ 각 부위의 현재 레벨을 입력하세요.<br>4⃣ 목표 레벨을 설정하고 계산하기를 누르세요.<br>5⃣ 아래 순서를 따르세요 — 1티어 먼저, 그다음 2티어.',
+    disclaimerText:'⚠️ 이 우선순위는 여러 커뮤니티 가이드와 게임 자체 데이터를 종합한 추천 사항이며, 게임의 공식 규칙이 아닙니다. 가이드마다 순서가 조금씩 다를 수 있으니 절대적인 규칙이 아니라 좋은 출발점으로 참고하세요.',
+    tipDmg:'💡 마크맨과 랜서는 딜을 담당하므로 모자와 신발(공격력·살상력)을 먼저 올리고, 장갑과 벨트(방어력·체력)는 그다음입니다.',
+    tipTank:'💡 보병은 딜을 받아내는 역할이므로 장갑과 벨트(방어력·체력)를 먼저 올리고, 모자와 신발(공격력·살상력)은 그다음입니다.',
     backLink:'‹ 도구', heroGearCalc:'🎖️ 영웅 장비 계산기',
     lead:'영웅 이름을 입력하고 병종을 선택한 뒤 각 부위의 현재 레벨을 입력하면 정확한 비용을 순서대로 알려드립니다.',
     ctaText:'이 계산기는 누구나 무료로 사용할 수 있으며, 계정이 필요하지 않습니다.',
@@ -556,6 +588,10 @@ var DICT={
     hintRecognized:'✓ 병종이 자동으로 설정되었습니다.', hintUnknown:'아직 Phoenix 영웅 목록에 없습니다 — 아래에서 직접 병종을 선택하세요.'
   },
   zh:{
+    howToText:'<b>使用方法：</b><br>1⃣ 输入英雄名字，选择兵种。<br>2⃣ 选择与你装备当前阶段匹配的标签页。<br>3⃣ 填入每个部位的当前等级。<br>4⃣ 设置目标等级，点击计算。<br>5⃣ 按下方顺序操作——先一级，再二级。',
+    disclaimerText:'⚠️ 这个优先级顺序是综合多个社区攻略和游戏本身数据得出的建议，并非游戏官方规定。不同攻略给出的顺序略有差异，请把它当作一个可靠的起点，而不是绝对准则。',
+    tipDmg:'💡 射手和骑兵负责输出，所以头盔和靴子（攻击力和杀伤力）优先，其次是手套和腰带（防御力和生命值）。',
+    tipTank:'💡 步兵负责承伤，所以手套和腰带（防御力和生命值）优先，其次是头盔和靴子（攻击力和杀伤力）。',
     backLink:'‹ 工具', heroGearCalc:'🎖️ 英雄装备计算器',
     lead:'输入英雄名字，选择兵种，填入每个部位的当前等级，即可按正确顺序获得精确花费。',
     ctaText:'这个计算器完全免费，人人可用，无需注册账号。',
@@ -580,6 +616,10 @@ var DICT={
     hintRecognized:'✓ 已自动设置兵种。', hintUnknown:'还不在 Phoenix 的英雄列表中——请在下方自行选择兵种。'
   },
   pt:{
+    howToText:'<b>Como usar isto:</b><br>1⃣ Digite o nome do seu herói e escolha o tipo de tropa.<br>2⃣ Escolha a aba que corresponde ao estágio atual do seu equipamento.<br>3⃣ Informe o nível atual de cada peça.<br>4⃣ Defina o nível alvo e toque em Calcular.<br>5⃣ Siga a ordem abaixo — primeiro Nível 1, depois Nível 2.',
+    disclaimerText:'⚠️ Esta ordem de prioridade é uma recomendação reunida a partir de vários guias da comunidade e dos dados do próprio jogo — não é uma regra oficial do jogo. Guias diferentes sugerem ordens ligeiramente diferentes, então trate isso como um bom ponto de partida, não como lei.',
+    tipDmg:'💡 Marksman e Lancer causam dano, então Capacete e Botas (Ataque e Letalidade) vêm primeiro — Luvas e Cinto (Defesa e Vida) depois.',
+    tipTank:'💡 Infantry tanca dano, então Luvas e Cinto (Defesa e Vida) vêm primeiro — Capacete e Botas (Ataque e Letalidade) depois.',
     backLink:'‹ Ferramentas', heroGearCalc:'🎖️ Calculadora de Equipamento de Herói',
     lead:'Digite o nome do seu herói, escolha o tipo de tropa, informe o nível atual de cada peça e obtenha os custos exatos — na ordem certa.',
     ctaText:'Esta calculadora é grátis para todos, sem necessidade de conta.',
@@ -602,7 +642,288 @@ var DICT={
     exclNote:'Os Widgets são específicos de cada herói — você não pode usar os Widgets de um herói no equipamento de outro. A única fonte confiável é a Loja Misteriosa ou o Evento Enigma.',
     footerNote:'As prioridades vêm do guia de equipamento de heróis do Phoenix (Copy-Paste Hub). Os números são das tabelas oficiais de Aprimoramento, Maestria, Lendário→Mítico e Equipamento Exclusivo publicadas pelo jogo.',
     hintRecognized:'✓ Tipo de tropa definido automaticamente.', hintUnknown:'Ainda não está na lista de heróis do Phoenix — escolha o tipo de tropa você mesmo abaixo.'
+  },
+  ja:{
+    howToText:'<b>使い方：</b><br>1⃣ ヒーローの名前を入力し、兵種を選びます。<br>2⃣ 装備の現在の段階に合ったタブを選びます。<br>3⃣ 各部位の現在レベルを入力します。<br>4⃣ 目標レベルを設定し、計算するをタップします。<br>5⃣ 下記の順番に従ってください — ティア1を先に、次にティア2。',
+    disclaimerText:'⚠️ この優先順位は複数のコミュニティガイドとゲーム自体のデータをもとにまとめたおすすめであり、ゲームの公式ルールではありません。ガイドによって順番は多少異なるため、絶対の法則ではなく良い出発点として参考にしてください。',
+    tipDmg:'💡 マークスマンとランサーはダメージ担当なので、ヘッドギアとブーツ（攻撃力・殺傷力）が先、グローブとベルト（防御力・体力）が後になります。',
+    tipTank:'💡 インファントリーはダメージを受け止める役割なので、グローブとベルト（防御力・体力）が先、ヘッドギアとブーツ（攻撃力・殺傷力）が後になります。',
+    backLink:'‹ ツール', heroGearCalc:'🎖️ ヒーロー装備計算機',
+    lead:'ヒーローの名前を入力し、兵種を選び、各部位の現在レベルを入力すると、正確な必要コストを正しい順番で表示します。',
+    ctaText:'この計算機は誰でも無料で使えます。アカウントは不要です。',
+    ctaSignup:'📱 Phoenixに登録', ctaDonate:'☕ Ko-fiで応援する',
+    heroNameLabel:'ヒーロー名', heroNamePh:'例：ジェロニモ',
+    classMarksman:'🏹 マークスマン', classLancer:'⚔️ ランサー', classInfantry:'🛡️ インファントリー',
+    tabEnh:'⚙️ 強化（Lv1〜100）', tabMas:'💎 熟練（ゴールド、Lv1〜20）',
+    tabMyth:'✨ レジェンド→ミシック（Lv1〜100）', tabExcl:'🗡️ 専用装備（Lv1〜10）',
+    enhH2:'部位ごとの現在レベル', enhSub:'ヘッドギア（ゴーグル）、グローブ、ベルト、ブーツ。0＝まだ作成していない。最大100。',
+    enhTargetLabel:'全部位の目標レベル', enhBtn:'計算する', enhTotalLbl:'必要な強化経験値の合計',
+    enhNote:'<b>強化の順番：</b>まずこの兵種の全ヒーローのティア1部位を上げ、その後ティア2を上げましょう — 1つの部位だけ突出させないように。表示される経験値はゲーム公式の強化表に基づき、現在レベルから目標レベルまでの合計です。',
+    masH2:'部位ごとの現在の熟練レベル', masSub:'すでに強化Lv100に達し、熟練が解放された（要塞Lv20）ゴールド装備のみ対象。0＝未着手。',
+    masTargetLabel:'目標熟練レベル', masBtn:'計算する', masTotalLbl:'必要なエッセンスストーンの合計',
+    masNote:'<b>注意：</b>熟練レベル11以降は、エッセンスストーンに加えて各レベルでレジェンド装備も必要です（Lv11で1個、Lv20までに最大10個）— 下の部位ごとの内訳をご確認ください。',
+    mythH2:'部位ごとの現在のミシックレベル', mythSub:'すでにミシックへ変換されたレジェンド装備のみ対象（レジェンドLv100＋熟練Lv10＋変換用ミシック部位2個が必要）。0＝変換直後。',
+    mythTargetLabel:'目標ミシックレベル', mythBtn:'計算する', mythTotalLbl:'必要な経験値の合計',
+    mythNote:'<b>ミスリル／ミシックヒーロー装備</b>はレベル20、40、60、80、100でのみ消費されます（目標がそれらを超える場合、下に部位ごとに表示）。4部位フルミシックセット（すべてLv100）は合計でミスリル600、ミシックヒーロー装備140個、経験値2,008,000が必要です。',
+    exclH2:'現在の専用装備レベル', exclSub:'ゴールド等級のヒーロー、1★覚醒後のみ対象。部位ごとではなくヒーロー1人につき武器1つ — 解放にはまずヒーロー専用ウィジェット5個が必要で、その後Lv1〜10でそれぞれ5/10/15/20/25/30/35/40/45/50個のウィジェットが必要です。',
+    exclCurLabel:'現在レベル', exclTargetLabel:'目標レベル', exclBtn:'計算する', exclTotalLbl:'必要なウィジェット数',
+    exclNote:'ウィジェットはヒーロー専用です — あるヒーローのウィジェットを別のヒーローの装備には使えません。信頼できる入手先はミステリーショップかエニグマイベントのみです。',
+    footerNote:'優先順位はPhoenixのヒーロー装備ガイド（コピペハブ）に基づいています。数値はゲーム公式が公開している強化・熟練・レジェンド→ミシック・専用装備の表に基づいています。',
+    hintRecognized:'✓ 兵種が自動設定されました。', hintUnknown:'まだPhoenixのヒーロー一覧にありません — 下で兵種を自分で選択してください。'
+  },
+  de:{
+    howToText:'<b>So funktioniert\'s:</b><br>1⃣ Gib den Namen deines Helden ein und waehle den Truppentyp.<br>2⃣ Waehle den Tab, der zur aktuellen Stufe deiner Ausruestung passt.<br>3⃣ Trage das aktuelle Level jedes Teils ein.<br>4⃣ Stelle das Ziel-Level ein und tippe auf Berechnen.<br>5⃣ Folge der Reihenfolge unten — zuerst Tier 1, dann Tier 2.',
+    disclaimerText:'⚠️ Diese Prioritaetsreihenfolge ist eine Empfehlung, zusammengestellt aus mehreren Community-Guides und den Daten des Spiels selbst — sie ist keine offizielle Regel des Spiels. Verschiedene Guides schlagen leicht unterschiedliche Reihenfolgen vor, betrachte dies also als guten Ausgangspunkt, nicht als Gesetz.',
+    tipDmg:'💡 Marksman und Lancer verursachen Schaden, daher kommen Kopfschutz und Stiefel (Angriff & Toedlichkeit) zuerst — Handschuhe und Guertel (Verteidigung & Gesundheit) danach.',
+    tipTank:'💡 Infantry haelt Schaden aus, daher kommen Handschuhe und Guertel (Verteidigung & Gesundheit) zuerst — Kopfschutz und Stiefel (Angriff & Toedlichkeit) danach.',
+    backLink:'‹ Werkzeuge', heroGearCalc:'🎖️ Helden-Ausruestungsrechner',
+    lead:'Gib den Namen deines Helden ein, waehle den Truppentyp, trage das aktuelle Level jedes Teils ein und erhalte die genauen Kosten — in der richtigen Reihenfolge.',
+    ctaText:'Dieser Rechner ist fuer alle kostenlos, kein Konto noetig.',
+    ctaSignup:'📱 Bei Phoenix registrieren', ctaDonate:'☕ Auf Ko-fi unterstuetzen',
+    heroNameLabel:'Heldenname', heroNamePh:'z. B. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Verbesserung (Lv 1–100)', tabMas:'💎 Meisterschaft (Gold, Lv 1–20)',
+    tabMyth:'✨ Legendaer → Mythisch (Lv 1–100)', tabExcl:'🗡️ Exklusive Ausruestung (Lv 1–10)',
+    enhH2:'Aktuelles Level pro Teil', enhSub:'Kopfschutz (Brille), Handschuhe, Guertel, Stiefel. 0 = noch nicht hergestellt. Max. 100.',
+    enhTargetLabel:'Ziel-Level fuer alle Teile', enhBtn:'Berechnen', enhTotalLbl:'Benoetigtes Verbesserungs-XP insgesamt',
+    enhNote:'<b>Verbesserungsreihenfolge:</b> Stufe zuerst die Tier-1-Teile bei jedem Helden dieses Truppentyps hoch, dann Tier 2 — schiebe kein Teil zu weit vor die anderen. Das gezeigte XP ist der Kosten-pro-Level-Wert aus der offiziellen Verbesserungstabelle des Spiels, addiert von deinem aktuellen Level bis zum Ziel.',
+    masH2:'Aktuelles Meisterschafts-Level pro Teil', masSub:'Nur fuer goldene Ausruestung, die bereits Verbesserung Lv.100 erreicht hat und deren Meisterschaft freigeschaltet ist (Festung Lv.20). 0 = noch nicht begonnen.',
+    masTargetLabel:'Ziel-Meisterschaftslevel', masBtn:'Berechnen', masTotalLbl:'Benoetigte Essenzsteine insgesamt',
+    masNote:'<b>Hinweis:</b> ab Meisterschaftslevel 11 kostet jedes Level zusaetzlich zu Essenzsteinen auch legendaere Ausruestungsteile (1 bei Lv.11, bis zu 10 bei Lv.20) — siehe die Aufschluesselung pro Teil unten.',
+    mythH2:'Aktuelles mythisches Level pro Teil', mythSub:'Nur fuer legendaere Ausruestung, die bereits zu Mythisch veredelt wurde (benoetigt Legendaer Lv.100 + Meisterschaft Lv.10 + 2 mythische Teile zum Veredeln). 0 = gerade veredelt.',
+    mythTargetLabel:'Ziel-Mythisch-Level', mythBtn:'Berechnen', mythTotalLbl:'Benoetigtes XP insgesamt',
+    mythNote:'<b>Mithril / Mythische Helden-Ausruestung</b> wird nur bei Level 20, 40, 60, 80 und 100 verbraucht (unten pro Teil angezeigt, wenn dein Ziel eine dieser Stufen ueberschreitet). Ein komplettes 4-teiliges Mythisch-Set (alle Lv.100) kostet insgesamt 600 Mithril, 140 Mythische Helden-Ausruestung und 2.008.000 XP.',
+    exclH2:'Aktuelles Level der exklusiven Ausruestung', exclSub:'Nur fuer goldene Helden, 1★-Erweckung. Eine Waffe pro Held, nicht eine pro Teil — die Freischaltung kostet zuerst 5 heldenspezifische Widgets, danach 5/10/15/20/25/30/35/40/45/50 Widgets fuer die Level 1–10.',
+    exclCurLabel:'Aktuelles Level', exclTargetLabel:'Ziel-Level', exclBtn:'Berechnen', exclTotalLbl:'Benoetigte Widgets',
+    exclNote:'Widgets sind heldenspezifisch — du kannst die Widgets eines Helden nicht fuer die Ausruestung eines anderen verwenden. Die einzig verlaessliche Quelle ist der Mystery-Shop oder das Enigma-Event.',
+    footerNote:'Die Prioritaeten stammen aus dem Helden-Ausruestungsleitfaden von Phoenix (Copy-Paste Hub). Die Zahlen stammen aus den vom Spiel veroeffentlichten Tabellen fuer Verbesserung, Meisterschaft, Legendaer→Mythisch und exklusive Ausruestung.',
+    hintRecognized:'✓ Truppentyp automatisch festgelegt.', hintUnknown:'Noch nicht in der Phoenix-Heldenliste — waehle den Truppentyp unten selbst aus.'
+  },
+  fr:{
+    howToText:'<b>Comment l\'utiliser :</b><br>1⃣ Tape le nom de ton héros et choisis son type de troupe.<br>2⃣ Choisis l\'onglet correspondant à l\'étape actuelle de ton équipement.<br>3⃣ Indique le niveau actuel de chaque pièce.<br>4⃣ Définis le niveau cible et appuie sur Calculer.<br>5⃣ Suis l\'ordre ci-dessous — d\'abord le Palier 1, puis le Palier 2.',
+    disclaimerText:'⚠️ Cet ordre de priorité est une recommandation rassemblée à partir de plusieurs guides communautaires et des données du jeu lui-même — ce n\'est pas une règle officielle du jeu. Différents guides suggèrent des ordres légèrement différents, considère donc ceci comme un bon point de départ, pas une loi.',
+    tipDmg:'💡 Marksman et Lancer infligent des dégâts, donc Casque et Bottes (Attaque et Létalité) viennent en premier — Gants et Ceinture (Défense et Vie) ensuite.',
+    tipTank:'💡 Infantry encaisse les dégâts, donc Gants et Ceinture (Défense et Vie) viennent en premier — Casque et Bottes (Attaque et Létalité) ensuite.',
+    backLink:'‹ Outils', heroGearCalc:'🎖️ Calculateur d\'équipement de héros',
+    lead:'Tape le nom de ton héros, choisis son type de troupe, indique le niveau actuel de chaque pièce, et obtiens les coûts exacts — dans le bon ordre.',
+    ctaText:'Ce calculateur est gratuit pour tout le monde, aucun compte requis.',
+    ctaSignup:'📱 Inscris-toi sur Phoenix', ctaDonate:'☕ Soutenir sur Ko-fi',
+    heroNameLabel:'Nom du héros', heroNamePh:'ex. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Amélioration (Nv 1–100)', tabMas:'💎 Maîtrise (Or, Nv 1–20)',
+    tabMyth:'✨ Légendaire → Mythique (Nv 1–100)', tabExcl:'🗡️ Équipement Exclusif (Nv 1–10)',
+    enhH2:'Niveau actuel par pièce', enhSub:'Casque (Lunettes), Gants, Ceinture, Bottes. 0 = pas encore fabriqué. Max 100.',
+    enhTargetLabel:'Niveau cible pour toutes les pièces', enhBtn:'Calculer', enhTotalLbl:'XP d\'Amélioration total nécessaire',
+    enhNote:'<b>Ordre d\'amélioration :</b> monte d\'abord les pièces de Palier 1 sur tous les héros de ce type de troupe, puis le Palier 2 — ne laisse pas une pièce trop en avance sur les autres. L\'XP affiché est le coût par niveau de la table d\'Amélioration officielle du jeu, additionné de ton niveau actuel jusqu\'à la cible.',
+    masH2:'Niveau de Maîtrise actuel par pièce', masSub:'Seulement pour l\'équipement doré déjà à Amélioration Nv.100 + Maîtrise débloquée (Fournaise Nv.20). 0 = pas commencé.',
+    masTargetLabel:'Niveau de Maîtrise cible', masBtn:'Calculer', masTotalLbl:'Total de Pierres d\'Essence nécessaires',
+    masNote:'<b>À noter :</b> à partir du niveau de Maîtrise 11, chaque niveau coûte aussi des pièces d\'Équipement Légendaire (1 au Nv.11, jusqu\'à 10 au Nv.20) en plus des Pierres d\'Essence — voir le détail par pièce ci-dessous.',
+    mythH2:'Niveau Mythique actuel par pièce', mythSub:'Seulement pour l\'équipement Légendaire déjà transformé en Mythique (nécessite Légendaire Nv.100 + Maîtrise Nv.10 + 2 pièces Mythiques pour transformer). 0 = juste transformé.',
+    mythTargetLabel:'Niveau Mythique cible', mythBtn:'Calculer', mythTotalLbl:'XP total nécessaire',
+    mythNote:'<b>Mithril / Équipement Mythique de Héros</b> ne sont dépensés qu\'aux niveaux 20, 40, 60, 80 et 100 (affiché par pièce ci-dessous quand ta cible dépasse l\'un d\'eux). Un set Mythique complet de 4 pièces (Nv.100 partout) coûte au total 600 Mithril, 140 Équipements Mythiques de Héros et 2 008 000 XP.',
+    exclH2:'Niveau actuel de l\'Équipement Exclusif', exclSub:'Seulement pour les héros dorés, Ascension 1★. Une arme par héros, pas une par pièce — le débloquer coûte d\'abord 5 Widgets spécifiques au héros, puis 5/10/15/20/25/30/35/40/45/50 Widgets pour les niveaux 1–10.',
+    exclCurLabel:'Niveau actuel', exclTargetLabel:'Niveau cible', exclBtn:'Calculer', exclTotalLbl:'Widgets nécessaires',
+    exclNote:'Les Widgets sont spécifiques à chaque héros — tu ne peux pas utiliser les Widgets d\'un héros sur l\'équipement d\'un autre. La seule source fiable est la Boutique Mystère ou l\'Événement Énigme.',
+    footerNote:'Les priorités viennent du guide d\'équipement de héros de Phoenix (Copy-Paste Hub). Les chiffres viennent des tables officielles d\'Amélioration, Maîtrise, Légendaire→Mythique et Équipement Exclusif publiées par le jeu.',
+    hintRecognized:'✓ Type de troupe défini automatiquement.', hintUnknown:'Pas encore dans la liste des héros de Phoenix — choisis toi-même le type de troupe ci-dessous.'
+  },
+  ar:{
+    howToText:'<b>كيفية الاستخدام:</b><br>1⃣ اكتب اسم بطلك واختر نوع جيشه.<br>2⃣ اختر التبويب المطابق للمرحلة الحالية لعتادك.<br>3⃣ أدخل المستوى الحالي لكل قطعة.<br>4⃣ حدد المستوى المستهدف واضغط احسب.<br>5⃣ اتبع الترتيب أدناه — المستوى الأول أولًا ثم الثاني.',
+    disclaimerText:'⚠️ ترتيب الأولوية هذا هو توصية مجمّعة من عدة أدلة مجتمعية وبيانات اللعبة نفسها — وليس قاعدة رسمية من اللعبة. تقترح الأدلة المختلفة ترتيبًا مختلفًا قليلًا، لذا اعتبر هذا نقطة انطلاق جيدة وليس قانونًا صارمًا.',
+    tipDmg:'💡 القناص والرمّاح يُلحقان الضرر، لذا يأتي غطاء الرأس والحذاء (الهجوم والفتك) أولًا، ثم القفازات والحزام (الدفاع والصحة).',
+    tipTank:'💡 المشاة يمتصون الضرر، لذا تأتي القفازات والحزام (الدفاع والصحة) أولًا، ثم غطاء الرأس والحذاء (الهجوم والفتك).',
+    backLink:'‹ الأدوات', heroGearCalc:'🎖️ حاسبة عتاد الأبطال',
+    lead:'اكتب اسم بطلك، اختر نوع جيشه، أدخل المستوى الحالي لكل قطعة، واحصل على التكاليف الدقيقة — بالترتيب الصحيح.',
+    ctaText:'هذه الحاسبة مجانية للجميع، لا حاجة لحساب.',
+    ctaSignup:'📱 سجّل في Phoenix', ctaDonate:'☕ ادعم على Ko-fi',
+    heroNameLabel:'اسم البطل', heroNamePh:'مثال: جيرونيمو',
+    classMarksman:'🏹 القناص', classLancer:'⚔️ الرمّاح', classInfantry:'🛡️ المشاة',
+    tabEnh:'⚙️ التحسين (المستوى 1–100)', tabMas:'💎 الإتقان (ذهبي، المستوى 1–20)',
+    tabMyth:'✨ أسطوري ← خرافي (المستوى 1–100)', tabExcl:'🗡️ العتاد الحصري (المستوى 1–10)',
+    enhH2:'المستوى الحالي لكل قطعة', enhSub:'غطاء الرأس (نظارات)، القفازات، الحزام، الحذاء. 0 = لم يُصنع بعد. الحد الأقصى 100.',
+    enhTargetLabel:'المستوى المستهدف لجميع القطع', enhBtn:'احسب', enhTotalLbl:'إجمالي خبرة التحسين المطلوبة',
+    enhNote:'<b>ترتيب التحسين:</b> ارفع أولًا قطع المستوى الأول لكل أبطال هذا النوع من الجيش، ثم المستوى الثاني — لا تدع قطعة واحدة تتقدم كثيرًا عن الباقي. الخبرة المعروضة هي التكلفة لكل مستوى من جدول التحسين الرسمي للعبة، مجمّعة من مستواك الحالي حتى الهدف.',
+    masH2:'مستوى الإتقان الحالي لكل قطعة', masSub:'فقط للعتاد الذهبي الذي وصل بالفعل لتحسين Lv.100 وتم فتح الإتقان له (الفرن Lv.20). 0 = لم يبدأ بعد.',
+    masTargetLabel:'مستوى الإتقان المستهدف', masBtn:'احسب', masTotalLbl:'إجمالي أحجار الجوهر المطلوبة',
+    masNote:'<b>تنبيه:</b> ابتداءً من مستوى الإتقان 11، كل مستوى يكلّف أيضًا قطع عتاد أسطوري (1 في Lv.11، حتى 10 في Lv.20) بالإضافة إلى أحجار الجوهر — راجع التفصيل لكل قطعة أدناه.',
+    mythH2:'المستوى الخرافي الحالي لكل قطعة', mythSub:'فقط للعتاد الأسطوري الذي تحوّل بالفعل إلى خرافي (يحتاج أسطوري Lv.100 + إتقان Lv.10 + قطعتين خرافيتين للتحويل). 0 = تم تحويله للتو.',
+    mythTargetLabel:'المستوى الخرافي المستهدف', mythBtn:'احسب', mythTotalLbl:'إجمالي الخبرة المطلوبة',
+    mythNote:'<b>الميثريل / عتاد البطل الخرافي</b> يُستهلكان فقط في المستويات 20 و40 و60 و80 و100 (يظهر لكل قطعة أدناه عندما يتجاوز هدفك أحدها). طقم خرافي كامل من 4 قطع (كلها Lv.100) يكلّف 600 ميثريل و140 قطعة عتاد بطل خرافي و2,008,000 خبرة إجمالًا.',
+    exclH2:'المستوى الحالي للعتاد الحصري', exclSub:'فقط للأبطال الذهبيين، بعد الصحوة 1★. سلاح واحد لكل بطل، وليس واحدًا لكل قطعة — فتحه يكلّف أولًا 5 قطع خاصة بالبطل، ثم 5/10/15/20/25/30/35/40/45/50 قطعة للمستويات 1–10.',
+    exclCurLabel:'المستوى الحالي', exclTargetLabel:'المستوى المستهدف', exclBtn:'احسب', exclTotalLbl:'القطع المطلوبة',
+    exclNote:'القطع خاصة بكل بطل — لا يمكنك استخدام قطع بطل على عتاد بطل آخر. المصدر الموثوق الوحيد هو المتجر الغامض أو فعالية الأحجية.',
+    footerNote:'الأولويات مأخوذة من دليل عتاد الأبطال في Phoenix (مركز النسخ واللصق). الأرقام من جداول التحسين والإتقان والأسطوري←الخرافي والعتاد الحصري الرسمية التي نشرتها اللعبة.',
+    hintRecognized:'✓ تم تعيين نوع الجيش تلقائيًا.', hintUnknown:'ليس بعد في قائمة أبطال Phoenix — اختر نوع الجيش بنفسك أدناه.'
+  },
+  ru:{
+    howToText:'<b>Как этим пользоваться:</b><br>1⃣ Введите имя героя и выберите тип войск.<br>2⃣ Выберите вкладку, соответствующую текущей стадии вашего снаряжения.<br>3⃣ Укажите текущий уровень каждой части.<br>4⃣ Установите целевой уровень и нажмите Рассчитать.<br>5⃣ Следуйте порядку ниже — сначала 1-й приоритет, затем 2-й.',
+    disclaimerText:'⚠️ Этот порядок приоритета — рекомендация, собранная из нескольких гайдов сообщества и данных самой игры, а не официальное правило игры. Разные гайды предлагают немного разный порядок, так что относитесь к этому как к хорошей отправной точке, а не как к закону.',
+    tipDmg:'💡 Стрелок и Копейщик наносят урон, поэтому Шлем и Ботинки (Атака и Летальность) прокачиваются первыми — Перчатки и Пояс (Защита и Здоровье) следом.',
+    tipTank:'💡 Пехота принимает урон на себя, поэтому Перчатки и Пояс (Защита и Здоровье) прокачиваются первыми — Шлем и Ботинки (Атака и Летальность) следом.',
+    backLink:'‹ Инструменты', heroGearCalc:'🎖️ Калькулятор снаряжения героя',
+    lead:'Введите имя героя, выберите тип войск, укажите текущий уровень каждой части снаряжения — и получите точные затраты в правильном порядке.',
+    ctaText:'Этот калькулятор бесплатен для всех, аккаунт не требуется.',
+    ctaSignup:'📱 Зарегистрироваться в Phoenix', ctaDonate:'☕ Поддержать на Ko-fi',
+    heroNameLabel:'Имя героя', heroNamePh:'напр. Жеронимо',
+    classMarksman:'🏹 Стрелок', classLancer:'⚔️ Копейщик', classInfantry:'🛡️ Пехота',
+    tabEnh:'⚙️ Улучшение (Ур 1–100)', tabMas:'💎 Мастерство (Золото, Ур 1–20)',
+    tabMyth:'✨ Легендарное → Мифическое (Ур 1–100)', tabExcl:'🗡️ Эксклюзивное снаряжение (Ур 1–10)',
+    enhH2:'Текущий уровень по частям', enhSub:'Шлем (Очки), Перчатки, Пояс, Ботинки. 0 = ещё не создано. Максимум 100.',
+    enhTargetLabel:'Целевой уровень для всех частей', enhBtn:'Рассчитать', enhTotalLbl:'Всего нужно опыта улучшения',
+    enhNote:'<b>Порядок улучшения:</b> сначала прокачайте части 1-го приоритета у всех героев этого типа войск, затем 2-го — не прокачивайте одну часть намного сильнее остальных. Показанный опыт — это стоимость за уровень из официальной таблицы улучшения игры, суммированная от текущего уровня до цели.',
+    masH2:'Текущий уровень Мастерства по частям', masSub:'Только для золотого снаряжения, уже достигшего Улучшения Ур.100, с открытым Мастерством (Печь Ур.20). 0 = ещё не начато.',
+    masTargetLabel:'Целевой уровень Мастерства', masBtn:'Рассчитать', masTotalLbl:'Всего нужно Камней Сущности',
+    masNote:'<b>Обратите внимание:</b> начиная с уровня Мастерства 11 каждый уровень также требует части Легендарного снаряжения (1 на Ур.11, до 10 на Ур.20) в дополнение к Камням Сущности — см. разбивку по частям ниже.',
+    mythH2:'Текущий Мифический уровень по частям', mythSub:'Только для Легендарного снаряжения, уже превращённого в Мифическое (нужно Легендарное Ур.100 + Мастерство Ур.10 + 2 Мифические части для превращения). 0 = только что превращено.',
+    mythTargetLabel:'Целевой Мифический уровень', mythBtn:'Рассчитать', mythTotalLbl:'Всего нужно опыта',
+    mythNote:'<b>Мифрил / Мифическое снаряжение героя</b> тратятся только на уровнях 20, 40, 60, 80 и 100 (показано по частям ниже, когда цель пересекает один из них). Полный комплект из 4 Мифических частей (все Ур.100) стоит 600 Мифрила, 140 Мифических снаряжений героя и 2 008 000 опыта в сумме.',
+    exclH2:'Текущий уровень эксклюзивного снаряжения', exclSub:'Только для золотых героев, после 1★ Пробуждения. Одно оружие на героя, а не одно на часть — открытие стоит сначала 5 деталей, уникальных для героя, затем 5/10/15/20/25/30/35/40/45/50 деталей для уровней 1–10.',
+    exclCurLabel:'Текущий уровень', exclTargetLabel:'Целевой уровень', exclBtn:'Рассчитать', exclTotalLbl:'Нужно деталей',
+    exclNote:'Детали уникальны для каждого героя — нельзя использовать детали одного героя на снаряжении другого. Единственный надёжный источник — Магазин тайн или ивент "Энигма".',
+    footerNote:'Приоритеты взяты из руководства по снаряжению героев Phoenix (Copy-Paste Hub). Цифры взяты из официальных таблиц Улучшения, Мастерства, Легендарное→Мифическое и Эксклюзивного снаряжения, опубликованных игрой.',
+    hintRecognized:'✓ Тип войск установлен автоматически.', hintUnknown:'Пока нет в списке героев Phoenix — выберите тип войск сами ниже.'
+  },
+  tr:{
+    howToText:'<b>Nasıl kullanılır:</b><br>1⃣ Kahramanının adını yaz ve asker türünü seç.<br>2⃣ Ekipmanının mevcut aşamasına uyan sekmeyi seç.<br>3⃣ Her parçanın mevcut seviyesini gir.<br>4⃣ Hedef seviyeyi ayarla, Hesapla\'ya dokun.<br>5⃣ Aşağıdaki sırayı takip et — önce 1. Kademe, sonra 2. Kademe.',
+    disclaimerText:'⚠️ Bu öncelik sırası, çeşitli topluluk rehberlerinden ve oyunun kendi verilerinden derlenen bir öneridir — oyunun resmi bir kuralı değildir. Farklı rehberler biraz farklı sıralar önerebilir, bu yüzden bunu kesin bir kural değil, iyi bir başlangıç noktası olarak düşün.',
+    tipDmg:'💡 Marksman ve Lancer hasar verir, bu yüzden önce Başlık ve Bot (Saldırı ve Öldürücülük), sonra Eldiven ve Kemer (Savunma ve Can) gelir.',
+    tipTank:'💡 Infantry hasarı emer, bu yüzden önce Eldiven ve Kemer (Savunma ve Can), sonra Başlık ve Bot (Saldırı ve Öldürücülük) gelir.',
+    backLink:'‹ Araçlar', heroGearCalc:'🎖️ Kahraman Ekipman Hesaplayıcı',
+    lead:'Kahramanının adını yaz, asker türünü seç, her parçanın mevcut seviyesini gir ve doğru sırayla tam maliyetleri al.',
+    ctaText:'Bu hesaplayıcı herkes için ücretsizdir, hesap gerekmez.',
+    ctaSignup:'📱 Phoenix\'e kaydol', ctaDonate:'☕ Ko-fi\'de destekle',
+    heroNameLabel:'Kahraman adı', heroNamePh:'ör. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Geliştirme (Sv 1–100)', tabMas:'💎 Ustalık (Altın, Sv 1–20)',
+    tabMyth:'✨ Efsanevi → Mitik (Sv 1–100)', tabExcl:'🗡️ Özel Ekipman (Sv 1–10)',
+    enhH2:'Parça başına mevcut seviye', enhSub:'Başlık (Gözlük), Eldiven, Kemer, Bot. 0 = henüz üretilmedi. Maks 100.',
+    enhTargetLabel:'Tüm parçalar için hedef seviye', enhBtn:'Hesapla', enhTotalLbl:'Gereken toplam Geliştirme XP',
+    enhNote:'<b>Geliştirme sırası:</b> önce bu asker türündeki her kahramanın 1. Kademe parçalarını yükselt, sonra 2. Kademeyi — bir parçayı diğerlerinden çok öne geçirme. Gösterilen XP, oyunun resmi Geliştirme tablosundaki seviye başına maliyettir, mevcut seviyenden hedefe kadar toplanmıştır.',
+    masH2:'Parça başına mevcut Ustalık seviyesi', masSub:'Sadece Geliştirme Sv.100\'e ulaşmış ve Ustalığı açılmış (Fırın Sv.20) Altın kalite ekipman için. 0 = henüz başlanmadı.',
+    masTargetLabel:'Hedef Ustalık seviyesi', masBtn:'Hesapla', masTotalLbl:'Gereken toplam Öz Taş',
+    masNote:'<b>Dikkat:</b> Ustalık seviyesi 11\'den itibaren her seviye, Öz Taşlarına ek olarak Efsanevi Ekipman parçaları da gerektirir (Sv.11\'de 1, Sv.20\'ye kadar en fazla 10) — aşağıdaki parça bazlı dökümü kontrol et.',
+    mythH2:'Parça başına mevcut Mitik seviye', mythSub:'Sadece Mitik\'e dönüştürülmüş Efsanevi ekipman için (dönüştürmek için Efsanevi Sv.100 + Ustalık Sv.10 + 2 Mitik parça gerekir). 0 = az önce dönüştürüldü.',
+    mythTargetLabel:'Hedef Mitik seviye', mythBtn:'Hesapla', mythTotalLbl:'Gereken toplam XP',
+    mythNote:'<b>Mithril / Mitik Kahraman Ekipmanı</b> yalnızca 20, 40, 60, 80 ve 100. seviyelerde harcanır (hedefin bunlardan birini geçtiğinde aşağıda parça başına gösterilir). Tam 4 parçalık bir Mitik set (hepsi Sv.100) toplam 600 Mithril, 140 Mitik Kahraman Ekipmanı ve 2.008.000 XP gerektirir.',
+    exclH2:'Mevcut Özel Ekipman seviyesi', exclSub:'Sadece Altın kalite kahramanlar için, 1★ Yükseliş sonrası. Parça başına değil, kahraman başına bir silah — açmak önce 5 kahramana özel Widget, ardından 1–10. seviyeler için sırasıyla 5/10/15/20/25/30/35/40/45/50 Widget gerektirir.',
+    exclCurLabel:'Mevcut seviye', exclTargetLabel:'Hedef seviye', exclBtn:'Hesapla', exclTotalLbl:'Gereken Widget',
+    exclNote:'Widget\'lar kahramana özeldir — bir kahramanın Widget\'larını başka bir kahramanın ekipmanında kullanamazsın. Tek güvenilir kaynak Gizem Mağazası veya Bilmece Etkinliği\'dir.',
+    footerNote:'Öncelikler Phoenix\'in kahraman ekipman rehberinden (Copy-Paste Hub) gelir. Sayılar oyunun yayımladığı resmi Geliştirme, Ustalık, Efsanevi→Mitik ve Özel Ekipman tablolarından alınmıştır.',
+    hintRecognized:'✓ Asker türü otomatik ayarlandı.', hintUnknown:'Henüz Phoenix\'in kahraman listesinde değil — asker türünü aşağıdan kendin seç.'
+  },
+  it:{
+    howToText:'<b>Come usarlo:</b><br>1⃣ Scrivi il nome del tuo eroe e scegli il tipo di truppa.<br>2⃣ Scegli la scheda corrispondente alla fase attuale del tuo equipaggiamento.<br>3⃣ Inserisci il livello attuale di ogni pezzo.<br>4⃣ Imposta il livello obiettivo e tocca Calcola.<br>5⃣ Segui l\'ordine qui sotto — prima il Livello 1, poi il Livello 2.',
+    disclaimerText:'⚠️ Quest\'ordine di priorità è un consiglio raccolto da diverse guide della community e dai dati stessi del gioco — non è una regola ufficiale del gioco. Guide diverse suggeriscono ordini leggermente diversi, quindi considera questo un buon punto di partenza, non una legge.',
+    tipDmg:'💡 Marksman e Lancer infliggono danno, quindi Copricapo e Stivali (Attacco e Letalità) vengono prima — Guanti e Cintura (Difesa e Vita) dopo.',
+    tipTank:'💡 Infantry assorbe il danno, quindi Guanti e Cintura (Difesa e Vita) vengono prima — Copricapo e Stivali (Attacco e Letalità) dopo.',
+    backLink:'‹ Strumenti', heroGearCalc:'🎖️ Calcolatore Equipaggiamento Eroe',
+    lead:'Scrivi il nome del tuo eroe, scegli il tipo di truppa, inserisci il livello attuale di ogni pezzo e ottieni i costi esatti — nell\'ordine giusto.',
+    ctaText:'Questo calcolatore è gratuito per tutti, nessun account richiesto.',
+    ctaSignup:'📱 Iscriviti a Phoenix', ctaDonate:'☕ Supporta su Ko-fi',
+    heroNameLabel:'Nome eroe', heroNamePh:'es. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Potenziamento (Lv 1–100)', tabMas:'💎 Maestria (Oro, Lv 1–20)',
+    tabMyth:'✨ Leggendario → Mitico (Lv 1–100)', tabExcl:'🗡️ Equipaggiamento Esclusivo (Lv 1–10)',
+    enhH2:'Livello attuale per pezzo', enhSub:'Copricapo (Occhiali), Guanti, Cintura, Stivali. 0 = non ancora creato. Max 100.',
+    enhTargetLabel:'Livello obiettivo per tutti i pezzi', enhBtn:'Calcola', enhTotalLbl:'XP di Potenziamento totale necessario',
+    enhNote:'<b>Ordine di potenziamento:</b> porta prima i pezzi di Livello 1 su ogni eroe di questo tipo di truppa, poi il Livello 2 — non far avanzare troppo un pezzo rispetto agli altri. L\'XP mostrato è il costo per livello dalla tabella ufficiale di Potenziamento del gioco, sommato dal tuo livello attuale all\'obiettivo.',
+    masH2:'Livello di Maestria attuale per pezzo', masSub:'Solo per equipaggiamento oro già a Potenziamento Lv.100 con Maestria sbloccata (Fornace Lv.20). 0 = non ancora iniziato.',
+    masTargetLabel:'Livello di Maestria obiettivo', masBtn:'Calcola', masTotalLbl:'Totale Pietre dell\'Essenza necessarie',
+    masNote:'<b>Attenzione:</b> dal livello di Maestria 11 in poi ogni livello costa anche pezzi di Equipaggiamento Leggendario (1 al Lv.11, fino a 10 al Lv.20) oltre alle Pietre dell\'Essenza — controlla il dettaglio per pezzo qui sotto.',
+    mythH2:'Livello Mitico attuale per pezzo', mythSub:'Solo per equipaggiamento Leggendario già trasformato in Mitico (serve Leggendario Lv.100 + Maestria Lv.10 + 2 pezzi Mitici per trasformare). 0 = appena trasformato.',
+    mythTargetLabel:'Livello Mitico obiettivo', mythBtn:'Calcola', mythTotalLbl:'XP totale necessario',
+    mythNote:'<b>Mithril / Equipaggiamento Mitico Eroe</b> vengono spesi solo ai livelli 20, 40, 60, 80 e 100 (mostrato per pezzo qui sotto quando il tuo obiettivo supera uno di questi). Un set Mitico completo di 4 pezzi (tutti Lv.100) costa in totale 600 Mithril, 140 Equipaggiamenti Mitici Eroe e 2.008.000 XP.',
+    exclH2:'Livello attuale dell\'Equipaggiamento Esclusivo', exclSub:'Solo per eroi oro, Ascensione 1★. Un\'arma per eroe, non una per pezzo — sbloccarla costa prima 5 Widget specifici dell\'eroe, poi 5/10/15/20/25/30/35/40/45/50 Widget per i livelli 1–10.',
+    exclCurLabel:'Livello attuale', exclTargetLabel:'Livello obiettivo', exclBtn:'Calcola', exclTotalLbl:'Widget necessari',
+    exclNote:'I Widget sono specifici per eroe — non puoi usare i Widget di un eroe sull\'equipaggiamento di un altro. L\'unica fonte affidabile è il Negozio Misterioso o l\'Evento Enigma.',
+    footerNote:'Le priorità vengono dalla guida all\'equipaggiamento eroi di Phoenix (Copy-Paste Hub). I numeri vengono dalle tabelle ufficiali di Potenziamento, Maestria, Leggendario→Mitico ed Equipaggiamento Esclusivo pubblicate dal gioco.',
+    hintRecognized:'✓ Tipo di truppa impostato automaticamente.', hintUnknown:'Non ancora nella lista eroi di Phoenix — scegli tu il tipo di truppa qui sotto.'
+  },
+  pl:{
+    howToText:'<b>Jak z tego korzystać:</b><br>1⃣ Wpisz imię swojego bohatera i wybierz typ wojsk.<br>2⃣ Wybierz zakładkę pasującą do obecnego etapu twojego ekwipunku.<br>3⃣ Podaj obecny poziom każdej części.<br>4⃣ Ustaw poziom docelowy i naciśnij Oblicz.<br>5⃣ Postępuj zgodnie z kolejnością poniżej — najpierw poziom 1, potem poziom 2.',
+    disclaimerText:'⚠️ Ta kolejność priorytetów to rekomendacja zebrana z kilku poradników społeczności i danych samej gry — nie jest oficjalną zasadą gry. Różne poradniki sugerują nieco inną kolejność, więc traktuj to jako dobry punkt wyjścia, a nie sztywną zasadę.',
+    tipDmg:'💡 Marksman i Lancer zadają obrażenia, więc najpierw Hełm i Buty (Atak i Śmiercionośność), a potem Rękawice i Pas (Obrona i Zdrowie).',
+    tipTank:'💡 Infantry przyjmuje obrażenia, więc najpierw Rękawice i Pas (Obrona i Zdrowie), a potem Hełm i Buty (Atak i Śmiercionośność).',
+    backLink:'‹ Narzędzia', heroGearCalc:'🎖️ Kalkulator Ekwipunku Bohatera',
+    lead:'Wpisz imię bohatera, wybierz typ wojsk, podaj obecny poziom każdej części i uzyskaj dokładne koszty — we właściwej kolejności.',
+    ctaText:'Ten kalkulator jest darmowy dla wszystkich, konto nie jest wymagane.',
+    ctaSignup:'📱 Zarejestruj się w Phoenix', ctaDonate:'☕ Wesprzyj na Ko-fi',
+    heroNameLabel:'Imię bohatera', heroNamePh:'np. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Ulepszanie (Poz 1–100)', tabMas:'💎 Mistrzostwo (Złoto, Poz 1–20)',
+    tabMyth:'✨ Legendarny → Mityczny (Poz 1–100)', tabExcl:'🗡️ Ekwipunek Ekskluzywny (Poz 1–10)',
+    enhH2:'Obecny poziom danej części', enhSub:'Hełm (Gogle), Rękawice, Pas, Buty. 0 = jeszcze nie wykonano. Maks. 100.',
+    enhTargetLabel:'Docelowy poziom dla wszystkich części', enhBtn:'Oblicz', enhTotalLbl:'Potrzebne łączne XP Ulepszania',
+    enhNote:'<b>Kolejność ulepszania:</b> najpierw podnieś części 1. poziomu priorytetu u każdego bohatera tego typu wojsk, potem 2. poziom — nie wysuwaj jednej części zbyt daleko przed resztę. Pokazane XP to koszt na poziom z oficjalnej tabeli Ulepszania gry, zsumowany od obecnego poziomu do celu.',
+    masH2:'Obecny poziom Mistrzostwa danej części', masSub:'Tylko dla złotego ekwipunku, który osiągnął już Ulepszanie Poz.100 z odblokowanym Mistrzostwem (Twierdza Poz.20). 0 = jeszcze nie rozpoczęto.',
+    masTargetLabel:'Docelowy poziom Mistrzostwa', masBtn:'Oblicz', masTotalLbl:'Potrzebne łącznie Kamienie Esencji',
+    masNote:'<b>Uwaga:</b> od poziomu Mistrzostwa 11 każdy poziom kosztuje też części Ekwipunku Legendarnego (1 na Poz.11, do 10 na Poz.20) oprócz Kamieni Esencji — sprawdź podział na części poniżej.',
+    mythH2:'Obecny poziom Mityczny danej części', mythSub:'Tylko dla ekwipunku Legendarnego już przekształconego w Mityczny (wymaga Legendarny Poz.100 + Mistrzostwo Poz.10 + 2 części Mityczne do przekształcenia). 0 = właśnie przekształcono.',
+    mythTargetLabel:'Docelowy poziom Mityczny', mythBtn:'Oblicz', mythTotalLbl:'Potrzebne łączne XP',
+    mythNote:'<b>Mithril / Mityczny Ekwipunek Bohatera</b> są wydawane tylko na poziomach 20, 40, 60, 80 i 100 (pokazane dla każdej części poniżej, gdy twój cel przekroczy jeden z nich). Pełny 4-częściowy zestaw Mityczny (wszystko Poz.100) kosztuje łącznie 600 Mithrilu, 140 Mitycznych Ekwipunków Bohatera i 2 008 000 XP.',
+    exclH2:'Obecny poziom Ekwipunku Ekskluzywnego', exclSub:'Tylko dla złotych bohaterów, po Wniebowstąpieniu 1★. Jedna broń na bohatera, nie jedna na część — odblokowanie kosztuje najpierw 5 Widgetów specyficznych dla bohatera, potem 5/10/15/20/25/30/35/40/45/50 Widgetów na poziomy 1–10.',
+    exclCurLabel:'Obecny poziom', exclTargetLabel:'Docelowy poziom', exclBtn:'Oblicz', exclTotalLbl:'Potrzebne Widgety',
+    exclNote:'Widgety są specyficzne dla bohatera — nie możesz użyć Widgetów jednego bohatera na ekwipunku innego. Jedynym pewnym źródłem jest Tajemniczy Sklep lub Wydarzenie Enigma.',
+    footerNote:'Priorytety pochodzą z przewodnika po ekwipunku bohaterów Phoenix (Copy-Paste Hub). Liczby pochodzą z oficjalnych tabel Ulepszania, Mistrzostwa, Legendarny→Mityczny i Ekwipunku Ekskluzywnego opublikowanych przez grę.',
+    hintRecognized:'✓ Typ wojsk ustawiony automatycznie.', hintUnknown:'Jeszcze nie ma go na liście bohaterów Phoenix — wybierz typ wojsk sam poniżej.'
+  },
+  th:{
+    howToText:'<b>วิธีใช้:</b><br>1⃣ พิมพ์ชื่อฮีโร่และเลือกประเภทกองทัพ<br>2⃣ เลือกแท็บที่ตรงกับขั้นตอนปัจจุบันของอุปกรณ์คุณ<br>3⃣ ใส่เลเวลปัจจุบันของแต่ละชิ้น<br>4⃣ ตั้งเลเวลเป้าหมายแล้วกดคำนวณ<br>5⃣ ทำตามลำดับด้านล่าง — ระดับความสำคัญที่ 1 ก่อน แล้วค่อยระดับ 2',
+    disclaimerText:'⚠️ ลำดับความสำคัญนี้เป็นคำแนะนำที่รวบรวมจากไกด์ของชุมชนหลายแห่งและข้อมูลของเกมเอง ไม่ใช่กฎอย่างเป็นทางการของเกม ไกด์แต่ละแห่งอาจแนะนำลำดับที่ต่างกันเล็กน้อย ดังนั้นให้ถือว่านี่เป็นจุดเริ่มต้นที่ดี ไม่ใช่กฎตายตัว',
+    tipDmg:'💡 Marksman และ Lancer สร้างความเสียหาย ดังนั้นหมวกและรองเท้าบูท (โจมตีและอัตราสังหาร) มาก่อน ตามด้วยถุงมือและเข็มขัด (ป้องกันและพลังชีวิต)',
+    tipTank:'💡 Infantry รับความเสียหาย ดังนั้นถุงมือและเข็มขัด (ป้องกันและพลังชีวิต) มาก่อน ตามด้วยหมวกและรองเท้าบูท (โจมตีและอัตราสังหาร)',
+    backLink:'‹ เครื่องมือ', heroGearCalc:'🎖️ เครื่องคำนวณอุปกรณ์ฮีโร่',
+    lead:'พิมพ์ชื่อฮีโร่ของคุณ เลือกประเภทกองทัพ ใส่เลเวลปัจจุบันของแต่ละชิ้น แล้วรับค่าใช้จ่ายที่แม่นยำ — ตามลำดับที่ถูกต้อง',
+    ctaText:'เครื่องคำนวณนี้ฟรีสำหรับทุกคน ไม่ต้องมีบัญชี',
+    ctaSignup:'📱 สมัคร Phoenix', ctaDonate:'☕ สนับสนุนบน Ko-fi',
+    heroNameLabel:'ชื่อฮีโร่', heroNamePh:'เช่น Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ การอัปเกรด (Lv 1–100)', tabMas:'💎 ความเชี่ยวชาญ (ทอง, Lv 1–20)',
+    tabMyth:'✨ ตำนาน → เทพนิยาย (Lv 1–100)', tabExcl:'🗡️ อุปกรณ์เฉพาะตัว (Lv 1–10)',
+    enhH2:'เลเวลปัจจุบันของแต่ละชิ้น', enhSub:'หมวก (แว่นตา), ถุงมือ, เข็มขัด, รองเท้าบูท 0 = ยังไม่ได้สร้าง สูงสุด 100',
+    enhTargetLabel:'เลเวลเป้าหมายของทุกชิ้น', enhBtn:'คำนวณ', enhTotalLbl:'EXP อัปเกรดที่ต้องใช้ทั้งหมด',
+    enhNote:'<b>ลำดับการอัปเกรด:</b> อัปชิ้นระดับความสำคัญที่ 1 ของฮีโร่ทุกคนในกองทัพประเภทนี้ก่อน แล้วค่อยระดับ 2 — อย่าปล่อยให้ชิ้นใดชิ้นหนึ่งนำหน้าชิ้นอื่นมากเกินไป EXP ที่แสดงคือค่าใช้จ่ายต่อเลเวลจากตารางอัปเกรดอย่างเป็นทางการของเกม รวมจากเลเวลปัจจุบันถึงเป้าหมาย',
+    masH2:'เลเวลความเชี่ยวชาญปัจจุบันของแต่ละชิ้น', masSub:'สำหรับอุปกรณ์ทองที่ถึง Lv.100 แล้วและปลดล็อกความเชี่ยวชาญแล้วเท่านั้น (เตาหลอม Lv.20) 0 = ยังไม่เริ่ม',
+    masTargetLabel:'เลเวลความเชี่ยวชาญเป้าหมาย', masBtn:'คำนวณ', masTotalLbl:'หินแก่นสารที่ต้องใช้ทั้งหมด',
+    masNote:'<b>ข้อควรทราบ:</b> ตั้งแต่เลเวลความเชี่ยวชาญ 11 เป็นต้นไป แต่ละเลเวลยังต้องใช้ชิ้นส่วนอุปกรณ์ตำนานด้วย (1 ชิ้นที่ Lv.11 สูงสุด 10 ชิ้นที่ Lv.20) นอกเหนือจากหินแก่นสาร — ดูรายละเอียดแต่ละชิ้นด้านล่าง',
+    mythH2:'เลเวลเทพนิยายปัจจุบันของแต่ละชิ้น', mythSub:'สำหรับอุปกรณ์ตำนานที่แปลงเป็นเทพนิยายแล้วเท่านั้น (ต้องการตำนาน Lv.100 + ความเชี่ยวชาญ Lv.10 + ชิ้นเทพนิยาย 2 ชิ้นในการแปลง) 0 = เพิ่งแปลง',
+    mythTargetLabel:'เลเวลเทพนิยายเป้าหมาย', mythBtn:'คำนวณ', mythTotalLbl:'EXP ที่ต้องใช้ทั้งหมด',
+    mythNote:'<b>มิธริล / อุปกรณ์ฮีโร่เทพนิยาย</b> จะใช้เฉพาะที่เลเวล 20, 40, 60, 80 และ 100 เท่านั้น (แสดงแต่ละชิ้นด้านล่างเมื่อเป้าหมายของคุณข้ามระดับเหล่านี้) ชุดเทพนิยายครบ 4 ชิ้น (ทั้งหมด Lv.100) ต้องใช้มิธริล 600 อุปกรณ์ฮีโร่เทพนิยาย 140 ชิ้น และ EXP รวม 2,008,000',
+    exclH2:'เลเวลอุปกรณ์เฉพาะตัวปัจจุบัน', exclSub:'สำหรับฮีโร่ทองเท่านั้น หลังตื่นขึ้น 1★ อาวุธหนึ่งชิ้นต่อฮีโร่หนึ่งคน ไม่ใช่ต่อชิ้นส่วน — การปลดล็อกต้องใช้วิดเจ็ตเฉพาะฮีโร่ 5 ชิ้นก่อน จากนั้น 5/10/15/20/25/30/35/40/45/50 ชิ้นสำหรับเลเวล 1–10',
+    exclCurLabel:'เลเวลปัจจุบัน', exclTargetLabel:'เลเวลเป้าหมาย', exclBtn:'คำนวณ', exclTotalLbl:'วิดเจ็ตที่ต้องใช้',
+    exclNote:'วิดเจ็ตเป็นของเฉพาะฮีโร่แต่ละคน — คุณใช้วิดเจ็ตของฮีโร่หนึ่งกับอุปกรณ์ของฮีโร่อีกคนไม่ได้ แหล่งที่เชื่อถือได้เพียงแหล่งเดียวคือร้านค้าปริศนาหรืออีเวนต์ Enigma',
+    footerNote:'ลำดับความสำคัญมาจากคู่มืออุปกรณ์ฮีโร่ของ Phoenix (Copy-Paste Hub) ตัวเลขมาจากตารางการอัปเกรด ความเชี่ยวชาญ ตำนาน→เทพนิยาย และอุปกรณ์เฉพาะตัวที่เกมเผยแพร่อย่างเป็นทางการ',
+    hintRecognized:'✓ ตั้งค่าประเภทกองทัพอัตโนมัติแล้ว', hintUnknown:'ยังไม่มีในรายชื่อฮีโร่ของ Phoenix — เลือกประเภทกองทัพเองด้านล่าง'
+  },
+  id:{
+    howToText:'<b>Cara menggunakannya:</b><br>1⃣ Ketik nama hero-mu dan pilih jenis pasukannya.<br>2⃣ Pilih tab yang sesuai dengan tahap gear-mu saat ini.<br>3⃣ Masukkan level saat ini untuk tiap bagian.<br>4⃣ Atur level target, ketuk Hitung.<br>5⃣ Ikuti urutan di bawah — Tier 1 dulu, baru Tier 2.',
+    disclaimerText:'⚠️ Urutan prioritas ini adalah rekomendasi yang dikumpulkan dari beberapa panduan komunitas dan data game itu sendiri — bukan aturan resmi dari game. Panduan berbeda bisa menyarankan urutan yang sedikit berbeda, jadi anggap ini titik awal yang baik, bukan aturan mutlak.',
+    tipDmg:'💡 Marksman dan Lancer memberikan damage, jadi Headgear dan Sepatu Bot (Attack & Lethality) diutamakan dulu — Sarung Tangan dan Sabuk (Defense & Health) berikutnya.',
+    tipTank:'💡 Infantry menahan damage, jadi Sarung Tangan dan Sabuk (Defense & Health) diutamakan dulu — Headgear dan Sepatu Bot (Attack & Lethality) berikutnya.',
+    backLink:'‹ Alat', heroGearCalc:'🎖️ Kalkulator Gear Hero',
+    lead:'Ketik nama hero-mu, pilih jenis pasukannya, masukkan level saat ini untuk tiap bagian, dan dapatkan biaya yang tepat — dengan urutan yang benar.',
+    ctaText:'Kalkulator ini gratis untuk semua orang, tidak perlu akun.',
+    ctaSignup:'📱 Daftar di Phoenix', ctaDonate:'☕ Dukung di Ko-fi',
+    heroNameLabel:'Nama hero', heroNamePh:'cth. Jeronimo',
+    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    tabEnh:'⚙️ Enhancement (Lv 1–100)', tabMas:'💎 Mastery (Emas, Lv 1–20)',
+    tabMyth:'✨ Legendary → Mythic (Lv 1–100)', tabExcl:'🗡️ Gear Eksklusif (Lv 1–10)',
+    enhH2:'Level saat ini per bagian', enhSub:'Headgear (Kacamata), Sarung Tangan, Sabuk, Sepatu Bot. 0 = belum dibuat. Maks 100.',
+    enhTargetLabel:'Level target untuk semua bagian', enhBtn:'Hitung', enhTotalLbl:'Total XP Enhancement yang dibutuhkan',
+    enhNote:'<b>Urutan upgrade:</b> naikkan dulu bagian Tier 1 di semua hero jenis pasukan ini, lalu Tier 2 — jangan biarkan satu bagian jauh lebih tinggi dari yang lain. XP yang ditampilkan adalah biaya per level dari tabel Enhancement resmi game, dijumlahkan dari level saat ini sampai target.',
+    masH2:'Level Mastery saat ini per bagian', masSub:'Hanya untuk gear Emas yang sudah mencapai Enhancement Lv.100 dan Mastery-nya terbuka (Furnace Lv.20). 0 = belum dimulai.',
+    masTargetLabel:'Level Mastery target', masBtn:'Hitung', masTotalLbl:'Total Essence Stone yang dibutuhkan',
+    masNote:'<b>Perhatian:</b> mulai level Mastery 11, setiap level juga membutuhkan bagian Legendary Gear (1 di Lv.11, sampai 10 di Lv.20) selain Essence Stone — lihat rincian per bagian di bawah.',
+    mythH2:'Level Mythic saat ini per bagian', mythSub:'Hanya untuk gear Legendary yang sudah diubah menjadi Mythic (butuh Legendary Lv.100 + Mastery Lv.10 + 2 bagian Mythic untuk mengubah). 0 = baru saja diubah.',
+    mythTargetLabel:'Level Mythic target', mythBtn:'Hitung', mythTotalLbl:'Total XP yang dibutuhkan',
+    mythNote:'<b>Mithril / Mythic Hero Gear</b> hanya digunakan di level 20, 40, 60, 80, dan 100 (ditampilkan per bagian di bawah saat targetmu melewati salah satunya). Satu set Mythic lengkap 4 bagian (semua Lv.100) membutuhkan total 600 Mithril, 140 Mythic Hero Gear, dan 2.008.000 XP.',
+    exclH2:'Level Gear Eksklusif saat ini', exclSub:'Hanya untuk hero Emas, setelah Ascension 1★. Satu senjata per hero, bukan satu per bagian — membukanya membutuhkan 5 Widget khusus hero dulu, lalu 5/10/15/20/25/30/35/40/45/50 Widget untuk level 1–10.',
+    exclCurLabel:'Level saat ini', exclTargetLabel:'Level target', exclBtn:'Hitung', exclTotalLbl:'Widget yang dibutuhkan',
+    exclNote:'Widget bersifat khusus per hero — kamu tidak bisa memakai Widget satu hero untuk gear hero lain. Satu-satunya sumber yang bisa diandalkan adalah Mystery Shop atau Enigma Event.',
+    footerNote:'Prioritas berasal dari panduan gear hero Phoenix (Copy-Paste Hub). Angka-angka berasal dari tabel resmi Enhancement, Mastery, Legendary→Mythic, dan Gear Eksklusif yang dipublikasikan game.',
+    hintRecognized:'✓ Jenis pasukan diatur otomatis.', hintUnknown:'Belum ada di daftar hero Phoenix — pilih sendiri jenis pasukannya di bawah.'
   }
+
 };
 
 PhxI18N.init(DICT, function(){

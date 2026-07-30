@@ -116,6 +116,7 @@ function gmsg(h){var m=document.getElementById('phxGateMsg');if(m)m.innerHTML=h;
 function getState(){var q=new URLSearchParams(location.search).get('s');if(q)return q;try{var ls=localStorage.getItem('phx_state');if(ls)return ls;}catch(e){}return '3139';}
 var STATE=getState();
 function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.parentNode.removeChild(g);document.getElementById('mainScreen').style.display='';boot();}
+var PROMO_END=new Date('2026-08-02T23:59:59Z'); // 3-day open preview — remove after the promo
 (function(){
   try{
     if(!(window.supabase&&window.supabase.createClient)){gmsg('Could not load. Reload the page.');return;}
@@ -123,6 +124,7 @@ function unlock(){var g=document.getElementById('phxGate');if(g&&g.parentNode)g.
     sb.auth.getSession().then(function(r){
       var s=r&&r.data&&r.data.session;
       if(!s){gmsg('🔒 Sign in to Phoenix first.<br><br>This tool is only for R4/R5 leaders.');return;}
+      if(new Date()<PROMO_END){ unlock(); return; }
       sb.from('players').select('role,alliance_id,state_id').eq('owner',s.user.id).eq('state_id',STATE).then(function(res){
         var rows=res.data||[];
         var isAdmin=rows.some(function(p){return p.role==='admin';});

@@ -297,6 +297,24 @@
   var SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
   var FREE_TAGS=['PXR','SNO'];
+
+  /* ── 3-DAY OPEN PREVIEW — remove this whole block once the promo is over ──
+     Lets ANY visitor, staff or not, see and use the leader tools for free
+     so alliances can try them before deciding to lead/subscribe. Redeem and
+     Copy-Paste stay gated even during the preview: Redeem does a real bulk
+     action on the whole roster, and Copy-Paste is one shared library that
+     affects every alliance at once — neither is safe to hand to a random
+     visitor even briefly. */
+  var PROMO_END = new Date('2026-08-02T23:59:59Z');
+  if(new Date() < PROMO_END){
+    show(['grpLeader','cardMap','cardNumbers','cardMilestones','cardHive','cardWorld','cardRally','cardVP']);
+    var promoBanner=document.createElement('div');
+    promoBanner.style.cssText='background:linear-gradient(90deg,rgba(255,185,56,.15),rgba(255,122,46,.15));border:2px solid var(--gold);border-radius:14px;padding:12px 16px;margin-bottom:16px;text-align:center;font-size:.82rem;font-weight:700;color:var(--gold);';
+    promoBanner.textContent='🎉 Free preview through Aug 2 — every leader tool below is open to everyone, no R4/R5 needed!';
+    var grp=document.getElementById('grpLeader');
+    if(grp) grp.parentNode.insertBefore(promoBanner, grp);
+  }
+
   function show(ids){ ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; }); }
   function revealLeader(){ show(['grpLeader','cardMap','cardNumbers','cardRedeem','cardMilestones','cardHive','cardWorld','cardRally','cardVP']); } // any R4/R5/admin
   function revealPXR(){ show(['grpPXR','cardCopyPaste']); } // admin OR R4/R5 of PXR/SNO
