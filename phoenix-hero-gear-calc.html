@@ -349,6 +349,30 @@ function cumCost(table, from, to){
   return sum;
 }
 
+// Piece names shown in the input grid, per language (data-piece keys stay in English internally).
+var PIECE_I18N={
+  en:{Headgear:'Headgear',Gloves:'Gloves',Belt:'Belt',Boots:'Boots'},
+  es:{Headgear:'Casco',Gloves:'Guantes',Belt:'Cinturón',Boots:'Botas'},
+  ko:{Headgear:'모자',Gloves:'장갑',Belt:'벨트',Boots:'신발'},
+  zh:{Headgear:'目镜',Gloves:'护手',Belt:'腰带',Boots:'靴子'},
+  pt:{Headgear:'Capacete',Gloves:'Luvas',Belt:'Cinto',Boots:'Botas'},
+  ja:{Headgear:'ヘッドギア',Gloves:'グローブ',Belt:'ベルト',Boots:'ブーツ'},
+  de:{Headgear:'Kopfschutz',Gloves:'Handschuhe',Belt:'Guertel',Boots:'Stiefel'},
+  fr:{Headgear:'Casque',Gloves:'Gants',Belt:'Ceinture',Boots:'Bottes'},
+  ar:{Headgear:'غطاء الرأس',Gloves:'القفازات',Belt:'الحزام',Boots:'الحذاء'},
+  ru:{Headgear:'Шлем',Gloves:'Перчатки',Belt:'Пояс',Boots:'Ботинки'},
+  tr:{Headgear:'Başlık',Gloves:'Eldiven',Belt:'Kemer',Boots:'Bot'},
+  it:{Headgear:'Copricapo',Gloves:'Guanti',Belt:'Cintura',Boots:'Stivali'},
+  pl:{Headgear:'Hełm',Gloves:'Rękawice',Belt:'Pas',Boots:'Buty'},
+  th:{Headgear:'หมวก',Gloves:'ถุงมือ',Belt:'เข็มขัด',Boots:'รองเท้าบูท'},
+  id:{Headgear:'Headgear',Gloves:'Sarung Tangan',Belt:'Sabuk',Boots:'Sepatu Bot'}
+};
+function pieceLabel(p){
+  var lang=(window.PhxI18N&&PhxI18N.getLang)?PhxI18N.getLang():'en';
+  var pack=PIECE_I18N[lang]||PIECE_I18N.en;
+  return pack[p]||p;
+}
+
 function buildGrid(gridId, max){
   var grid=document.getElementById(gridId);
   grid.innerHTML='';
@@ -356,7 +380,7 @@ function buildGrid(gridId, max){
     var tier=PRIORITY[currentClass][p];
     var box=document.createElement('div');
     box.className='pieceBox tier'+tier;
-    box.innerHTML='<label>'+p+'<span class="tierTag">Tier '+tier+'</span></label>'+
+    box.innerHTML='<label>'+pieceLabel(p)+'<span class="tierTag">Tier '+tier+'</span></label>'+
       '<input type="number" class="lvlInput" data-piece="'+p+'" min="0" max="'+max+'" value="0">';
     grid.appendChild(box);
   });
@@ -534,14 +558,14 @@ var DICT={
   es:{
     howToText:'<b>Cómo usar esto:</b><br>1⃣ Escribe el nombre de tu héroe y elige su tipo de tropa.<br>2⃣ Elige la pestaña que corresponda a la etapa actual de tu gear.<br>3⃣ Indica el nivel actual de cada pieza.<br>4⃣ Pon el nivel objetivo y pulsa Calcular.<br>5⃣ Sigue el orden de abajo — primero Nivel 1, luego Nivel 2.',
     disclaimerText:'⚠️ Este orden de prioridad es una recomendación reunida a partir de varias guías de la comunidad y los datos propios del juego — no es una norma oficial del juego. Distintas guías sugieren órdenes ligeramente distintos, así que tómalo como un buen punto de partida, no como una ley.',
-    tipDmg:'💡 Marksman y Lancer hacen daño, así que Casco y Botas (Ataque y Letalidad) van primero — Guantes y Cinturón (Defensa y Vida) después.',
-    tipTank:'💡 Infantry aguanta el daño, así que Guantes y Cinturón (Defensa y Vida) van primero — Casco y Botas (Ataque y Letalidad) después.',
+    tipDmg:'💡 Tirador y Lancero hacen daño, así que Casco y Botas (Ataque y Letalidad) van primero — Guantes y Cinturón (Defensa y Vida) después.',
+    tipTank:'💡 Infantería aguanta el daño, así que Guantes y Cinturón (Defensa y Vida) van primero — Casco y Botas (Ataque y Letalidad) después.',
     backLink:'‹ Herramientas', heroGearCalc:'🎖️ Calculadora de Gear de Héroes',
     lead:'Escribe el nombre de tu héroe, elige su tipo de tropa, indica el nivel actual de cada pieza y obtén los costes exactos — en el orden correcto.',
     ctaText:'Esta calculadora es gratis para todo el mundo, no hace falta cuenta.',
     ctaSignup:'📱 Regístrate en Phoenix', ctaDonate:'☕ Apoya en Ko-fi',
     heroNameLabel:'Nombre del héroe', heroNamePh:'ej. Jeronimo',
-    classMarksman:'🏹 Marksman', classLancer:'⚔️ Lancer', classInfantry:'🛡️ Infantry',
+    classMarksman:'🏹 Tirador', classLancer:'⚔️ Lancero', classInfantry:'🛡️ Infantería',
     tabEnh:'⚙️ Mejora (Niv 1–100)', tabMas:'💎 Maestría (Dorado, Niv 1–20)',
     tabMyth:'✨ Legendario → Mítico (Niv 1–100)', tabExcl:'🗡️ Arma Especial (Niv 1–10)',
     enhH2:'Nivel actual por pieza', enhSub:'Casco (Gafas), Guantes, Cinturón, Botas. 0 = aún sin fabricar. Máximo 100.',
@@ -562,20 +586,20 @@ var DICT={
   ko:{
     howToText:'<b>사용 방법:</b><br>1⃣ 영웅 이름을 입력하고 병종을 선택하세요.<br>2⃣ 장비의 현재 단계에 맞는 탭을 선택하세요.<br>3⃣ 각 부위의 현재 레벨을 입력하세요.<br>4⃣ 목표 레벨을 설정하고 계산하기를 누르세요.<br>5⃣ 아래 순서를 따르세요 — 1티어 먼저, 그다음 2티어.',
     disclaimerText:'⚠️ 이 우선순위는 여러 커뮤니티 가이드와 게임 자체 데이터를 종합한 추천 사항이며, 게임의 공식 규칙이 아닙니다. 가이드마다 순서가 조금씩 다를 수 있으니 절대적인 규칙이 아니라 좋은 출발점으로 참고하세요.',
-    tipDmg:'💡 마크맨과 랜서는 딜을 담당하므로 모자와 신발(공격력·살상력)을 먼저 올리고, 장갑과 벨트(방어력·체력)는 그다음입니다.',
+    tipDmg:'💡 궁병과 창병은 딜을 담당하므로 모자와 신발(공격력·살상력)을 먼저 올리고, 장갑과 벨트(방어력·체력)는 그다음입니다.',
     tipTank:'💡 보병은 딜을 받아내는 역할이므로 장갑과 벨트(방어력·체력)를 먼저 올리고, 모자와 신발(공격력·살상력)은 그다음입니다.',
     backLink:'‹ 도구', heroGearCalc:'🎖️ 영웅 장비 계산기',
     lead:'영웅 이름을 입력하고 병종을 선택한 뒤 각 부위의 현재 레벨을 입력하면 정확한 비용을 순서대로 알려드립니다.',
     ctaText:'이 계산기는 누구나 무료로 사용할 수 있으며, 계정이 필요하지 않습니다.',
     ctaSignup:'📱 Phoenix 가입하기', ctaDonate:'☕ Ko-fi에서 후원하기',
     heroNameLabel:'영웅 이름', heroNamePh:'예: 제로니모',
-    classMarksman:'🏹 마크맨', classLancer:'⚔️ 랜서', classInfantry:'🛡️ 보병',
+    classMarksman:'🏹 궁병', classLancer:'⚔️ 창병', classInfantry:'🛡️ 보병',
     tabEnh:'⚙️ 강화 (Lv 1–100)', tabMas:'💎 숙련 (골드, Lv 1–20)',
     tabMyth:'✨ 레전더리 → 신화 (Lv 1–100)', tabExcl:'🗡️ 전용 장비 (Lv 1–10)',
     enhH2:'부위별 현재 레벨', enhSub:'모자(고글), 장갑, 벨트, 신발. 0 = 아직 제작 안 함. 최대 100.',
     enhTargetLabel:'모든 부위의 목표 레벨', enhBtn:'계산하기', enhTotalLbl:'필요한 총 강화 경험치',
     enhNote:'<b>강화 순서:</b> 이 병종의 모든 영웅에서 1티어 부위를 먼저 올리고, 그다음 2티어를 올리세요 — 한 부위만 너무 앞서가지 않게 하세요. 표시된 경험치는 게임의 공식 강화표 기준으로, 현재 레벨부터 목표 레벨까지 합산한 값입니다.',
-    masH2:'부위별 현재 숙련 레벨', masSub:'이미 강화 Lv.100에 도달하고 숙련이 해금된(요새 Lv.20) 골드 등급 장비에만 해당. 0 = 아직 시작 안 함.',
+    masH2:'부위별 현재 숙련 레벨', masSub:'이미 강화 Lv.100에 도달하고 숙련이 해금된(용광로 Lv.20) 골드 등급 장비에만 해당. 0 = 아직 시작 안 함.',
     masTargetLabel:'목표 숙련 레벨', masBtn:'계산하기', masTotalLbl:'필요한 총 에센스 스톤',
     masNote:'<b>참고:</b> 숙련 레벨 11부터는 에센스 스톤 외에도 레벨마다 레전더리 장비 조각이 필요합니다 (Lv.11에 1개, Lv.20까지 최대 10개) — 아래 부위별 내역을 확인하세요.',
     mythH2:'부위별 현재 신화 레벨', mythSub:'이미 신화로 승화된 레전더리 장비에만 해당 (레전더리 Lv.100 + 숙련 Lv.10 + 신화 조각 2개 필요). 0 = 방금 승화함.',
@@ -590,20 +614,20 @@ var DICT={
   zh:{
     howToText:'<b>使用方法：</b><br>1⃣ 输入英雄名字，选择兵种。<br>2⃣ 选择与你装备当前阶段匹配的标签页。<br>3⃣ 填入每个部位的当前等级。<br>4⃣ 设置目标等级，点击计算。<br>5⃣ 按下方顺序操作——先一级，再二级。',
     disclaimerText:'⚠️ 这个优先级顺序是综合多个社区攻略和游戏本身数据得出的建议，并非游戏官方规定。不同攻略给出的顺序略有差异，请把它当作一个可靠的起点，而不是绝对准则。',
-    tipDmg:'💡 射手和骑兵负责输出，所以头盔和靴子（攻击力和杀伤力）优先，其次是手套和腰带（防御力和生命值）。',
-    tipTank:'💡 步兵负责承伤，所以手套和腰带（防御力和生命值）优先，其次是头盔和靴子（攻击力和杀伤力）。',
+    tipDmg:'💡 神射手和长枪兵负责输出，所以目镜和靴子（攻击力和杀伤力）优先，其次是护手和腰带（防御力和生命值）。',
+    tipTank:'💡 步兵负责承伤，所以护手和腰带（防御力和生命值）优先，其次是目镜和靴子（攻击力和杀伤力）。',
     backLink:'‹ 工具', heroGearCalc:'🎖️ 英雄装备计算器',
     lead:'输入英雄名字，选择兵种，填入每个部位的当前等级，即可按正确顺序获得精确花费。',
     ctaText:'这个计算器完全免费，人人可用，无需注册账号。',
     ctaSignup:'📱 注册 Phoenix', ctaDonate:'☕ 在 Ko-fi 上支持我们',
     heroNameLabel:'英雄名字', heroNamePh:'例如：杰罗尼莫',
-    classMarksman:'🏹 射手', classLancer:'⚔️ 骑兵', classInfantry:'🛡️ 步兵',
+    classMarksman:'🏹 神射手', classLancer:'⚔️ 长枪兵', classInfantry:'🛡️ 步兵',
     tabEnh:'⚙️ 强化 (Lv 1–100)', tabMas:'💎 精通 (金色, Lv 1–20)',
     tabMyth:'✨ 传说 → 神话 (Lv 1–100)', tabExcl:'🗡️ 专属装备 (Lv 1–10)',
-    enhH2:'各部位当前等级', enhSub:'头盔（护目镜）、手套、腰带、靴子。0 = 尚未制作。最高 100 级。',
+    enhH2:'各部位当前等级', enhSub:'目镜、护手、腰带、靴子。0 = 尚未制作。最高 100 级。',
     enhTargetLabel:'所有部位的目标等级', enhBtn:'计算', enhTotalLbl:'所需强化经验总量',
     enhNote:'<b>强化顺序：</b>先把该兵种所有英雄的一级部位升到位，再升二级部位——不要让某个部位远远领先其他部位。经验数值来自游戏官方强化表，为从当前等级到目标等级的累计值。',
-    masH2:'各部位当前精通等级', masSub:'仅适用于已达到强化 Lv.100 且已解锁精通（要塞 Lv.20）的金色装备。0 = 尚未开始。',
+    masH2:'各部位当前精通等级', masSub:'仅适用于已达到强化 Lv.100 且已解锁精通（熔炉 Lv.20）的金色装备。0 = 尚未开始。',
     masTargetLabel:'目标精通等级', masBtn:'计算', masTotalLbl:'所需精华石总量',
     masNote:'<b>提示：</b>从精通等级 11 开始，除了精华石外，每级还需要传说装备（Lv.11 需要 1 个，到 Lv.20 最多需要 10 个）——请查看下方各部位明细。',
     mythH2:'各部位当前神话等级', mythSub:'仅适用于已升华为神话的传说装备（需要传说 Lv.100 + 精通 Lv.10 + 2 个神话部件才能升华）。0 = 刚升华。',
@@ -659,7 +683,7 @@ var DICT={
     enhH2:'部位ごとの現在レベル', enhSub:'ヘッドギア（ゴーグル）、グローブ、ベルト、ブーツ。0＝まだ作成していない。最大100。',
     enhTargetLabel:'全部位の目標レベル', enhBtn:'計算する', enhTotalLbl:'必要な強化経験値の合計',
     enhNote:'<b>強化の順番：</b>まずこの兵種の全ヒーローのティア1部位を上げ、その後ティア2を上げましょう — 1つの部位だけ突出させないように。表示される経験値はゲーム公式の強化表に基づき、現在レベルから目標レベルまでの合計です。',
-    masH2:'部位ごとの現在の熟練レベル', masSub:'すでに強化Lv100に達し、熟練が解放された（要塞Lv20）ゴールド装備のみ対象。0＝未着手。',
+    masH2:'部位ごとの現在の熟練レベル', masSub:'すでに強化Lv100に達し、熟練が解放された（溶鉱炉Lv20）ゴールド装備のみ対象。0＝未着手。',
     masTargetLabel:'目標熟練レベル', masBtn:'計算する', masTotalLbl:'必要なエッセンスストーンの合計',
     masNote:'<b>注意：</b>熟練レベル11以降は、エッセンスストーンに加えて各レベルでレジェンド装備も必要です（Lv11で1個、Lv20までに最大10個）— 下の部位ごとの内訳をご確認ください。',
     mythH2:'部位ごとの現在のミシックレベル', mythSub:'すでにミシックへ変換されたレジェンド装備のみ対象（レジェンドLv100＋熟練Lv10＋変換用ミシック部位2個が必要）。0＝変換直後。',
@@ -687,7 +711,7 @@ var DICT={
     enhH2:'Aktuelles Level pro Teil', enhSub:'Kopfschutz (Brille), Handschuhe, Guertel, Stiefel. 0 = noch nicht hergestellt. Max. 100.',
     enhTargetLabel:'Ziel-Level fuer alle Teile', enhBtn:'Berechnen', enhTotalLbl:'Benoetigtes Verbesserungs-XP insgesamt',
     enhNote:'<b>Verbesserungsreihenfolge:</b> Stufe zuerst die Tier-1-Teile bei jedem Helden dieses Truppentyps hoch, dann Tier 2 — schiebe kein Teil zu weit vor die anderen. Das gezeigte XP ist der Kosten-pro-Level-Wert aus der offiziellen Verbesserungstabelle des Spiels, addiert von deinem aktuellen Level bis zum Ziel.',
-    masH2:'Aktuelles Meisterschafts-Level pro Teil', masSub:'Nur fuer goldene Ausruestung, die bereits Verbesserung Lv.100 erreicht hat und deren Meisterschaft freigeschaltet ist (Festung Lv.20). 0 = noch nicht begonnen.',
+    masH2:'Aktuelles Meisterschafts-Level pro Teil', masSub:'Nur fuer goldene Ausruestung, die bereits Verbesserung Lv.100 erreicht hat und deren Meisterschaft freigeschaltet ist (Schmelzofen Lv.20). 0 = noch nicht begonnen.',
     masTargetLabel:'Ziel-Meisterschaftslevel', masBtn:'Berechnen', masTotalLbl:'Benoetigte Essenzsteine insgesamt',
     masNote:'<b>Hinweis:</b> ab Meisterschaftslevel 11 kostet jedes Level zusaetzlich zu Essenzsteinen auch legendaere Ausruestungsteile (1 bei Lv.11, bis zu 10 bei Lv.20) — siehe die Aufschluesselung pro Teil unten.',
     mythH2:'Aktuelles mythisches Level pro Teil', mythSub:'Nur fuer legendaere Ausruestung, die bereits zu Mythisch veredelt wurde (benoetigt Legendaer Lv.100 + Meisterschaft Lv.10 + 2 mythische Teile zum Veredeln). 0 = gerade veredelt.',
@@ -855,7 +879,7 @@ var DICT={
     enhH2:'Obecny poziom danej części', enhSub:'Hełm (Gogle), Rękawice, Pas, Buty. 0 = jeszcze nie wykonano. Maks. 100.',
     enhTargetLabel:'Docelowy poziom dla wszystkich części', enhBtn:'Oblicz', enhTotalLbl:'Potrzebne łączne XP Ulepszania',
     enhNote:'<b>Kolejność ulepszania:</b> najpierw podnieś części 1. poziomu priorytetu u każdego bohatera tego typu wojsk, potem 2. poziom — nie wysuwaj jednej części zbyt daleko przed resztę. Pokazane XP to koszt na poziom z oficjalnej tabeli Ulepszania gry, zsumowany od obecnego poziomu do celu.',
-    masH2:'Obecny poziom Mistrzostwa danej części', masSub:'Tylko dla złotego ekwipunku, który osiągnął już Ulepszanie Poz.100 z odblokowanym Mistrzostwem (Twierdza Poz.20). 0 = jeszcze nie rozpoczęto.',
+    masH2:'Obecny poziom Mistrzostwa danej części', masSub:'Tylko dla złotego ekwipunku, który osiągnął już Ulepszanie Poz.100 z odblokowanym Mistrzostwem (Piec Poz.20). 0 = jeszcze nie rozpoczęto.',
     masTargetLabel:'Docelowy poziom Mistrzostwa', masBtn:'Oblicz', masTotalLbl:'Potrzebne łącznie Kamienie Esencji',
     masNote:'<b>Uwaga:</b> od poziomu Mistrzostwa 11 każdy poziom kosztuje też części Ekwipunku Legendarnego (1 na Poz.11, do 10 na Poz.20) oprócz Kamieni Esencji — sprawdź podział na części poniżej.',
     mythH2:'Obecny poziom Mityczny danej części', mythSub:'Tylko dla ekwipunku Legendarnego już przekształconego w Mityczny (wymaga Legendarny Poz.100 + Mistrzostwo Poz.10 + 2 części Mityczne do przekształcenia). 0 = właśnie przekształcono.',
@@ -928,6 +952,11 @@ var DICT={
 
 PhxI18N.init(DICT, function(){
   document.getElementById('heroClassHint').textContent='';
+  buildGrid('enhGrid',100);
+  buildGrid('masGrid',20);
+  buildGrid('mythGrid',100);
+  var tipKey = (currentClass==='infantry') ? 'tipTank' : 'tipDmg';
+  document.getElementById('tipBox').textContent = PhxI18N.t(tipKey);
 });
 
 (function(){
