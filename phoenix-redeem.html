@@ -144,7 +144,7 @@ document.getElementById('startBtn').addEventListener('click', async()=>{
   document.getElementById('setupPanel').classList.add('hidden');
   document.getElementById('runPanel').classList.remove('hidden');
   processNext();
-  });
+  },{excludeFromPromo:true});
 });
 
 async function processNext(){

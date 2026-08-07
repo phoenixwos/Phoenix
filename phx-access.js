@@ -5,19 +5,26 @@
    clock per alliance). After the trial ends, full access requires an active Ko-fi
    subscription (alliance_subscriptions.paid_through in the future).
 
+   OPEN PROMO: while now < PROMO_UNTIL, every tool grants full access to EVERYONE,
+   no login required at all — except tools that explicitly opt out by passing
+   {excludeFromPromo:true} as the second argument to check() (used by the gift-code
+   redemption bot, which must stay gated during the promo).
+
    Usage in a tool page:
      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
      <script src="phx-access.js"></script>
      <script>
        PhxAccess.check(function(granted, reason, ctx){
          if(granted){
-           // unlock the premium bit; ctx.sb / ctx.uid available if needed
+           // unlock the premium bit; ctx.sb / ctx.uid available if reason isn't 'promo'
            // if(reason==='trial' && ctx.daysLeft<=3) showTrialNotice(ctx.daysLeft);
          }else{
            document.getElementById('phxDemoBanner').innerHTML = 'Your specific locked-feature sentence. ' + PhxAccess.message(reason);
            document.getElementById('phxDemoBanner').style.display='block';
          }
        });
+       // To opt a tool OUT of the open promo (keep it fully gated):
+       // PhxAccess.check(function(granted, reason, ctx){ ... }, {excludeFromPromo:true});
      </script>
 */
 (function(){
@@ -27,6 +34,7 @@
   var PRICE_TEXT='$5/mo';
   var KOFI_URL='https://ko-fi.com/phoenixwos';
   var FREE_TAGS=['PXR','SNO']; // alliances with full access for every R4/R5, no payment ever
+  var PROMO_UNTIL=new Date('2026-09-06T23:59:59Z'); // open promo end — no login needed, full access
 
   function isFreeTag(tag){
     tag=(tag||'').toUpperCase();
@@ -44,6 +52,7 @@
     TRIAL_DAYS:TRIAL_DAYS,
     PRICE_TEXT:PRICE_TEXT,
     KOFI_URL:KOFI_URL,
+    PROMO_UNTIL:PROMO_UNTIL,
 
     message:function(reason){
       var guide=' <a href="phoenix-leader-guide.html" target="_blank" rel="noopener" style="color:#7fd9ee;">See the leader guide</a>.';
@@ -52,8 +61,10 @@
       return '<a href="'+KOFI_URL+'" target="_blank" rel="noopener" style="color:#7fd9ee;font-weight:700;">Subscribe on Ko-fi</a> ('+PRICE_TEXT+') to unlock it — or ask your R4/R5 to start the free '+TRIAL_DAYS+'-day trial.'+guide;
     },
 
-    check:function(cb){
+    check:function(cb,opts){
+      opts=opts||{};
       try{
+        if(!opts.excludeFromPromo && new Date()<PROMO_UNTIL){ cb(true,'promo',{}); return; }
         if(!(window.supabase&&window.supabase.createClient)){cb(false,'error');return;}
         var sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
         sb.auth.getSession().then(function(r){
