@@ -164,6 +164,7 @@
 
 <script>
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const FN_URL = SUPA_URL + '/functions/v1/solo-redeem-api';
 const LS_KEY = 'phx_solo_access_key';
 
@@ -172,7 +173,7 @@ function show(id){el(id).classList.remove('hidden');}
 function hide(id){el(id).classList.add('hidden');}
 
 async function callApi(action, extra){
-  const res = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...extra})});
+  const res = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action,...extra})});
   return await res.json();
 }
 
