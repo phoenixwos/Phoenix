@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Auto Gift Codes · Phoenix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --gold:#f0c26e;--gold-dim:#a8895a;--ok:#3da76e;--warn:#f0b93d;--err:#e05a5a;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 14px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.5rem;margin:0 0 4px;text-shadow:0 0 18px rgba(240,194,110,.25);}
+  .wrap{max-width:460px;margin:0 auto;}
+  header{text-align:center;margin-bottom:18px;}
+  .eyebrow{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:4px;}
+  p.sub{font-size:.82rem;color:var(--text-dim);margin:0;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:16px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold-dim);margin-bottom:10px;font-weight:600;}
+  label{display:block;font-size:.78rem;color:var(--text-dim);margin:10px 0 5px;}
+  label:first-child{margin-top:0;}
+  input[type=text]{width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;
+    padding:11px 12px;color:var(--text);font-size:.95rem;box-sizing:border-box;}
+  .btn{width:100%;background:var(--gold);border:none;color:#2a1c06;padding:13px;border-radius:10px;
+    font-weight:700;font-size:.95rem;cursor:pointer;margin-top:12px;}
+  .btn:disabled{opacity:.5;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
+  .btn-small{width:auto;padding:8px 14px;font-size:.82rem;margin-top:0;}
+  .link{color:var(--gold);text-decoration:underline;cursor:pointer;font-size:.82rem;}
+  .center{text-align:center;}
+  .errmsg{color:#ff9d9d;font-size:.8rem;margin-top:8px;text-align:center;}
+  .okmsg{color:#7be0a4;font-size:.8rem;margin-top:8px;text-align:center;}
+
+  .key-display{background:var(--bg-deep);border:1px dashed var(--gold-dim);border-radius:10px;
+    padding:16px;text-align:center;margin:12px 0;}
+  .key-display .key{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;letter-spacing:.15em;color:var(--gold);}
+  .key-warn{font-size:.78rem;color:var(--warn);margin-top:8px;}
+
+  .id-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);}
+  .id-row:last-child{border-bottom:none;}
+  .id-info{flex:1;}
+  .id-name{font-weight:600;font-size:.88rem;}
+  .id-gid{font-size:.72rem;color:var(--text-dim);}
+  .id-remove{color:var(--err);font-size:.78rem;cursor:pointer;background:none;border:none;padding:4px;}
+
+  .add-row{display:flex;gap:8px;margin-top:10px;}
+  .add-row input{flex:1;}
+
+  .log-row{display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:.8rem;border-bottom:1px solid var(--line);}
+  .log-row:last-child{border-bottom:none;}
+  .log-icon{width:18px;text-align:center;flex-shrink:0;}
+  .log-main{flex:1;}
+  .log-code{font-weight:600;}
+  .log-msg{font-size:.72rem;color:var(--text-dim);}
+  .empty{text-align:center;color:var(--text-dim);font-size:.85rem;padding:20px 0;}
+
+  .badge{display:inline-block;font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px;}
+  .badge-on{background:rgba(61,167,110,.18);color:#7be0a4;}
+
+  .footnote{font-size:.72rem;color:var(--text-dim);text-align:center;margin-top:18px;line-height:1.5;}
+  .hidden{display:none !important;}
+  .spin{animation:spin 1s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Phoenix · Free for anyone</div>
+    <h1>🎁 Auto Gift Codes</h1>
+    <p class="sub">Save your Governor ID once. New codes get redeemed for you automatically.</p>
+    <p class="sub" style="color:var(--warn);margin-top:6px;">⚠️ The auto-solver gets the captcha right about 80% of the time. The rest show up in your history so you can redeem that one code by hand.</p>
+  </header>
+
+  <!-- REGISTER -->
+  <div class="panel" id="registerPanel">
+    <div class="panel-title">Get started</div>
+    <label>Your Governor ID</label>
+    <input type="text" id="regGid" placeholder="e.g. 123456789" inputmode="numeric">
+    <label>Nickname (optional, just for you)</label>
+    <input type="text" id="regLabel" placeholder="e.g. My main">
+    <button class="btn" id="regBtn">Start auto-redeeming</button>
+    <div class="errmsg" id="regErr"></div>
+    <div class="center" style="margin-top:14px;">
+      <span class="link" id="haveKeyLink">I already have an access key</span>
+    </div>
+  </div>
+
+  <!-- LOGIN WITH KEY -->
+  <div class="panel hidden" id="loginPanel">
+    <div class="panel-title">Load your account</div>
+    <label>Access key</label>
+    <input type="text" id="loginKey" placeholder="e.g. A1B2C3D4" style="text-transform:uppercase;">
+    <button class="btn" id="loginBtn">Load</button>
+    <div class="errmsg" id="loginErr"></div>
+    <div class="center" style="margin-top:14px;">
+      <span class="link" id="backToRegLink">I don't have a key yet</span>
+    </div>
+  </div>
+
+  <!-- KEY REVEAL (first time only) -->
+  <div class="panel hidden" id="keyRevealPanel">
+    <div class="panel-title">Your access key — save this!</div>
+    <div class="key-display">
+      <div class="key" id="revealedKey"></div>
+      <div class="key-warn">⚠️ This is the only way to check your status later. Screenshot it or write it down.</div>
+    </div>
+    <button class="btn" id="continueBtn">Got it, continue</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="hidden" id="dashboard">
+    <div class="panel">
+      <div class="panel-title">Your IDs <span class="badge badge-on">auto-redeem ON</span></div>
+      <div id="idList"></div>
+      <div class="add-row">
+        <input type="text" id="addGidInput" placeholder="Add another Governor ID" inputmode="numeric">
+        <button class="btn btn-small" id="addGidBtn">Add</button>
+      </div>
+      <div class="errmsg" id="dashErr"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Redemption history <span id="refreshSpin"></span></div>
+      <div id="logList"></div>
+    </div>
+
+    <div class="center">
+      <span class="link" id="switchKeyLink">Use a different access key</span>
+    </div>
+
+    <div class="center" style="margin-top:14px;">
+      <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:none;font-size:.82rem;">Enjoying it? Support Phoenix on Ko-fi ☕</a>
+    </div>
+  </div>
+
+  <div class="footnote">
+    A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you've added here. Some codes need a captcha the bot can't always solve — those show up in your history so you know a code needs a manual redeem. No login, no data beyond your Governor ID.
+  </div>
+
+  <!-- ADMIN (hidden unless ?admin=1) -->
+  <div class="hidden" id="adminPanel">
+    <div class="panel">
+      <div class="panel-title">Admin — who's using this</div>
+      <label>Admin key</label>
+      <input type="text" id="adminKeyInput">
+      <button class="btn btn-small" id="adminLoadBtn">Load</button>
+      <div class="errmsg" id="adminErr"></div>
+    </div>
+    <div class="panel hidden" id="adminData">
+      <div class="panel-title">Registered players</div>
+      <div id="adminPlayers"></div>
+    </div>
+    <div class="panel hidden" id="adminLogPanel">
+      <div class="panel-title">Recent redemption log</div>
+      <div id="adminLog"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const FN_URL = SUPA_URL + '/functions/v1/solo-redeem-api';
+const LS_KEY = 'phx_solo_access_key';
+
+function el(id){return document.getElementById(id);}
+function show(id){el(id).classList.remove('hidden');}
+function hide(id){el(id).classList.add('hidden');}
+
+async function callApi(action, extra){
+  const res = await fetch(FN_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...extra})});
+  return await res.json();
+}
+
+el('haveKeyLink').onclick=()=>{hide('registerPanel');show('loginPanel');};
+el('backToRegLink').onclick=()=>{hide('loginPanel');show('registerPanel');};
+
+el('regBtn').onclick=async()=>{
+  const gid=el('regGid').value.trim();
+  const errEl=el('regErr'); errEl.textContent='';
+  if(!gid){errEl.textContent='Enter your Governor ID.';return;}
+  const btn=el('regBtn'); btn.disabled=true; btn.textContent='Setting up…';
+  const r=await callApi('register',{governor_id:gid,label:el('regLabel').value.trim()});
+  btn.disabled=false; btn.textContent='Start auto-redeeming';
+  if(!r.ok){errEl.textContent=r.error||'Something went wrong.';return;}
+  localStorage.setItem(LS_KEY, r.access_key);
+  hide('registerPanel');
+  el('revealedKey').textContent=r.access_key;
+  show('keyRevealPanel');
+};
+
+el('continueBtn').onclick=()=>{hide('keyRevealPanel');loadDashboard();};
+
+el('loginBtn').onclick=async()=>{
+  const key=el('loginKey').value.trim().toUpperCase();
+  const errEl=el('loginErr'); errEl.textContent='';
+  if(!key){errEl.textContent='Enter your access key.';return;}
+  localStorage.setItem(LS_KEY, key);
+  hide('loginPanel');
+  const ok=await loadDashboard();
+  if(!ok){errEl.textContent='Key not found.';show('loginPanel');localStorage.removeItem(LS_KEY);}
+};
+
+el('switchKeyLink').onclick=()=>{
+  localStorage.removeItem(LS_KEY);
+  hide('dashboard');
+  show('loginPanel');
+};
+
+el('addGidBtn').onclick=async()=>{
+  const key=localStorage.getItem(LS_KEY);
+  const gid=el('addGidInput').value.trim();
+  const errEl=el('dashErr'); errEl.textContent='';
+  if(!gid){errEl.textContent='Enter a Governor ID.';return;}
+  const r=await callApi('add',{access_key:key,governor_id:gid});
+  if(!r.ok){errEl.textContent=r.error||'Could not add.';return;}
+  el('addGidInput').value='';
+  loadDashboard();
+};
+
+async function removeId(gid){
+  const key=localStorage.getItem(LS_KEY);
+  await callApi('remove',{access_key:key,governor_id:gid});
+  loadDashboard();
+}
+
+function statusIcon(s){return s==='ok'?'✅':s==='warn'?'⚠️':'❌';}
+
+async function loadDashboard(){
+  const key=localStorage.getItem(LS_KEY);
+  if(!key)return false;
+  const r=await callApi('status',{access_key:key});
+  if(!r.ok)return false;
+
+  show('dashboard');
+  const idList=el('idList');
+  idList.innerHTML='';
+  if(r.players.length===0){
+    idList.innerHTML='<div class="empty">No IDs yet.</div>';
+  }
+  r.players.forEach(p=>{
+    const row=document.createElement('div');
+    row.className='id-row';
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id}</div></div>
+      <button class="id-remove">Remove</button>`;
+    row.querySelector('.id-remove').onclick=()=>removeId(p.governor_id);
+    idList.appendChild(row);
+  });
+
+  const logList=el('logList');
+  logList.innerHTML='';
+  if(r.log.length===0){
+    logList.innerHTML='<div class="empty">No codes have shown up yet — check back after the next scan.</div>';
+  }
+  r.log.forEach(l=>{
+    const row=document.createElement('div');
+    row.className='log-row';
+    row.innerHTML=`<span class="log-icon">${statusIcon(l.status)}</span>
+      <div class="log-main"><div class="log-code">${l.code}</div><div class="log-msg">${l.governor_id} · ${l.message}</div></div>`;
+    logList.appendChild(row);
+  });
+  return true;
+}
+
+el('adminLoadBtn').onclick=async()=>{
+  const admin_key=el('adminKeyInput').value.trim();
+  const errEl=el('adminErr'); errEl.textContent='';
+  const r=await callApi('admin_list',{admin_key});
+  if(!r.ok){errEl.textContent=r.error||'Error';return;}
+  show('adminData'); show('adminLogPanel');
+  const pDiv=el('adminPlayers'); pDiv.innerHTML='';
+  if(r.players.length===0)pDiv.innerHTML='<div class="empty">No players registered yet.</div>';
+  r.players.forEach(p=>{
+    const row=document.createElement('div');
+    row.className='id-row';
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'} <span style="color:var(--text-dim);font-weight:400;">· key ${p.access_key}</span></div><div class="id-gid">ID ${p.governor_id} · ${p.active?'active':'inactive'} · since ${new Date(p.created_at).toLocaleDateString()}</div></div>`;
+    pDiv.appendChild(row);
+  });
+  const lDiv=el('adminLog'); lDiv.innerHTML='';
+  if(r.log.length===0)lDiv.innerHTML='<div class="empty">No redemption attempts logged yet.</div>';
+  r.log.forEach(l=>{
+    const row=document.createElement('div');
+    row.className='log-row';
+    row.innerHTML=`<span class="log-icon">${statusIcon(l.status)}</span>
+      <div class="log-main"><div class="log-code">${l.code}</div><div class="log-msg">${l.governor_id} · ${l.message} · ${new Date(l.created_at).toLocaleString()}</div></div>`;
+    lDiv.appendChild(row);
+  });
+};
+
+(async function init(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('admin')==='1'){
+    document.querySelector('header').style.display='none';
+    show('adminPanel');
+    return;
+  }
+  const key=localStorage.getItem(LS_KEY);
+  if(key){
+    const ok=await loadDashboard();
+    if(!ok){localStorage.removeItem(LS_KEY);show('registerPanel');}
+  } else {
+    show('registerPanel');
+  }
+})();
+</script>
+</body>
+</html>
