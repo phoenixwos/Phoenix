@@ -143,6 +143,10 @@
     A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you've added here. Some codes need a captcha the bot can't always solve — those show up in your history so you know a code needs a manual redeem. No login, no data beyond your Governor ID.
   </div>
 
+  <div class="center" style="margin-top:14px;">
+    <a href="?admin=1" style="color:var(--text-dim);font-size:.72rem;text-decoration:none;">⚙️ Admin</a>
+  </div>
+
   <!-- ADMIN (hidden unless ?admin=1) -->
   <div class="hidden" id="adminPanel">
     <div class="panel">
@@ -164,6 +168,11 @@
       <div class="panel-title">Diagnose the code scanner</div>
       <button class="btn btn-small" id="debugFetchBtn">Check what the scanner sees</button>
       <div id="debugResults" style="margin-top:10px;font-size:.72rem;color:var(--text-dim);white-space:pre-wrap;word-break:break-all;"></div>
+
+      <label style="margin-top:16px;">Test a login directly (paste any Governor ID)</label>
+      <input type="text" id="debugLoginInput" placeholder="e.g. 797649178">
+      <button class="btn btn-small" id="debugLoginBtn">Test login</button>
+      <div id="debugLoginResults" style="margin-top:10px;font-size:.72rem;color:var(--text-dim);white-space:pre-wrap;word-break:break-all;"></div>
     </div>
     <div class="panel hidden" id="adminData">
       <div class="panel-title">Registered players</div>
@@ -281,6 +290,20 @@ async function loadDashboard(){
   return true;
 }
 
+el('debugLoginBtn').onclick=async()=>{
+  const admin_key=el('adminKeyInput').value.trim();
+  const fid=el('debugLoginInput').value.trim();
+  const resEl=el('debugLoginResults'); resEl.textContent='Consultando…';
+  try{
+    const r=await fetch(SUPA_URL+'/functions/v1/solo-scanner',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action:'debug_login',admin_key,fid})});
+    const data=await r.json();
+    if(!data.ok){resEl.textContent='Error: '+(data.error||'desconocido');return;}
+    resEl.textContent=JSON.stringify(data.login,null,2);
+  }catch(e){
+    resEl.textContent='Error de conexión.';
+  }
+};
+
 el('debugFetchBtn').onclick=async()=>{
   const admin_key=el('adminKeyInput').value.trim();
   const resEl=el('debugResults'); resEl.textContent='Consultando…';
@@ -324,6 +347,7 @@ el('adminLoadBtn').onclick=async()=>{
   const errEl=el('adminErr'); errEl.textContent='';
   const r=await callApi('admin_list',{admin_key});
   if(!r.ok){errEl.textContent=r.error||'Error';return;}
+  localStorage.setItem('phx_solo_admin_key', admin_key);
   show('adminData'); show('adminLogPanel'); show('adminManual'); show('adminDebug');
   const pDiv=el('adminPlayers'); pDiv.innerHTML='';
   if(r.players.length===0)pDiv.innerHTML='<div class="empty">No players registered yet.</div>';
@@ -354,6 +378,8 @@ el('adminLoadBtn').onclick=async()=>{
   if(params.get('admin')==='1'){
     document.querySelector('header').style.display='none';
     show('adminPanel');
+    const savedKey=localStorage.getItem('phx_solo_admin_key');
+    if(savedKey){ el('adminKeyInput').value=savedKey; el('adminLoadBtn').click(); }
     return;
   }
   const key=localStorage.getItem(LS_KEY);
