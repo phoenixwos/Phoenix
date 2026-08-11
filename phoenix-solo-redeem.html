@@ -69,6 +69,7 @@
 </head>
 <body>
 <div class="wrap">
+  <a href="phoenix-tools.html" id="backLink" style="display:inline-block;color:var(--gold-dim);font-size:.82rem;text-decoration:none;margin-bottom:10px;">‹ Tools</a>
   <header>
     <div class="eyebrow">Phoenix · Free for anyone</div>
     <h1>🎁 Auto Gift Codes</h1>
@@ -150,6 +151,19 @@
       <input type="text" id="adminKeyInput">
       <button class="btn btn-small" id="adminLoadBtn">Load</button>
       <div class="errmsg" id="adminErr"></div>
+    </div>
+    <div class="panel hidden" id="adminManual">
+      <div class="panel-title">Push a code manually — right now, no waiting</div>
+      <label>Gift code</label>
+      <input type="text" id="manualCodeInput" placeholder="e.g. WOS0812">
+      <button class="btn btn-small" id="manualCodeBtn">Send to everyone</button>
+      <div class="errmsg" id="manualErr"></div>
+      <div id="manualResults" style="margin-top:10px;"></div>
+    </div>
+    <div class="panel hidden" id="adminDebug">
+      <div class="panel-title">Diagnose the code scanner</div>
+      <button class="btn btn-small" id="debugFetchBtn">Check what the scanner sees</button>
+      <div id="debugResults" style="margin-top:10px;font-size:.72rem;color:var(--text-dim);white-space:pre-wrap;word-break:break-all;"></div>
     </div>
     <div class="panel hidden" id="adminData">
       <div class="panel-title">Registered players</div>
@@ -267,12 +281,50 @@ async function loadDashboard(){
   return true;
 }
 
+el('debugFetchBtn').onclick=async()=>{
+  const admin_key=el('adminKeyInput').value.trim();
+  const resEl=el('debugResults'); resEl.textContent='Consultando…';
+  try{
+    const r=await fetch(SUPA_URL+'/functions/v1/solo-scanner',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action:'debug_fetch',admin_key})});
+    const data=await r.json();
+    if(!data.ok){resEl.textContent='Error: '+(data.error||'desconocido');return;}
+    resEl.textContent=JSON.stringify(data.snippets,null,2);
+  }catch(e){
+    resEl.textContent='Error de conexión.';
+  }
+};
+
+el('manualCodeBtn').onclick=async()=>{
+  const admin_key=el('adminKeyInput').value.trim();
+  const code=el('manualCodeInput').value.trim();
+  const errEl=el('manualErr'); errEl.textContent='';
+  const resEl=el('manualResults'); resEl.innerHTML='';
+  if(!code){errEl.textContent='Enter a code.';return;}
+  const btn=el('manualCodeBtn'); btn.disabled=true; btn.textContent='Sending… (can take a minute)';
+  try{
+    const r=await fetch(SUPA_URL+'/functions/v1/solo-scanner',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action:'manual_code',admin_key,code})});
+    const data=await r.json();
+    btn.disabled=false; btn.textContent='Send to everyone';
+    if(!data.ok){errEl.textContent=data.error||'Error';return;}
+    resEl.innerHTML=`<div style="font-size:.8rem;color:var(--text-dim);margin-bottom:6px;">${data.processed} of ${data.players} players processed</div>`;
+    (data.results||[]).forEach(r=>{
+      const row=document.createElement('div');
+      row.className='log-row';
+      row.innerHTML=`<span class="log-icon">${statusIcon(r.status)}</span><div class="log-main"><div class="log-code">${r.governor_id}</div><div class="log-msg">${r.message}</div></div>`;
+      resEl.appendChild(row);
+    });
+  }catch(e){
+    btn.disabled=false; btn.textContent='Send to everyone';
+    errEl.textContent='Connection error.';
+  }
+};
+
 el('adminLoadBtn').onclick=async()=>{
   const admin_key=el('adminKeyInput').value.trim();
   const errEl=el('adminErr'); errEl.textContent='';
   const r=await callApi('admin_list',{admin_key});
   if(!r.ok){errEl.textContent=r.error||'Error';return;}
-  show('adminData'); show('adminLogPanel');
+  show('adminData'); show('adminLogPanel'); show('adminManual'); show('adminDebug');
   const pDiv=el('adminPlayers'); pDiv.innerHTML='';
   if(r.players.length===0)pDiv.innerHTML='<div class="empty">No players registered yet.</div>';
   r.players.forEach(p=>{
@@ -291,6 +343,11 @@ el('adminLoadBtn').onclick=async()=>{
     lDiv.appendChild(row);
   });
 };
+
+(function(){
+  var s=new URLSearchParams(location.search).get('s');
+  if(s&&/^\d{3,5}$/.test(s)){ document.getElementById('backLink').href='phoenix-tools.html?s='+s; }
+})();
 
 (async function init(){
   const params=new URLSearchParams(location.search);
