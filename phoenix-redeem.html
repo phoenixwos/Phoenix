@@ -130,7 +130,7 @@ function toast(msg){
 async function callFn(action, extra){
   const res = await fetch(FN_URL, {
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPA_KEY},
     body: JSON.stringify({action, ...extra})
   });
   return await res.json();
