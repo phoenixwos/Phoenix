@@ -177,6 +177,18 @@
       <label style="margin-top:16px;color:var(--gold);">Test login FROM THIS PHONE (bypasses Supabase entirely)</label>
       <button class="btn btn-small" id="debugLoginBrowserBtn">Test login from browser</button>
       <div id="debugLoginBrowserResults" style="margin-top:10px;font-size:.72rem;color:var(--text-dim);white-space:pre-wrap;word-break:break-all;"></div>
+
+      <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:14px;">
+        <div class="panel-title" style="color:var(--gold);">🔎 Find the new redeem method</div>
+        <label>Governor ID</label>
+        <input type="text" id="probeFid" placeholder="e.g. 818277533" inputmode="numeric">
+        <label>Region / State</label>
+        <input type="text" id="probeRegion" placeholder="e.g. 4501" inputmode="numeric">
+        <label>Gift code</label>
+        <input type="text" id="probeCode" placeholder="e.g. GuDokYTKOR">
+        <button class="btn btn-small" id="probeBtn">Probe endpoints</button>
+        <div id="probeResults" style="margin-top:10px;font-size:.72rem;color:var(--text-dim);white-space:pre-wrap;word-break:break-all;"></div>
+      </div>
     </div>
     <div class="panel hidden" id="adminData">
       <div class="panel-title">Registered players</div>
@@ -410,6 +422,56 @@ el('debugLoginBtn').onclick=async()=>{
     resEl.textContent='Error de conexión.';
   }
 };
+
+el('probeBtn').onclick=async()=>{
+  const fid=el('probeFid').value.trim();
+  const region=el('probeRegion').value.trim();
+  const gcode=el('probeCode').value.trim();
+  const resEl=el('probeResults');
+  if(!fid||!region||!gcode){resEl.textContent='Rellena los tres campos.';return;}
+  const btn=el('probeBtn'); btn.disabled=true; btn.textContent='Probando…';
+  resEl.textContent='Probando combinaciones, espera unos segundos…';
+
+  const bases=['https://wos-giftcode-api.centurygame.com/api','https://wos-giftcode-api.centurygame.com'];
+  const paths=['/gift_code','/redeem','/player','/giftcode','/code/redeem','/gift_code/redeem'];
+  const time=Date.now().toString();
+  const payloads=[
+    {fid,kid:region,cdk:gcode,time},
+    {fid,region,cdk:gcode,time},
+    {fid,state:region,cdk:gcode,time},
+    {fid,kid:region,code:gcode,time},
+  ];
+
+  const found=[];
+  let tried=0, corsBlocked=0;
+  for(const base of bases){
+    for(const p of paths){
+      for(let pi=0;pi<payloads.length;pi++){
+        tried++;
+        const body=signedBody(payloads[pi]);
+        try{
+          const r=await fetch(base+p,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+          const t=await r.text();
+          const boring = r.status===404 && (!t || t.includes('"message": ""'));
+          if(!boring) found.push(`${base}${p} [variante ${pi}] → ${r.status}\n${t.slice(0,200)}`);
+        }catch(e){ corsBlocked++; }
+      }
+    }
+  }
+  btn.disabled=false; btn.textContent='Probe endpoints';
+  if(found.length){
+    resEl.textContent='ENCONTRADO:\n\n'+found.join('\n\n');
+  } else if(corsBlocked===tried){
+    resEl.textContent=`Las ${tried} combinaciones fueron bloqueadas por el navegador (CORS). Hay que probarlo desde el Worker.`;
+  } else {
+    resEl.textContent=`Probadas ${tried} combinaciones (${corsBlocked} bloqueadas por CORS). Ninguna respondió algo útil.`;
+  }
+};
+
+function signedBody(data){
+  const encoded=Object.keys(data).sort().map(k=>k+'='+data[k]).join('&');
+  return encoded+'&sign='+md5(encoded+SALT);
+}
 
 el('debugLoginBrowserBtn').onclick=async()=>{
   const fid=el('debugLoginInput').value.trim();
