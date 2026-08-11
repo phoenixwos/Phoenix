@@ -432,40 +432,42 @@ el('probeBtn').onclick=async()=>{
   const btn=el('probeBtn'); btn.disabled=true; btn.textContent='Probando…';
   resEl.textContent='Probando combinaciones, espera unos segundos…';
 
-  const bases=['https://wos-giftcode-api.centurygame.com/api','https://wos-giftcode-api.centurygame.com'];
-  const paths=['/gift_code','/redeem','/player','/giftcode','/code/redeem','/gift_code/redeem'];
   const time=Date.now().toString();
-  const payloads=[
-    {fid,kid:region,cdk:gcode,time},
-    {fid,region,cdk:gcode,time},
-    {fid,state:region,cdk:gcode,time},
-    {fid,kid:region,code:gcode,time},
+  const target='https://wos-giftcode-api.centurygame.com/api/gift_code';
+
+  // /api/gift_code answers 403 "Unauthorized request" rather than 404, so the
+  // route is right and something about the payload/signature is what it rejects.
+  // Try many field-name and signing combinations against it.
+  const variants=[
+    {label:'kid+cdk',           data:{fid,kid:region,cdk:gcode,time}},
+    {label:'region+cdk',        data:{fid,region,cdk:gcode,time}},
+    {label:'state+cdk',         data:{fid,state:region,cdk:gcode,time}},
+    {label:'kid+code',          data:{fid,kid:region,code:gcode,time}},
+    {label:'no time',           data:{fid,kid:region,cdk:gcode}},
+    {label:'seconds not ms',    data:{fid,kid:region,cdk:gcode,time:Math.floor(Date.now()/1000).toString()}},
+    {label:'sid',               data:{fid,sid:region,cdk:gcode,time}},
+    {label:'server_id',         data:{fid,server_id:region,cdk:gcode,time}},
+    {label:'plain no sign',     data:{fid,kid:region,cdk:gcode,time}, noSign:true},
+    {label:'captcha empty',     data:{fid,kid:region,cdk:gcode,captcha_code:'',time}},
+    {label:'lang added',        data:{fid,kid:region,cdk:gcode,lang:'es',time}},
+    {label:'no region at all',  data:{fid,cdk:gcode,time}},
   ];
 
   const found=[];
-  let tried=0, corsBlocked=0;
-  for(const base of bases){
-    for(const p of paths){
-      for(let pi=0;pi<payloads.length;pi++){
-        tried++;
-        const body=signedBody(payloads[pi]);
-        try{
-          const r=await fetch(base+p,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
-          const t=await r.text();
-          const boring = r.status===404 && (!t || t.includes('"message": ""'));
-          if(!boring) found.push(`${base}${p} [variante ${pi}] → ${r.status}\n${t.slice(0,200)}`);
-        }catch(e){ corsBlocked++; }
-      }
-    }
+  let corsBlocked=0;
+  for(const v of variants){
+    const body = v.noSign
+      ? Object.keys(v.data).sort().map(k=>k+'='+v.data[k]).join('&')
+      : signedBody(v.data);
+    try{
+      const r=await fetch(target,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+      const t=await r.text();
+      found.push(`[${v.label}] → ${r.status}\n${t.slice(0,200)}`);
+    }catch(e){ corsBlocked++; found.push(`[${v.label}] → BLOQUEADO (${String(e).slice(0,60)})`); }
   }
+
   btn.disabled=false; btn.textContent='Probe endpoints';
-  if(found.length){
-    resEl.textContent='ENCONTRADO:\n\n'+found.join('\n\n');
-  } else if(corsBlocked===tried){
-    resEl.textContent=`Las ${tried} combinaciones fueron bloqueadas por el navegador (CORS). Hay que probarlo desde el Worker.`;
-  } else {
-    resEl.textContent=`Probadas ${tried} combinaciones (${corsBlocked} bloqueadas por CORS). Ninguna respondió algo útil.`;
-  }
+  resEl.textContent=found.join('\n\n');
 };
 
 function signedBody(data){
