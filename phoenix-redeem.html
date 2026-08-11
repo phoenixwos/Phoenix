@@ -69,6 +69,7 @@
 <div class="gate" id="gate">Comprobando acceso…</div>
 
 <div class="wrap" id="app">
+  <a href="phoenix-tools.html" id="backLink" style="display:inline-block;color:var(--ice-dim);font-size:.82rem;text-decoration:none;margin-bottom:10px;">‹ Tools</a>
   <header>
     <div class="eyebrow">Phoenix · Herramienta R4/R5</div>
     <h1>🎁 Canjeo de Códigos</h1>
@@ -183,8 +184,13 @@ async function processNext(){
       return processNext();
     }
     if(auto.status==='err_id'){
-      recordResult(player,'err',auto.message);
-      return processNext();
+      stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">Fallo automático (${auto.message||'login'}) — probando el método de siempre…</p>`;
+      const loginTry=await callFn('login',{fid:player.governor_id});
+      if(!loginTry || loginTry.code!==0){
+        recordResult(player,'err','Login failed on both methods: '+JSON.stringify(loginTry).slice(0,150));
+        return processNext();
+      }
+      return runCaptchaAttempt(player, 1);
     }
     if(auto.status==='err_code'){
       recordResult(player,'err',auto.message);
@@ -294,6 +300,11 @@ document.getElementById('restartBtn').addEventListener('click',()=>{
   document.getElementById('setupPanel').classList.remove('hidden');
   document.getElementById('codeInput').value='';
 });
+
+(function(){
+  var s=new URLSearchParams(location.search).get('s');
+  if(s&&/^\d{3,5}$/.test(s)){ document.getElementById('backLink').href='phoenix-tools.html?s='+s; }
+})();
 
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
