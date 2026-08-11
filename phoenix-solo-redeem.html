@@ -298,7 +298,7 @@ el('debugLoginBtn').onclick=async()=>{
     const r=await fetch(SUPA_URL+'/functions/v1/solo-scanner',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action:'debug_login',admin_key,fid})});
     const data=await r.json();
     if(!data.ok){resEl.textContent='Error: '+(data.error||'desconocido');return;}
-    resEl.textContent=JSON.stringify(data.login,null,2);
+    resEl.textContent=JSON.stringify(data.raw,null,2);
   }catch(e){
     resEl.textContent='Error de conexión.';
   }
