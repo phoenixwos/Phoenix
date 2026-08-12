@@ -74,7 +74,7 @@
     <div class="eyebrow">Phoenix · Free for anyone</div>
     <h1>🎁 Auto Gift Codes</h1>
     <p class="sub">Save your Governor ID once. New codes get redeemed for you automatically.</p>
-    <p class="sub" style="color:var(--warn);margin-top:6px;">⚠️ The auto-solver gets the captcha right about 80% of the time. The rest show up in your history so you can redeem that one code by hand.</p>
+    <p class="sub" style="margin-top:6px;">Codes are checked every ~15 minutes and redeemed for every ID you save here.</p>
   </header>
 
   <!-- REGISTER -->
@@ -82,6 +82,8 @@
     <div class="panel-title">Get started</div>
     <label>Your Governor ID</label>
     <input type="text" id="regGid" placeholder="e.g. 123456789" inputmode="numeric">
+    <label>Your Region / State number</label>
+    <input type="text" id="regRegion" placeholder="e.g. 4501" inputmode="numeric">
     <label>Nickname (optional, just for you)</label>
     <input type="text" id="regLabel" placeholder="e.g. My main">
     <button class="btn" id="regBtn">Start auto-redeeming</button>
@@ -119,7 +121,8 @@
       <div class="panel-title">Your IDs <span class="badge badge-on">auto-redeem ON</span></div>
       <div id="idList"></div>
       <div class="add-row">
-        <input type="text" id="addGidInput" placeholder="Add another Governor ID" inputmode="numeric">
+        <input type="text" id="addGidInput" placeholder="Governor ID" inputmode="numeric">
+        <input type="text" id="addRegionInput" placeholder="Region" inputmode="numeric" style="max-width:90px;">
         <button class="btn btn-small" id="addGidBtn">Add</button>
       </div>
       <div class="errmsg" id="dashErr"></div>
@@ -140,7 +143,7 @@
   </div>
 
   <div class="footnote">
-    A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you've added here. Some codes need a captcha the bot can't always solve — those show up in your history so you know a code needs a manual redeem. No login, no data beyond your Governor ID.
+    A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you save here. Your redemption history shows what worked. No login needed — just your Governor ID and region.
   </div>
 
   <div class="center" style="margin-top:14px;">
@@ -324,10 +327,12 @@ el('backToRegLink').onclick=()=>{hide('loginPanel');show('registerPanel');};
 
 el('regBtn').onclick=async()=>{
   const gid=el('regGid').value.trim();
+  const reg=el('regRegion').value.trim();
   const errEl=el('regErr'); errEl.textContent='';
   if(!gid){errEl.textContent='Enter your Governor ID.';return;}
+  if(!reg){errEl.textContent='Enter your Region / State number.';return;}
   const btn=el('regBtn'); btn.disabled=true; btn.textContent='Setting up…';
-  const r=await callApi('register',{governor_id:gid,label:el('regLabel').value.trim()});
+  const r=await callApi('register',{governor_id:gid,region:reg,label:el('regLabel').value.trim()});
   btn.disabled=false; btn.textContent='Start auto-redeeming';
   if(!r.ok){errEl.textContent=r.error||'Something went wrong.';return;}
   localStorage.setItem(LS_KEY, r.access_key);
@@ -357,11 +362,13 @@ el('switchKeyLink').onclick=()=>{
 el('addGidBtn').onclick=async()=>{
   const key=localStorage.getItem(LS_KEY);
   const gid=el('addGidInput').value.trim();
+  const reg=el('addRegionInput').value.trim();
   const errEl=el('dashErr'); errEl.textContent='';
   if(!gid){errEl.textContent='Enter a Governor ID.';return;}
-  const r=await callApi('add',{access_key:key,governor_id:gid});
+  if(!reg){errEl.textContent='Enter the region for that ID.';return;}
+  const r=await callApi('add',{access_key:key,governor_id:gid,region:reg});
   if(!r.ok){errEl.textContent=r.error||'Could not add.';return;}
-  el('addGidInput').value='';
+  el('addGidInput').value=''; el('addRegionInput').value='';
   loadDashboard();
 };
 
@@ -388,7 +395,7 @@ async function loadDashboard(){
   r.players.forEach(p=>{
     const row=document.createElement('div');
     row.className='id-row';
-    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id}</div></div>
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id}${p.region?' · region '+p.region:' · <span style="color:var(--warn)">no region set</span>'}</div></div>
       <button class="id-remove">Remove</button>`;
     row.querySelector('.id-remove').onclick=()=>removeId(p.governor_id);
     idList.appendChild(row);
@@ -539,7 +546,7 @@ el('adminLoadBtn').onclick=async()=>{
   r.players.forEach(p=>{
     const row=document.createElement('div');
     row.className='id-row';
-    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'} <span style="color:var(--text-dim);font-weight:400;">· key ${p.access_key}</span></div><div class="id-gid">ID ${p.governor_id} · ${p.active?'active':'inactive'} · since ${new Date(p.created_at).toLocaleDateString()}</div></div>`;
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'} <span style="color:var(--text-dim);font-weight:400;">· key ${p.access_key}</span></div><div class="id-gid">ID ${p.governor_id} · region ${p.region||'—'} · ${p.active?'active':'inactive'} · since ${new Date(p.created_at).toLocaleDateString()}</div></div>`;
     pDiv.appendChild(row);
   });
   const lDiv=el('adminLog'); lDiv.innerHTML='';
