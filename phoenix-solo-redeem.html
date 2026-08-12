@@ -77,68 +77,42 @@
     <p class="sub" style="margin-top:6px;">Codes are checked every ~15 minutes and redeemed for every ID you save here.</p>
   </header>
 
-  <!-- REGISTER -->
+  <!-- REGISTER / SIGN IN -->
   <div class="panel" id="registerPanel">
-    <div class="panel-title">Get started</div>
-    <label>Your Governor ID</label>
+    <div class="panel-title">Your details</div>
+    <label>Governor ID</label>
     <input type="text" id="regGid" placeholder="e.g. 123456789" inputmode="numeric">
-    <label>Your Region / State number</label>
+    <label>Region / State number</label>
     <input type="text" id="regRegion" placeholder="e.g. 4501" inputmode="numeric">
-    <label>Nickname (optional, just for you)</label>
+    <label>Nickname (optional)</label>
     <input type="text" id="regLabel" placeholder="e.g. My main">
     <button class="btn" id="regBtn">Start auto-redeeming</button>
     <div class="errmsg" id="regErr"></div>
-    <div class="center" style="margin-top:14px;">
-      <span class="link" id="haveKeyLink">I already have an access key</span>
+    <div class="okmsg" id="regOk"></div>
+    <div class="center" style="margin-top:14px;font-size:.75rem;color:var(--text-dim);">
+      Already signed up? Just enter the same ID and region to see your history.
     </div>
-  </div>
-
-  <!-- LOGIN WITH KEY -->
-  <div class="panel hidden" id="loginPanel">
-    <div class="panel-title">Load your account</div>
-    <label>Access key</label>
-    <input type="text" id="loginKey" placeholder="e.g. A1B2C3D4" style="text-transform:uppercase;">
-    <button class="btn" id="loginBtn">Load</button>
-    <div class="errmsg" id="loginErr"></div>
-    <div class="center" style="margin-top:14px;">
-      <span class="link" id="backToRegLink">I don't have a key yet</span>
-    </div>
-  </div>
-
-  <!-- KEY REVEAL (first time only) -->
-  <div class="panel hidden" id="keyRevealPanel">
-    <div class="panel-title">Your access key — save this!</div>
-    <div class="key-display">
-      <div class="key" id="revealedKey"></div>
-      <div class="key-warn">⚠️ This is the only way to check your status later. Screenshot it or write it down.</div>
-    </div>
-    <button class="btn" id="continueBtn">Got it, continue</button>
   </div>
 
   <!-- DASHBOARD -->
   <div class="hidden" id="dashboard">
     <div class="panel">
-      <div class="panel-title">Your IDs <span class="badge badge-on">auto-redeem ON</span></div>
+      <div class="panel-title">Your account <span class="badge badge-on">auto-redeem ON</span></div>
       <div id="idList"></div>
-      <div class="add-row">
-        <input type="text" id="addGidInput" placeholder="Governor ID" inputmode="numeric">
-        <input type="text" id="addRegionInput" placeholder="Region" inputmode="numeric" style="max-width:90px;">
-        <button class="btn btn-small" id="addGidBtn">Add</button>
-      </div>
       <div class="errmsg" id="dashErr"></div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">Redemption history <span id="refreshSpin"></span></div>
+      <div class="panel-title">Redemption history</div>
       <div id="logList"></div>
     </div>
 
     <div class="center">
-      <span class="link" id="switchKeyLink">Use a different access key</span>
+      <span class="link" id="switchKeyLink">Check a different ID</span>
     </div>
 
     <div class="center" style="margin-top:14px;">
-      <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:none;font-size:.82rem;">Enjoying it? Support Phoenix on Ko-fi ☕</a>
+      <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:none;font-size:.82rem;">Enjoying it? Support Phoenix on Ko-fi</a>
     </div>
   </div>
 
@@ -311,7 +285,8 @@ async function gameRequest(path, payload) {
 const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const FN_URL = SUPA_URL + '/functions/v1/solo-redeem-api';
-const LS_KEY = 'phx_solo_access_key';
+const LS_GID = 'phx_solo_gid';
+const LS_REGION = 'phx_solo_region';
 
 function el(id){return document.getElementById(id);}
 function show(id){el(id).classList.remove('hidden');}
@@ -322,113 +297,76 @@ async function callApi(action, extra){
   return await res.json();
 }
 
-el('haveKeyLink').onclick=()=>{hide('registerPanel');show('loginPanel');};
-el('backToRegLink').onclick=()=>{hide('loginPanel');show('registerPanel');};
+function statusIcon(s){return s==='ok'?'✅':s==='warn'?'⚠️':'❌';}
 
 el('regBtn').onclick=async()=>{
   const gid=el('regGid').value.trim();
-  const reg=el('regRegion').value.trim();
+  const region=el('regRegion').value.trim();
   const errEl=el('regErr'); errEl.textContent='';
+  const okEl=el('regOk'); okEl.textContent='';
   if(!gid){errEl.textContent='Enter your Governor ID.';return;}
-  if(!reg){errEl.textContent='Enter your Region / State number.';return;}
+  if(!region){errEl.textContent='Enter your Region / State number.';return;}
+
   const btn=el('regBtn'); btn.disabled=true; btn.textContent='Setting up…';
-  const r=await callApi('register',{governor_id:gid,region:reg,label:el('regLabel').value.trim()});
+  const r=await callApi('register',{governor_id:gid,region:region,label:el('regLabel').value.trim()});
   btn.disabled=false; btn.textContent='Start auto-redeeming';
   if(!r.ok){errEl.textContent=r.error||'Something went wrong.';return;}
-  localStorage.setItem(LS_KEY, r.access_key);
+
+  localStorage.setItem(LS_GID, gid);
+  localStorage.setItem(LS_REGION, region);
   hide('registerPanel');
-  el('revealedKey').textContent=r.access_key;
-  show('keyRevealPanel');
-};
-
-el('continueBtn').onclick=()=>{hide('keyRevealPanel');loadDashboard();};
-
-el('loginBtn').onclick=async()=>{
-  const key=el('loginKey').value.trim().toUpperCase();
-  const errEl=el('loginErr'); errEl.textContent='';
-  if(!key){errEl.textContent='Enter your access key.';return;}
-  localStorage.setItem(LS_KEY, key);
-  hide('loginPanel');
-  const ok=await loadDashboard();
-  if(!ok){errEl.textContent='Key not found.';show('loginPanel');localStorage.removeItem(LS_KEY);}
+  loadDashboard();
 };
 
 el('switchKeyLink').onclick=()=>{
-  localStorage.removeItem(LS_KEY);
+  localStorage.removeItem(LS_GID);
+  localStorage.removeItem(LS_REGION);
   hide('dashboard');
-  show('loginPanel');
+  el('regGid').value=''; el('regRegion').value=''; el('regLabel').value='';
+  show('registerPanel');
 };
 
-el('addGidBtn').onclick=async()=>{
-  const key=localStorage.getItem(LS_KEY);
-  const gid=el('addGidInput').value.trim();
-  const reg=el('addRegionInput').value.trim();
-  const errEl=el('dashErr'); errEl.textContent='';
-  if(!gid){errEl.textContent='Enter a Governor ID.';return;}
-  if(!reg){errEl.textContent='Enter the region for that ID.';return;}
-  const r=await callApi('add',{access_key:key,governor_id:gid,region:reg});
-  if(!r.ok){errEl.textContent=r.error||'Could not add.';return;}
-  el('addGidInput').value=''; el('addRegionInput').value='';
-  loadDashboard();
-};
-
-async function removeId(gid){
-  const key=localStorage.getItem(LS_KEY);
-  await callApi('remove',{access_key:key,governor_id:gid});
-  loadDashboard();
+async function removeMe(gid, region){
+  await callApi('remove',{governor_id:gid,region:region});
+  localStorage.removeItem(LS_GID);
+  localStorage.removeItem(LS_REGION);
+  hide('dashboard');
+  show('registerPanel');
 }
 
-function statusIcon(s){return s==='ok'?'✅':s==='warn'?'⚠️':'❌';}
-
 async function loadDashboard(){
-  const key=localStorage.getItem(LS_KEY);
-  if(!key)return false;
-  const r=await callApi('status',{access_key:key});
+  const gid=localStorage.getItem(LS_GID);
+  const region=localStorage.getItem(LS_REGION);
+  if(!gid||!region)return false;
+  const r=await callApi('status',{governor_id:gid,region:region});
   if(!r.ok)return false;
 
   show('dashboard');
   const idList=el('idList');
   idList.innerHTML='';
-  if(r.players.length===0){
-    idList.innerHTML='<div class="empty">No IDs yet.</div>';
-  }
   r.players.forEach(p=>{
     const row=document.createElement('div');
     row.className='id-row';
-    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id}${p.region?' · region '+p.region:' · <span style="color:var(--warn)">no region set</span>'}</div></div>
-      <button class="id-remove">Remove</button>`;
-    row.querySelector('.id-remove').onclick=()=>removeId(p.governor_id);
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id} · region ${p.region}</div></div>
+      <button class="id-remove">Stop</button>`;
+    row.querySelector('.id-remove').onclick=()=>removeMe(p.governor_id,p.region);
     idList.appendChild(row);
   });
 
   const logList=el('logList');
   logList.innerHTML='';
   if(r.log.length===0){
-    logList.innerHTML='<div class="empty">No codes have shown up yet — check back after the next scan.</div>';
+    logList.innerHTML='<div class="empty">Nothing yet — check back after the next scan.</div>';
   }
   r.log.forEach(l=>{
     const row=document.createElement('div');
     row.className='log-row';
     row.innerHTML=`<span class="log-icon">${statusIcon(l.status)}</span>
-      <div class="log-main"><div class="log-code">${l.code}</div><div class="log-msg">${l.governor_id} · ${l.message}</div></div>`;
+      <div class="log-main"><div class="log-code">${l.code}</div><div class="log-msg">${l.message}</div></div>`;
     logList.appendChild(row);
   });
   return true;
 }
-
-el('debugLoginBtn').onclick=async()=>{
-  const admin_key=el('adminKeyInput').value.trim();
-  const fid=el('debugLoginInput').value.trim();
-  const resEl=el('debugLoginResults'); resEl.textContent='Consultando…';
-  try{
-    const r=await fetch(SUPA_URL+'/functions/v1/solo-scanner',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_ANON_KEY,'apikey':SUPA_ANON_KEY},body:JSON.stringify({action:'debug_login',admin_key,fid})});
-    const data=await r.json();
-    if(!data.ok){resEl.textContent='Error: '+(data.error||'desconocido');return;}
-    resEl.textContent=JSON.stringify(data.raw,null,2);
-  }catch(e){
-    resEl.textContent='Error de conexión.';
-  }
-};
 
 el('probeBtn').onclick=async()=>{
   const fid=el('probeFid').value.trim();
@@ -546,7 +484,7 @@ el('adminLoadBtn').onclick=async()=>{
   r.players.forEach(p=>{
     const row=document.createElement('div');
     row.className='id-row';
-    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'} <span style="color:var(--text-dim);font-weight:400;">· key ${p.access_key}</span></div><div class="id-gid">ID ${p.governor_id} · region ${p.region||'—'} · ${p.active?'active':'inactive'} · since ${new Date(p.created_at).toLocaleDateString()}</div></div>`;
+    row.innerHTML=`<div class="id-info"><div class="id-name">${p.label||'(no nickname)'}</div><div class="id-gid">ID ${p.governor_id} · region ${p.region||'—'} · ${p.active?'active':'inactive'} · since ${new Date(p.created_at).toLocaleDateString()}</div></div>`;
     pDiv.appendChild(row);
   });
   const lDiv=el('adminLog'); lDiv.innerHTML='';
@@ -574,10 +512,14 @@ el('adminLoadBtn').onclick=async()=>{
     if(savedKey){ el('adminKeyInput').value=savedKey; el('adminLoadBtn').click(); }
     return;
   }
-  const key=localStorage.getItem(LS_KEY);
-  if(key){
+  const gid=localStorage.getItem(LS_GID);
+  const region=localStorage.getItem(LS_REGION);
+  if(gid&&region){
     const ok=await loadDashboard();
-    if(!ok){localStorage.removeItem(LS_KEY);show('registerPanel');}
+    if(!ok){
+      localStorage.removeItem(LS_GID); localStorage.removeItem(LS_REGION);
+      show('registerPanel');
+    }
   } else {
     show('registerPanel');
   }

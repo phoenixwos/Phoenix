@@ -73,7 +73,7 @@
   <header>
     <div class="eyebrow">Phoenix · Herramienta R4/R5</div>
     <h1>🎁 Canjeo de Códigos</h1>
-    <p class="sub">Auto-solving captchas — you only step in if the bot can't read one</p>
+    <p class="sub">Canjeo automático para toda tu alianza</p>
   </header>
 
   <div class="panel" id="setupPanel">
@@ -82,7 +82,9 @@
 
     <label style="display:block;font-size:.78rem;color:var(--text-dim);margin:14px 0 5px;">Lista de IDs (opcional — pégalos separados por comas o uno por línea)</label>
     <textarea id="idListInput" rows="4" placeholder="123456789, 987654321&#10;o&#10;123456789&#10;987654321" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--text);font-size:.85rem;font-family:inherit;box-sizing:border-box;resize:vertical;"></textarea>
-    <div style="font-size:.72rem;color:var(--text-dim);margin-top:4px;">Si dejas esto vacío, se usa el roster guardado de tu alianza (con Governor ID).</div>
+    <div style="font-size:.72rem;color:var(--text-dim);margin-top:4px;">Si dejas esto vacío, se usa el roster guardado de tu alianza (el estado se toma de cada ficha).</div>
+    <label style="display:block;font-size:.78rem;color:var(--text-dim);margin:14px 0 5px;">Estado de esa lista (solo si pegas IDs arriba)</label>
+    <input type="text" id="listRegionInput" placeholder="Ej. 4501" inputmode="numeric">
 
     <button class="btn" id="startBtn">▶️ Empezar canjeo</button>
     <div class="errmsg" id="setupErr"></div>
@@ -109,12 +111,20 @@ const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 const FN_URL = SUPA_URL + '/functions/v1/swift-processor';
-const AUTO_FN_URL = SUPA_URL + '/functions/v1/bulk-auto-redeem';
+const WORKER_URL = 'https://divine-bread-b48d.hestelae.workers.dev';
 
-function parseIdList(text){
-  return [...new Set(
-    text.split(/[\n,]+/).map(s=>s.trim()).filter(s=>/^\d{4,15}$/.test(s))
-  )].map(id=>({governor_id:id, name:''}));
+function parseIdList(text, defaultRegion){
+  const out=[]; const seen=new Set();
+  text.split(/\n+/).forEach(line=>{
+    line.split(',').forEach(part=>{
+      const t=part.trim();
+      if(!/^\d{4,15}$/.test(t)) return;
+      if(seen.has(t)) return;
+      seen.add(t);
+      out.push({governor_id:t, name:'', region:defaultRegion});
+    });
+  });
+  return out;
 }
 
 let currentUser=null, accessToken=null, allianceId=null;
@@ -147,13 +157,13 @@ document.getElementById('startBtn').addEventListener('click', async()=>{
     }
   const btn=document.getElementById('startBtn'); btn.disabled=true; btn.textContent='Cargando…';
 
-  const pasted=parseIdList(document.getElementById('idListInput').value);
+  const pasted=parseIdList(document.getElementById('idListInput').value, document.getElementById('listRegionInput').value.trim());
   if(pasted.length>0){
     roster=pasted;
   } else {
-    const{data:players,error}=await sb.from('players').select('governor_id,name').eq('alliance_id',allianceId).not('governor_id','is',null);
+    const{data:players,error}=await sb.from('players').select('governor_id,name,state_id').eq('alliance_id',allianceId).not('governor_id','is',null);
     if(error){btn.disabled=false;btn.textContent='▶️ Empezar canjeo';errEl.textContent='Error cargando el roster: '+error.message;return;}
-    roster=(players||[]).filter(p=>p.governor_id);
+    roster=(players||[]).filter(p=>p.governor_id).map(p=>({governor_id:p.governor_id,name:p.name,region:p.state_id?String(p.state_id):''}));
   }
   btn.disabled=false; btn.textContent='▶️ Empezar canjeo';
   if(roster.length===0){errEl.textContent='No hay IDs: pega una lista o revisa que tu roster tenga Governor IDs guardados.';return;}
@@ -167,105 +177,40 @@ document.getElementById('startBtn').addEventListener('click', async()=>{
 
 async function processNext(){
   if(currentIndex>=roster.length){ showSummary(); return; }
+  if(currentIndex>0){ await new Promise(r=>setTimeout(r,1500)); }
   const player=roster[currentIndex];
   document.getElementById('progressText').textContent=`${currentIndex+1} / ${roster.length}`;
   document.getElementById('playerCard').innerHTML=`
     <div class="player-avatar">${(player.name||'??').slice(0,2).toUpperCase()}</div>
-    <div><div class="player-name">${player.name||'(sin nombre)'}</div><div class="player-id">ID ${player.governor_id}</div></div>`;
+    <div><div class="player-name">${player.name||'(sin nombre)'}</div><div class="player-id">ID ${player.governor_id} · estado ${player.region||'?'}</div></div>`;
   const stepArea=document.getElementById('stepArea');
-  stepArea.innerHTML=`<p style="text-align:center;color:var(--text-dim);font-size:.85rem;">🤖 Canjeando automáticamente…</p>`;
+  stepArea.innerHTML=`<p style="text-align:center;color:var(--text-dim);font-size:.85rem;">Canjeando…</p>`;
+
+  if(!player.region){
+    recordResult(player,'warn','Sin estado guardado para este jugador');
+    return processNext();
+  }
 
   try{
-    const res=await fetch(AUTO_FN_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},body:JSON.stringify({fid:player.governor_id,cdk:code})});
-    const auto=await res.json();
+    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fid:player.governor_id, region:player.region, code})});
+    const d=await res.json();
 
-    if(auto.status==='ok'){
-      recordResult(player,'ok',auto.message);
+    if(d.ok){
+      recordResult(player,'ok', d.already ? 'Ya canjeado antes' : 'Canjeado ✓');
       return processNext();
     }
-    if(auto.status==='err_id'){
-      stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">Fallo automático (${auto.message||'login'}) — probando el método de siempre…</p>`;
-      const loginTry=await callFn('login',{fid:player.governor_id});
-      if(!loginTry || loginTry.code!==0){
-        recordResult(player,'err','Login failed on both methods: '+JSON.stringify(loginTry).slice(0,150));
-        return processNext();
-      }
-      return runCaptchaAttempt(player, 1);
-    }
-    if(auto.status==='err_code'){
-      recordResult(player,'err',auto.message);
-      currentIndex=roster.length; // affects everyone, stop entirely
+    if(d.err_code===40004){
+      recordResult(player,'err','El código no existe o ha caducado');
+      currentIndex=roster.length; // affects everyone
       return processNext();
     }
-    if(auto.status==='need_manual'){
-      stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">El bot no pudo leer el captcha — hazlo tú para este jugador.</p>`;
-      await callFn('login',{fid:player.governor_id});
-      return runCaptchaAttempt(player, 1);
-    }
-    // err_other or anything unexpected: fall back to manual too, rather than losing the player silently
-    stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">Fallo automático (${auto.message||'error'}) — inténtalo a mano.</p>`;
-    await callFn('login',{fid:player.governor_id});
-    return runCaptchaAttempt(player, 1);
+    recordResult(player,'err', d.msg || d.error || 'Error desconocido');
+    return processNext();
   }catch(e){
-    stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">Sin conexión con el canjeo automático — inténtalo a mano.</p>`;
-    return runCaptchaAttempt(player, 1);
-  }
-}
-
-async function runCaptchaAttempt(player, attempt){
-  const stepArea=document.getElementById('stepArea');
-  if(attempt>4){
-    recordResult(player,'err','No se pudo resolver el captcha tras varios intentos');
+    recordResult(player,'err','Error de conexión');
     return processNext();
   }
-  stepArea.innerHTML=`<p style="text-align:center;color:var(--text-dim);font-size:.85rem;">Cargando captcha…</p>`;
-  const captchaRes = await callFn('captcha',{fid:player.governor_id});
-  const img = captchaRes?.data?.img;
-  if(!img){
-    stepArea.innerHTML=`<p style="text-align:center;color:var(--text-dim);font-size:.85rem;">Captcha no disponible, reintentando…</p>`;
-    await new Promise(r=>setTimeout(r,1500));
-    return runCaptchaAttempt(player, attempt+1);
-  }
-
-  stepArea.innerHTML=`
-    <div class="captcha-box">
-      <div class="captcha-img"><img src="${img}" alt="captcha"></div>
-      <input type="text" class="captcha-input" id="captchaInput" maxlength="6" autocomplete="off" placeholder="????">
-      <button class="btn" id="submitCaptchaBtn" style="margin-top:0;">Confirmar</button>
-      <button class="btn btn-ghost" id="skipBtn" style="margin-top:0;">Saltar este jugador</button>
-    </div>`;
-  document.getElementById('captchaInput').focus();
-  document.getElementById('skipBtn').onclick=()=>{recordResult(player,'warn','Saltado manualmente');processNext();};
-  document.getElementById('submitCaptchaBtn').onclick=async()=>{
-    const val=document.getElementById('captchaInput').value.trim();
-    if(!val)return;
-    const btn=document.getElementById('submitCaptchaBtn'); btn.disabled=true; btn.textContent='Canjeando…';
-    const redeem = await callFn('redeem',{fid:player.governor_id, cdk:code, captcha_code:val});
-    const msg=(redeem?.msg||'').toUpperCase();
-
-    if(['SUCCESS','RECEIVED','SAME TYPE EXCHANGE'].includes(msg)){
-      recordResult(player,'ok', msg==='RECEIVED' || msg==='SAME TYPE EXCHANGE' ? 'Ya canjeado antes' : 'Canjeado ✓');
-      return processNext();
-    }
-    if(msg.includes('CAPTCHA')){
-      stepArea.innerHTML=`<p style="text-align:center;color:var(--warn);font-size:.85rem;">Captcha incorrecto, prueba otra vez…</p>`;
-      await new Promise(r=>setTimeout(r,600));
-      return runCaptchaAttempt(player, attempt+1);
-    }
-    if(msg.includes('NOT EXIST') || msg.includes('CDK NOT FOUND')){
-      recordResult(player,'err','El código no existe');
-      // Stop entirely — this affects everyone, not just this player.
-      currentIndex=roster.length;
-      return processNext();
-    }
-    if(msg.includes('EXPIRED')){
-      recordResult(player,'err','El código ha caducado');
-      currentIndex=roster.length;
-      return processNext();
-    }
-    recordResult(player,'err', redeem?.msg || 'Error desconocido');
-    return processNext();
-  };
 }
 
 function recordResult(player, kind, label){
