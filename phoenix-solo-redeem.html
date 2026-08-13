@@ -6,6 +6,7 @@
 <title>Auto Gift Codes · Phoenix</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="phx-i18n.js"></script>
 <style>
   :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
     --gold:#f0c26e;--gold-dim:#a8895a;--ok:#3da76e;--warn:#f0b93d;--err:#e05a5a;--text:#eaf3f9;--text-dim:#86a0b7;}
@@ -63,61 +64,75 @@
 
   .footnote{font-size:.72rem;color:var(--text-dim);text-align:center;margin-top:18px;line-height:1.5;}
   .hidden{display:none !important;}
+  .lang-box{position:relative;display:flex;justify-content:flex-end;margin-bottom:6px;}
+  #langBtn{background:var(--panel);border:1.5px solid var(--line);color:var(--text-dim);
+    border-radius:10px;padding:7px 11px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter';}
+  .lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:12px;padding:6px;max-height:280px;overflow-y:auto;z-index:30;
+    min-width:130px;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+  .lang-menu.open{display:block;}
+  .lang-menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);
+    padding:8px 10px;border-radius:8px;font-size:.82rem;cursor:pointer;font-family:'Inter';}
+  .lang-menu button:hover,.lang-menu button.active{background:rgba(240,194,110,.15);color:var(--gold);}
   .spin{animation:spin 1s linear infinite;display:inline-block;}
   @keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="phoenix-tools.html" id="backLink" style="display:inline-block;color:var(--gold-dim);font-size:.82rem;text-decoration:none;margin-bottom:10px;">‹ Tools</a>
+  <div class="lang-box">
+    <button id="langBtn">🌐 <span id="langLabel">EN</span></button>
+    <div id="langMenu" class="lang-menu"></div>
+  </div>
+  <a href="phoenix-tools.html" id="backLink" style="display:inline-block;color:var(--gold-dim);font-size:.82rem;text-decoration:none;margin-bottom:10px;" data-i18n="backTools">‹ Tools</a>
   <header>
-    <div class="eyebrow">Phoenix · Free for anyone</div>
-    <h1>🎁 Auto Gift Codes</h1>
-    <p class="sub">Save your Governor ID once. New codes get redeemed for you automatically.</p>
-    <p class="sub" style="margin-top:6px;">Codes are checked every ~15 minutes and redeemed for every ID you save here.</p>
+    <div class="eyebrow" data-i18n="eyebrow">Phoenix · Free for anyone</div>
+    <h1>🎁 <span data-i18n="title">Auto Gift Codes</span></h1>
+    <p class="sub" data-i18n="sub1">Save your Governor ID once. New codes get redeemed for you automatically.</p>
+    <p class="sub" style="margin-top:6px;" data-i18n="sub2">Codes are checked every ~15 minutes and redeemed for every ID you save here.</p>
   </header>
 
   <!-- REGISTER / SIGN IN -->
   <div class="panel" id="registerPanel">
-    <div class="panel-title">Your details</div>
-    <label>Governor ID</label>
-    <input type="text" id="regGid" placeholder="e.g. 123456789" inputmode="numeric">
-    <label>Region / State number</label>
-    <input type="text" id="regRegion" placeholder="e.g. 4501" inputmode="numeric">
-    <label>Nickname (optional)</label>
-    <input type="text" id="regLabel" placeholder="e.g. My main">
-    <button class="btn" id="regBtn">Start auto-redeeming</button>
+    <div class="panel-title" data-i18n="yourDetails">Your details</div>
+    <label data-i18n="governorId">Governor ID</label>
+    <input type="text" id="regGid" data-i18n-ph="phGid" placeholder="e.g. 123456789" inputmode="numeric">
+    <label data-i18n="region">Region / State number</label>
+    <input type="text" id="regRegion" data-i18n-ph="phRegion" placeholder="e.g. 4501" inputmode="numeric">
+    <label data-i18n="nickname">Nickname (optional)</label>
+    <input type="text" id="regLabel" data-i18n-ph="phNickname" placeholder="e.g. My main">
+    <button class="btn" id="regBtn" data-i18n="startBtn">Start auto-redeeming</button>
     <div class="errmsg" id="regErr"></div>
     <div class="okmsg" id="regOk"></div>
     <div class="center" style="margin-top:14px;font-size:.75rem;color:var(--text-dim);">
-      Already signed up? Just enter the same ID and region to see your history.
+      <span data-i18n="alreadySignedUp">Already signed up? Just enter the same ID and region to see your history.</span>
     </div>
   </div>
 
   <!-- DASHBOARD -->
   <div class="hidden" id="dashboard">
     <div class="panel">
-      <div class="panel-title">Your account <span class="badge badge-on">auto-redeem ON</span></div>
+      <div class="panel-title"><span data-i18n="yourAccount">Your account</span> <span class="badge badge-on" data-i18n="autoOn">auto-redeem ON</span></div>
       <div id="idList"></div>
       <div class="errmsg" id="dashErr"></div>
     </div>
 
     <div class="panel">
-      <div class="panel-title">Redemption history</div>
+      <div class="panel-title" data-i18n="history">Redemption history</div>
       <div id="logList"></div>
     </div>
 
     <div class="center">
-      <span class="link" id="switchKeyLink">Check a different ID</span>
+      <span class="link" id="switchKeyLink" data-i18n="switchId">Check a different ID</span>
     </div>
 
     <div class="center" style="margin-top:14px;">
-      <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:none;font-size:.82rem;">Enjoying it? Support Phoenix on Ko-fi</a>
+      <a href="https://ko-fi.com/phoenixwos" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:none;font-size:.82rem;" data-i18n="kofi">Enjoying it? Support Phoenix on Ko-fi</a>
     </div>
   </div>
 
   <div class="footnote">
-    A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you save here. Your redemption history shows what worked. No login needed — just your Governor ID and region.
+    <span data-i18n="footnote">A scanner checks for new Whiteout Survival codes every ~15 minutes and redeems them for every ID you save here. Your redemption history shows what worked. No login needed — just your Governor ID and region.</span>
   </div>
 
   <div class="center" style="margin-top:14px;">
@@ -525,6 +540,161 @@ el('adminLoadBtn').onclick=async()=>{
     show('registerPanel');
   }
 })();
+</script>
+<script>
+const DICT = {
+en:{eyebrow:"Phoenix · Free for anyone",title:"Auto Gift Codes",
+ sub1:"Save your Governor ID once. New codes get redeemed for you automatically.",
+ sub2:"Codes are checked every few minutes and redeemed for every ID you save here.",
+ yourDetails:"Your details",governorId:"Governor ID",region:"Region / State number",
+ nickname:"Nickname (optional)",phGid:"e.g. 123456789",phRegion:"e.g. 4501",phNickname:"e.g. My main",
+ startBtn:"Start auto-redeeming",
+ alreadySignedUp:"Already signed up? Just enter the same ID and region to see your history.",
+ yourAccount:"Your account",autoOn:"auto-redeem ON",history:"Redemption history",
+ switchId:"Check a different ID",kofi:"Enjoying it? Support Phoenix on Ko-fi",backTools:"‹ Tools",
+ footnote:"A scanner checks for new Whiteout Survival codes every few minutes and redeems them for every ID you save here. Your redemption history shows what worked. No login needed — just your Governor ID and region."},
+es:{eyebrow:"Phoenix · Gratis para todos",title:"Códigos Automáticos",
+ sub1:"Guarda tu ID de Gobernador una vez. Los códigos nuevos se canjean solos.",
+ sub2:"Se comprueban códigos cada pocos minutos y se canjean para cada ID que guardes aquí.",
+ yourDetails:"Tus datos",governorId:"ID de Gobernador",region:"Región / Número de estado",
+ nickname:"Apodo (opcional)",phGid:"Ej. 123456789",phRegion:"Ej. 4501",phNickname:"Ej. Mi cuenta principal",
+ startBtn:"Activar canjeo automático",
+ alreadySignedUp:"¿Ya te registraste? Escribe el mismo ID y región para ver tu historial.",
+ yourAccount:"Tu cuenta",autoOn:"canjeo automático ACTIVO",history:"Historial de canjes",
+ switchId:"Consultar otro ID",kofi:"¿Te gusta? Apoya a Phoenix en Ko-fi",backTools:"‹ Herramientas",
+ footnote:"Un escáner busca códigos nuevos de Whiteout Survival cada pocos minutos y los canjea para cada ID que guardes aquí. Tu historial muestra qué funcionó. Sin registro — solo tu ID de Gobernador y tu región."},
+ko:{eyebrow:"Phoenix · 누구나 무료",title:"자동 선물 코드",
+ sub1:"영주 ID를 한 번만 저장하세요. 새 코드가 자동으로 교환됩니다.",
+ sub2:"몇 분마다 코드를 확인하여 저장된 모든 ID로 교환합니다.",
+ yourDetails:"내 정보",governorId:"영주 ID",region:"지역 / 서버 번호",
+ nickname:"별명 (선택)",phGid:"예: 123456789",phRegion:"예: 4501",phNickname:"예: 본캐",
+ startBtn:"자동 교환 시작",
+ alreadySignedUp:"이미 등록하셨나요? 같은 ID와 지역을 입력하면 기록을 볼 수 있습니다.",
+ yourAccount:"내 계정",autoOn:"자동 교환 켜짐",history:"교환 기록",
+ switchId:"다른 ID 확인",kofi:"마음에 드시나요? Ko-fi에서 Phoenix를 후원해 주세요",backTools:"‹ 도구",
+ footnote:"스캐너가 몇 분마다 새로운 Whiteout Survival 코드를 찾아 저장된 모든 ID로 교환합니다. 기록에서 결과를 확인하세요. 로그인 불필요 — 영주 ID와 지역만 있으면 됩니다."},
+zh:{eyebrow:"Phoenix · 人人免费",title:"自动礼包码",
+ sub1:"保存一次领主ID，新礼包码将自动为你兑换。",
+ sub2:"每隔几分钟检查一次礼包码，并为你保存的每个ID兑换。",
+ yourDetails:"你的信息",governorId:"领主ID",region:"区域 / 服务器编号",
+ nickname:"昵称（可选）",phGid:"例如 123456789",phRegion:"例如 4501",phNickname:"例如 主号",
+ startBtn:"开启自动兑换",
+ alreadySignedUp:"已经注册过？输入相同的ID和区域即可查看记录。",
+ yourAccount:"你的账户",autoOn:"自动兑换已开启",history:"兑换记录",
+ switchId:"查询其他ID",kofi:"喜欢吗？在 Ko-fi 支持 Phoenix",backTools:"‹ 工具",
+ footnote:"扫描器每隔几分钟查找新的 Whiteout Survival 礼包码，并为你保存的每个ID兑换。兑换记录会显示结果。无需登录——只要领主ID和区域。"},
+ja:{eyebrow:"Phoenix · 誰でも無料",title:"自動ギフトコード",
+ sub1:"領主IDを一度保存するだけ。新しいコードが自動で交換されます。",
+ sub2:"数分ごとにコードを確認し、保存したすべてのIDで交換します。",
+ yourDetails:"あなたの情報",governorId:"領主ID",region:"地域 / サーバー番号",
+ nickname:"ニックネーム（任意）",phGid:"例: 123456789",phRegion:"例: 4501",phNickname:"例: メイン垢",
+ startBtn:"自動交換を開始",
+ alreadySignedUp:"登録済みですか？同じIDと地域を入力すると履歴が見られます。",
+ yourAccount:"あなたのアカウント",autoOn:"自動交換オン",history:"交換履歴",
+ switchId:"別のIDを確認",kofi:"気に入りましたか？Ko-fiでPhoenixを応援",backTools:"‹ ツール",
+ footnote:"スキャナーが数分ごとに新しいWhiteout Survivalコードを探し、保存したすべてのIDで交換します。履歴で結果を確認できます。ログイン不要——領主IDと地域だけです。"},
+de:{eyebrow:"Phoenix · Kostenlos für alle",title:"Automatische Geschenkcodes",
+ sub1:"Speichere deine Gouverneurs-ID einmal. Neue Codes werden automatisch eingelöst.",
+ sub2:"Codes werden alle paar Minuten geprüft und für jede gespeicherte ID eingelöst.",
+ yourDetails:"Deine Daten",governorId:"Gouverneurs-ID",region:"Region / Servernummer",
+ nickname:"Spitzname (optional)",phGid:"z.B. 123456789",phRegion:"z.B. 4501",phNickname:"z.B. Mein Hauptaccount",
+ startBtn:"Automatisches Einlösen starten",
+ alreadySignedUp:"Schon registriert? Gib dieselbe ID und Region ein, um deinen Verlauf zu sehen.",
+ yourAccount:"Dein Konto",autoOn:"Auto-Einlösen AN",history:"Einlöse-Verlauf",
+ switchId:"Andere ID prüfen",kofi:"Gefällt es dir? Unterstütze Phoenix auf Ko-fi",backTools:"‹ Werkzeuge",
+ footnote:"Ein Scanner sucht alle paar Minuten nach neuen Whiteout-Survival-Codes und löst sie für jede hier gespeicherte ID ein. Dein Verlauf zeigt, was funktioniert hat. Kein Login nötig — nur Gouverneurs-ID und Region."},
+fr:{eyebrow:"Phoenix · Gratuit pour tous",title:"Codes Cadeaux Automatiques",
+ sub1:"Enregistre ton ID de Gouverneur une fois. Les nouveaux codes sont échangés automatiquement.",
+ sub2:"Les codes sont vérifiés toutes les quelques minutes et échangés pour chaque ID enregistré ici.",
+ yourDetails:"Tes informations",governorId:"ID de Gouverneur",region:"Région / Numéro de serveur",
+ nickname:"Surnom (facultatif)",phGid:"ex. 123456789",phRegion:"ex. 4501",phNickname:"ex. Mon compte principal",
+ startBtn:"Activer l'échange automatique",
+ alreadySignedUp:"Déjà inscrit ? Saisis le même ID et la même région pour voir ton historique.",
+ yourAccount:"Ton compte",autoOn:"échange auto ACTIVÉ",history:"Historique des échanges",
+ switchId:"Vérifier un autre ID",kofi:"Ça te plaît ? Soutiens Phoenix sur Ko-fi",backTools:"‹ Outils",
+ footnote:"Un scanner cherche de nouveaux codes Whiteout Survival toutes les quelques minutes et les échange pour chaque ID enregistré ici. Ton historique montre ce qui a marché. Aucune connexion requise — juste ton ID de Gouverneur et ta région."},
+ar:{eyebrow:"Phoenix · مجاني للجميع",title:"أكواد الهدايا التلقائية",
+ sub1:"احفظ معرّف الحاكم مرة واحدة. الأكواد الجديدة تُستبدل تلقائياً.",
+ sub2:"يتم فحص الأكواد كل بضع دقائق واستبدالها لكل معرّف تحفظه هنا.",
+ yourDetails:"بياناتك",governorId:"معرّف الحاكم",region:"المنطقة / رقم الخادم",
+ nickname:"اللقب (اختياري)",phGid:"مثال: 123456789",phRegion:"مثال: 4501",phNickname:"مثال: حسابي الرئيسي",
+ startBtn:"تفعيل الاستبدال التلقائي",
+ alreadySignedUp:"مسجّل بالفعل؟ أدخل نفس المعرّف والمنطقة لرؤية سجلك.",
+ yourAccount:"حسابك",autoOn:"الاستبدال التلقائي مُفعّل",history:"سجل الاستبدال",
+ switchId:"التحقق من معرّف آخر",kofi:"أعجبك؟ ادعم Phoenix على Ko-fi",backTools:"‹ الأدوات",
+ footnote:"يبحث الماسح عن أكواد Whiteout Survival الجديدة كل بضع دقائق ويستبدلها لكل معرّف تحفظه هنا. يعرض سجلك ما نجح. لا حاجة لتسجيل الدخول — فقط معرّف الحاكم والمنطقة."},
+ru:{eyebrow:"Phoenix · Бесплатно для всех",title:"Автоматические подарочные коды",
+ sub1:"Сохраните ID губернатора один раз. Новые коды активируются автоматически.",
+ sub2:"Коды проверяются каждые несколько минут и активируются для каждого сохранённого ID.",
+ yourDetails:"Ваши данные",governorId:"ID губернатора",region:"Регион / Номер сервера",
+ nickname:"Псевдоним (необязательно)",phGid:"напр. 123456789",phRegion:"напр. 4501",phNickname:"напр. Основной аккаунт",
+ startBtn:"Включить автоактивацию",
+ alreadySignedUp:"Уже зарегистрированы? Введите тот же ID и регион, чтобы увидеть историю.",
+ yourAccount:"Ваш аккаунт",autoOn:"автоактивация ВКЛ",history:"История активаций",
+ switchId:"Проверить другой ID",kofi:"Нравится? Поддержите Phoenix на Ko-fi",backTools:"‹ Инструменты",
+ footnote:"Сканер ищет новые коды Whiteout Survival каждые несколько минут и активирует их для каждого сохранённого ID. История показывает результат. Регистрация не нужна — только ID губернатора и регион."},
+tr:{eyebrow:"Phoenix · Herkese ücretsiz",title:"Otomatik Hediye Kodları",
+ sub1:"Vali Kimliğini bir kez kaydet. Yeni kodlar senin için otomatik kullanılır.",
+ sub2:"Kodlar birkaç dakikada bir kontrol edilir ve kaydettiğin her kimlik için kullanılır.",
+ yourDetails:"Bilgilerin",governorId:"Vali Kimliği",region:"Bölge / Sunucu numarası",
+ nickname:"Takma ad (isteğe bağlı)",phGid:"örn. 123456789",phRegion:"örn. 4501",phNickname:"örn. Ana hesabım",
+ startBtn:"Otomatik kullanmayı başlat",
+ alreadySignedUp:"Zaten kayıtlı mısın? Geçmişini görmek için aynı kimlik ve bölgeyi gir.",
+ yourAccount:"Hesabın",autoOn:"otomatik kullanım AÇIK",history:"Kullanım geçmişi",
+ switchId:"Başka kimlik kontrol et",kofi:"Beğendin mi? Ko-fi'de Phoenix'i destekle",backTools:"‹ Araçlar",
+ footnote:"Tarayıcı birkaç dakikada bir yeni Whiteout Survival kodu arar ve burada kaydettiğin her kimlik için kullanır. Geçmişin neyin işe yaradığını gösterir. Giriş gerekmez — sadece Vali Kimliği ve bölge."},
+it:{eyebrow:"Phoenix · Gratis per tutti",title:"Codici Regalo Automatici",
+ sub1:"Salva il tuo ID Governatore una volta. I nuovi codici vengono riscattati automaticamente.",
+ sub2:"I codici vengono controllati ogni pochi minuti e riscattati per ogni ID salvato qui.",
+ yourDetails:"I tuoi dati",governorId:"ID Governatore",region:"Regione / Numero server",
+ nickname:"Soprannome (facoltativo)",phGid:"es. 123456789",phRegion:"es. 4501",phNickname:"es. Account principale",
+ startBtn:"Attiva riscatto automatico",
+ alreadySignedUp:"Già registrato? Inserisci lo stesso ID e regione per vedere la cronologia.",
+ yourAccount:"Il tuo account",autoOn:"riscatto automatico ATTIVO",history:"Cronologia riscatti",
+ switchId:"Controlla un altro ID",kofi:"Ti piace? Sostieni Phoenix su Ko-fi",backTools:"‹ Strumenti",
+ footnote:"Uno scanner cerca nuovi codici Whiteout Survival ogni pochi minuti e li riscatta per ogni ID salvato qui. La cronologia mostra cosa ha funzionato. Nessun login — solo ID Governatore e regione."},
+pl:{eyebrow:"Phoenix · Za darmo dla każdego",title:"Automatyczne kody podarunkowe",
+ sub1:"Zapisz swoje ID Gubernatora raz. Nowe kody zostaną odebrane automatycznie.",
+ sub2:"Kody są sprawdzane co kilka minut i odbierane dla każdego zapisanego ID.",
+ yourDetails:"Twoje dane",governorId:"ID Gubernatora",region:"Region / Numer serwera",
+ nickname:"Pseudonim (opcjonalnie)",phGid:"np. 123456789",phRegion:"np. 4501",phNickname:"np. Moje główne konto",
+ startBtn:"Włącz automatyczne odbieranie",
+ alreadySignedUp:"Już zarejestrowany? Wpisz to samo ID i region, aby zobaczyć historię.",
+ yourAccount:"Twoje konto",autoOn:"auto-odbieranie WŁ.",history:"Historia odbierania",
+ switchId:"Sprawdź inne ID",kofi:"Podoba się? Wesprzyj Phoenix na Ko-fi",backTools:"‹ Narzędzia",
+ footnote:"Skaner szuka nowych kodów Whiteout Survival co kilka minut i odbiera je dla każdego zapisanego tu ID. Historia pokazuje, co zadziałało. Bez logowania — wystarczy ID Gubernatora i region."},
+pt:{eyebrow:"Phoenix · Grátis para todos",title:"Códigos de Presente Automáticos",
+ sub1:"Guarda o teu ID de Governador uma vez. Os novos códigos são resgatados automaticamente.",
+ sub2:"Os códigos são verificados a cada poucos minutos e resgatados para cada ID guardado aqui.",
+ yourDetails:"Os teus dados",governorId:"ID de Governador",region:"Região / Número do servidor",
+ nickname:"Apelido (opcional)",phGid:"ex. 123456789",phRegion:"ex. 4501",phNickname:"ex. Conta principal",
+ startBtn:"Ativar resgate automático",
+ alreadySignedUp:"Já te registaste? Introduz o mesmo ID e região para veres o histórico.",
+ yourAccount:"A tua conta",autoOn:"resgate automático LIGADO",history:"Histórico de resgates",
+ switchId:"Verificar outro ID",kofi:"Gostas? Apoia o Phoenix no Ko-fi",backTools:"‹ Ferramentas",
+ footnote:"Um scanner procura novos códigos de Whiteout Survival a cada poucos minutos e resgata-os para cada ID guardado aqui. O teu histórico mostra o que funcionou. Sem login — só o ID de Governador e a região."},
+th:{eyebrow:"Phoenix · ฟรีสำหรับทุกคน",title:"โค้ดของขวัญอัตโนมัติ",
+ sub1:"บันทึก ID ผู้ว่าการของคุณครั้งเดียว โค้ดใหม่จะถูกแลกให้อัตโนมัติ",
+ sub2:"ระบบตรวจสอบโค้ดทุกไม่กี่นาทีและแลกให้ทุก ID ที่คุณบันทึกไว้",
+ yourDetails:"ข้อมูลของคุณ",governorId:"ID ผู้ว่าการ",region:"ภูมิภาค / หมายเลขเซิร์ฟเวอร์",
+ nickname:"ชื่อเล่น (ไม่บังคับ)",phGid:"เช่น 123456789",phRegion:"เช่น 4501",phNickname:"เช่น ตัวหลัก",
+ startBtn:"เริ่มแลกอัตโนมัติ",
+ alreadySignedUp:"ลงทะเบียนแล้ว? กรอก ID และภูมิภาคเดิมเพื่อดูประวัติ",
+ yourAccount:"บัญชีของคุณ",autoOn:"แลกอัตโนมัติ เปิด",history:"ประวัติการแลก",
+ switchId:"ตรวจสอบ ID อื่น",kofi:"ชอบไหม? สนับสนุน Phoenix บน Ko-fi",backTools:"‹ เครื่องมือ",
+ footnote:"ระบบสแกนหาโค้ด Whiteout Survival ใหม่ทุกไม่กี่นาทีและแลกให้ทุก ID ที่บันทึกไว้ ประวัติจะแสดงผลลัพธ์ ไม่ต้องเข้าสู่ระบบ — แค่ ID ผู้ว่าการและภูมิภาค"},
+id:{eyebrow:"Phoenix · Gratis untuk semua",title:"Kode Hadiah Otomatis",
+ sub1:"Simpan ID Gubernur kamu sekali. Kode baru akan ditukarkan otomatis.",
+ sub2:"Kode diperiksa setiap beberapa menit dan ditukarkan untuk setiap ID yang kamu simpan di sini.",
+ yourDetails:"Data kamu",governorId:"ID Gubernur",region:"Region / Nomor server",
+ nickname:"Nama panggilan (opsional)",phGid:"mis. 123456789",phRegion:"mis. 4501",phNickname:"mis. Akun utama",
+ startBtn:"Mulai tukar otomatis",
+ alreadySignedUp:"Sudah terdaftar? Masukkan ID dan region yang sama untuk melihat riwayat.",
+ yourAccount:"Akun kamu",autoOn:"tukar otomatis AKTIF",history:"Riwayat penukaran",
+ switchId:"Cek ID lain",kofi:"Suka? Dukung Phoenix di Ko-fi",backTools:"‹ Alat",
+ footnote:"Pemindai mencari kode Whiteout Survival baru setiap beberapa menit dan menukarkannya untuk setiap ID yang kamu simpan di sini. Riwayat menunjukkan apa yang berhasil. Tanpa login — cukup ID Gubernur dan region."}
+};
+PhxI18N.init(DICT);
 </script>
 <script src="phx-track.js"></script>
 </body>
