@@ -63,6 +63,21 @@
   #app{display:none;}
   .hidden{display:none !important;}
   .errmsg{color:#ff9d9d;font-size:.8rem;margin-top:8px;text-align:center;}
+  .okmsg{color:#7be0a4;font-size:.8rem;margin-top:8px;text-align:center;}
+  .mem-row{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:.85rem;}
+  .mem-row:last-child{border-bottom:none;}
+  .mem-info{flex:1;min-width:0;}
+  .mem-name{font-weight:600;}
+  .mem-gid{font-size:.72rem;color:var(--text-dim);}
+  .mem-del{background:none;border:none;color:var(--err);font-size:.78rem;cursor:pointer;padding:4px 6px;}
+  .mem-list{max-height:45vh;overflow-y:auto;}
+  .add-row{display:flex;gap:8px;margin-top:12px;}
+  .add-row input{flex:1;}
+  .btn-small{width:auto;padding:9px 14px;font-size:.85rem;margin-top:0;}
+  .counter{font-size:.75rem;color:var(--text-dim);text-align:right;margin-top:6px;}
+  .counter.full{color:var(--warn);font-weight:600;}
+  .badge{display:inline-block;font-size:.66rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px;
+    background:rgba(127,217,238,.15);color:var(--ice);}
 </style>
 </head>
 <body>
@@ -73,21 +88,73 @@
   <header>
     <div class="eyebrow">Phoenix · Herramienta R4/R5</div>
     <h1>🎁 Canjeo de Códigos</h1>
-    <p class="sub">Canjeo automático para toda tu alianza</p>
+    <p class="sub">Automático por defecto · manual cuando lo necesites</p>
   </header>
 
-  <div class="panel" id="setupPanel">
-    <div class="panel-title">Código de regalo</div>
+  <div class="panel" id="whoPanel">
+    <div class="panel-title">Tu alianza</div>
+    <div id="whoInfo" style="font-size:.95rem;">Cargando…</div>
+  </div>
+
+  <div class="panel" id="autoPanel">
+    <div class="panel-title">Canjeo automático</div>
+    <div style="font-size:.88rem;line-height:1.5;">
+      <span style="color:var(--ok);font-weight:700;">✓ Activo</span> — Phoenix busca códigos nuevos cada pocos
+      minutos y los canjea solo para todos los de la lista. No hay que hacer nada.
+    </div>
+    <div id="autoCounts" style="font-size:.78rem;color:var(--text-dim);margin-top:10px;"></div>
+  </div>
+
+  <!-- MEMBER VIEW: am I on the list? -->
+  <div class="panel hidden" id="checkPanel">
+    <div class="panel-title">¿Estoy en la lista?</div>
+    <div style="font-size:.8rem;color:var(--text-dim);margin-bottom:10px;">
+      Comprueba si tu Governor ID está apuntado para recibir los códigos automáticamente.
+    </div>
+    <input type="text" id="checkGid" placeholder="Tu Governor ID" inputmode="numeric">
+    <button class="btn" id="checkBtn">Comprobar</button>
+    <div id="checkResult" style="margin-top:12px;text-align:center;font-size:.9rem;"></div>
+  </div>
+
+  <!-- R4/R5: manage the gift-code list -->
+  <div class="panel hidden" id="managePanel">
+    <div class="panel-title">Lista de códigos <span class="badge">R4/R5</span></div>
+    <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:10px;">
+      Quitar a alguien de aquí solo hace que deje de recibir códigos. No borra su perfil ni su historial en Phoenix.
+    </div>
+    <div class="mem-list" id="memberList"></div>
+    <div class="counter" id="memberCounter"></div>
+
+    <div class="add-row">
+      <input type="text" id="newGid" placeholder="Governor ID" inputmode="numeric">
+      <input type="text" id="newName" placeholder="Nombre" style="max-width:120px;">
+      <button class="btn btn-small" id="addMemberBtn">Añadir</button>
+    </div>
+    <div style="font-size:.72rem;color:var(--text-dim);margin-top:8px;">
+      También puedes pegar varios IDs de golpe, separados por comas o uno por línea:
+    </div>
+    <textarea id="bulkGids" rows="2" placeholder="123456789, 987654321" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--text);font-size:.85rem;font-family:inherit;box-sizing:border-box;resize:vertical;margin-top:6px;"></textarea>
+    <button class="btn btn-ghost btn-small" id="bulkAddBtn" style="width:100%;margin-top:8px;">Añadir lista</button>
+    <div class="errmsg" id="manageErr"></div>
+    <div class="okmsg" id="manageOk"></div>
+  </div>
+
+  <!-- R4/R5: manual redeem -->
+  <div class="panel hidden" id="setupPanel">
+    <div class="panel-title">Canjeo manual de un código <span class="badge">R4/R5</span></div>
+    <div style="font-size:.78rem;color:var(--text-dim);margin-bottom:12px;">
+      Solo si quieres forzar un código concreto sin esperar al canjeo automático.
+    </div>
+    <label style="display:block;font-size:.78rem;color:var(--text-dim);margin:0 0 5px;">Código de regalo</label>
     <input type="text" id="codeInput" placeholder="Ej. WOS0706" maxlength="30">
-
-    <label style="display:block;font-size:.78rem;color:var(--text-dim);margin:14px 0 5px;">Lista de IDs (opcional — pégalos separados por comas o uno por línea)</label>
-    <textarea id="idListInput" rows="4" placeholder="123456789, 987654321&#10;o&#10;123456789&#10;987654321" style="width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--text);font-size:.85rem;font-family:inherit;box-sizing:border-box;resize:vertical;"></textarea>
-    <div style="font-size:.72rem;color:var(--text-dim);margin-top:4px;">Si dejas esto vacío, se usa el roster guardado de tu alianza (el estado se toma de cada ficha).</div>
-    <label style="display:block;font-size:.78rem;color:var(--text-dim);margin:14px 0 5px;">Estado de esa lista (solo si pegas IDs arriba)</label>
-    <input type="text" id="listRegionInput" placeholder="Ej. 4501" inputmode="numeric">
-
-    <button class="btn" id="startBtn">▶️ Empezar canjeo</button>
+    <button class="btn" id="startBtn">▶️ Canjear ahora para toda la lista</button>
     <div class="errmsg" id="setupErr"></div>
+  </div>
+
+  <!-- ADMIN: everything -->
+  <div class="panel hidden" id="adminPanel">
+    <div class="panel-title">Todas las alianzas <span class="badge">Admin</span></div>
+    <div id="adminList" style="font-size:.85rem;"></div>
   </div>
 
   <div class="panel hidden" id="runPanel">
@@ -113,66 +180,165 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 const FN_URL = SUPA_URL + '/functions/v1/swift-processor';
 const WORKER_URL = 'https://divine-bread-b48d.hestelae.workers.dev';
 
-function parseIdList(text, defaultRegion){
+let myRole='', memberCount=0;
+const MEMBER_LIMIT=110;
+
+function parseGids(text){
   const out=[]; const seen=new Set();
-  text.split(/\n+/).forEach(line=>{
-    line.split(',').forEach(part=>{
-      const t=part.trim();
-      if(!/^\d{4,15}$/.test(t)) return;
-      if(seen.has(t)) return;
-      seen.add(t);
-      out.push({governor_id:t, name:'', region:defaultRegion});
-    });
+  text.split(/[\n,]+/).forEach(part=>{
+    const t=part.trim();
+    if(!/^\d{4,15}$/.test(t)||seen.has(t))return;
+    seen.add(t); out.push(t);
   });
   return out;
 }
 
-let currentUser=null, accessToken=null, allianceId=null;
-let roster=[], results=[], code='';
-let currentIndex=0;
-
 function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2200);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-async function callFn(action, extra){
-  const res = await fetch(FN_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPA_KEY},
-    body: JSON.stringify({action, ...extra})
+async function loadAllianceInfo(){
+  const infoEl=document.getElementById('whoInfo');
+  const countsEl=document.getElementById('autoCounts');
+  try{
+    const{data:al}=await sb.from('alliances').select('tag,name,state_id').eq('id',allianceId).maybeSingle();
+    if(al){
+      allianceRegion = al.state_id ? String(al.state_id) : '';
+      infoEl.innerHTML=`<div style="font-weight:700;font-size:1.05rem;">[${al.tag}] ${al.name||''}</div>
+        <div style="font-size:.82rem;color:var(--text-dim);margin-top:2px;">Estado ${al.state_id||'?'}</div>`;
+    } else {
+      infoEl.textContent='No se pudo cargar la alianza.';
+    }
+    const{count}=await sb.from('alliance_giftcode_members')
+      .select('id',{count:'exact',head:true}).eq('alliance_id',allianceId);
+    memberCount=count||0;
+    countsEl.textContent=`${memberCount} jugadores en la lista de códigos.`;
+  }catch(e){
+    infoEl.textContent='Error cargando los datos de la alianza.';
+  }
+}
+
+// ---------- member view ----------
+document.getElementById('checkBtn').addEventListener('click', async()=>{
+  const gid=document.getElementById('checkGid').value.trim();
+  const res=document.getElementById('checkResult');
+  if(!gid){res.innerHTML='<span style="color:var(--warn)">Escribe tu Governor ID.</span>';return;}
+  const{data}=await sb.from('alliance_giftcode_members')
+    .select('governor_id').eq('alliance_id',allianceId).eq('governor_id',gid).maybeSingle();
+  if(data){
+    res.innerHTML='<span style="color:var(--ok);font-weight:700;">✓ Sí, estás en la lista</span><br><span style="font-size:.78rem;color:var(--text-dim);">Recibes todos los códigos automáticamente.</span>';
+  }else{
+    res.innerHTML='<span style="color:var(--warn);font-weight:700;">No estás en la lista</span><br><span style="font-size:.78rem;color:var(--text-dim);">Pídele a un R4/R5 que te añada.</span>';
+  }
+});
+
+// ---------- R4/R5 list management ----------
+async function loadMembers(){
+  const listEl=document.getElementById('memberList');
+  const cEl=document.getElementById('memberCounter');
+  const{data,error}=await sb.from('alliance_giftcode_members')
+    .select('id,governor_id,name').eq('alliance_id',allianceId).order('name');
+  if(error){listEl.innerHTML='<div style="color:var(--err);font-size:.8rem;">Error cargando la lista.</div>';return;}
+
+  memberCount=(data||[]).length;
+  listEl.innerHTML='';
+  if(memberCount===0){
+    listEl.innerHTML='<div style="color:var(--text-dim);font-size:.85rem;text-align:center;padding:14px 0;">La lista está vacía. Añade jugadores abajo.</div>';
+  }
+  (data||[]).forEach(m=>{
+    const row=document.createElement('div');
+    row.className='mem-row';
+    row.innerHTML=`<div class="mem-info"><div class="mem-name">${m.name||'(sin nombre)'}</div>
+      <div class="mem-gid">ID ${m.governor_id}</div></div>
+      <button class="mem-del">Quitar</button>`;
+    row.querySelector('.mem-del').onclick=async()=>{
+      const{error:e}=await sb.from('alliance_giftcode_members').delete().eq('id',m.id);
+      if(e){toast('No se pudo quitar');return;}
+      toast('Quitado de la lista');
+      loadMembers(); loadAllianceInfo();
+    };
+    listEl.appendChild(row);
   });
-  return await res.json();
+
+  cEl.textContent=`${memberCount} / ${MEMBER_LIMIT}`;
+  cEl.className = memberCount>=MEMBER_LIMIT ? 'counter full' : 'counter';
 }
 
+async function addMembers(pairs){
+  const errEl=document.getElementById('manageErr'); errEl.textContent='';
+  const okEl=document.getElementById('manageOk'); okEl.textContent='';
+  if(pairs.length===0){errEl.textContent='No hay IDs válidos que añadir.';return;}
+  if(memberCount+pairs.length>MEMBER_LIMIT){
+    errEl.textContent=`No caben: la lista admite ${MEMBER_LIMIT} y ya hay ${memberCount}.`;
+    return;
+  }
+  const rows=pairs.map(p=>({alliance_id:allianceId, governor_id:p.gid, name:p.name||''}));
+  const{error}=await sb.from('alliance_giftcode_members').upsert(rows,{onConflict:'alliance_id,governor_id'});
+  if(error){errEl.textContent='Error: '+error.message;return;}
+  okEl.textContent=`${pairs.length} añadido(s).`;
+  loadMembers(); loadAllianceInfo();
+}
+
+document.getElementById('addMemberBtn').addEventListener('click',()=>{
+  const gid=document.getElementById('newGid').value.trim();
+  const name=document.getElementById('newName').value.trim();
+  if(!/^\d{4,15}$/.test(gid)){document.getElementById('manageErr').textContent='Governor ID no válido.';return;}
+  addMembers([{gid,name}]);
+  document.getElementById('newGid').value=''; document.getElementById('newName').value='';
+});
+
+document.getElementById('bulkAddBtn').addEventListener('click',()=>{
+  const gids=parseGids(document.getElementById('bulkGids').value);
+  addMembers(gids.map(g=>({gid:g,name:''})));
+  document.getElementById('bulkGids').value='';
+});
+
+// ---------- admin view ----------
+async function loadAdminView(){
+  const el=document.getElementById('adminList');
+  const{data:als}=await sb.from('alliances').select('id,tag,name,state_id').order('state_id');
+  if(!als||als.length===0){el.textContent='No hay alianzas.';return;}
+  const{data:allMembers}=await sb.from('alliance_giftcode_members').select('alliance_id');
+  const counts={};
+  (allMembers||[]).forEach(m=>{counts[m.alliance_id]=(counts[m.alliance_id]||0)+1;});
+
+  el.innerHTML='';
+  als.forEach(a=>{
+    const n=counts[a.id]||0;
+    const row=document.createElement('div');
+    row.className='mem-row';
+    row.innerHTML=`<div class="mem-info"><div class="mem-name">[${a.tag}] ${a.name||''}</div>
+      <div class="mem-gid">Estado ${a.state_id||'?'}</div></div>
+      <div style="font-weight:700;color:${n>0?'var(--ok)':'var(--text-dim)'};">${n}</div>`;
+    el.appendChild(row);
+  });
+}
+
+// ---------- manual redeem ----------
 document.getElementById('startBtn').addEventListener('click', async()=>{
   code = document.getElementById('codeInput').value.trim();
   const errEl=document.getElementById('setupErr'); errEl.textContent='';
   if(!code){errEl.textContent='Escribe un código.';return;}
-  PhxAccess.check(async function(granted, reason){
-    if(!granted){
-      errEl.innerHTML='🔒 Bulk redeeming for your whole roster is a premium feature. '+PhxAccess.message(reason);
-      return;
-    }
-  const btn=document.getElementById('startBtn'); btn.disabled=true; btn.textContent='Cargando…';
 
-  const pasted=parseIdList(document.getElementById('idListInput').value, document.getElementById('listRegionInput').value.trim());
-  if(pasted.length>0){
-    roster=pasted;
-  } else {
-    const{data:players,error}=await sb.from('players').select('governor_id,name,state_id').eq('alliance_id',allianceId).not('governor_id','is',null);
-    if(error){btn.disabled=false;btn.textContent='▶️ Empezar canjeo';errEl.textContent='Error cargando el roster: '+error.message;return;}
-    roster=(players||[]).filter(p=>p.governor_id).map(p=>({governor_id:p.governor_id,name:p.name,region:p.state_id?String(p.state_id):''}));
-  }
-  btn.disabled=false; btn.textContent='▶️ Empezar canjeo';
-  if(roster.length===0){errEl.textContent='No hay IDs: pega una lista o revisa que tu roster tenga Governor IDs guardados.';return;}
+  const btn=document.getElementById('startBtn'); btn.disabled=true; btn.textContent='Cargando…';
+  const{data:members,error}=await sb.from('alliance_giftcode_members')
+    .select('governor_id,name').eq('alliance_id',allianceId);
+  btn.disabled=false; btn.textContent='▶️ Canjear ahora para toda la lista';
+
+  if(error){errEl.textContent='Error cargando la lista: '+error.message;return;}
+  roster=(members||[]).map(m=>({governor_id:m.governor_id,name:m.name,region:allianceRegion}));
+  if(roster.length===0){errEl.textContent='La lista está vacía. Añade jugadores primero.';return;}
 
   results=[]; currentIndex=0;
   document.getElementById('setupPanel').classList.add('hidden');
+  document.getElementById('whoPanel').classList.add('hidden');
+  document.getElementById('autoPanel').classList.add('hidden');
+  document.getElementById('managePanel').classList.add('hidden');
+  document.getElementById('adminPanel').classList.add('hidden');
   document.getElementById('runPanel').classList.remove('hidden');
   processNext();
-  },{excludeFromPromo:true});
 });
 
 async function processNext(){
@@ -242,9 +408,20 @@ function showSummary(){
 
 document.getElementById('restartBtn').addEventListener('click',()=>{
   document.getElementById('summaryPanel').classList.add('hidden');
-  document.getElementById('setupPanel').classList.remove('hidden');
+  document.getElementById('whoPanel').classList.remove('hidden');
+  document.getElementById('autoPanel').classList.remove('hidden');
+  applyRoleVisibility();
   document.getElementById('codeInput').value='';
 });
+
+function applyRoleVisibility(){
+  const isStaff=['admin','r4','r5'].includes(myRole);
+  const isAdmin=myRole==='admin';
+  document.getElementById('checkPanel').classList.toggle('hidden', isStaff);
+  document.getElementById('managePanel').classList.toggle('hidden', !isStaff);
+  document.getElementById('setupPanel').classList.toggle('hidden', !isStaff);
+  document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
+}
 
 (function(){
   var s=new URLSearchParams(location.search).get('s');
@@ -257,13 +434,47 @@ async function init(){
   currentUser=session.user; accessToken=session.access_token;
 
   const{data:rows}=await sb.from('players').select('role,alliance_id').eq('owner',currentUser.id);
-  const staffRow=(rows||[]).find(p=>['admin','r4','r5'].includes(p.role));
-  if(!staffRow){document.getElementById('gate').textContent='Esta herramienta es solo para admin/R4/R5.';return;}
-  allianceId=staffRow.alliance_id;
+  const profiles=rows||[];
+  if(profiles.length===0){document.getElementById('gate').textContent='Tu perfil no está en ninguna alianza.';return;}
+
+  // pick the highest-privilege profile
+  const order={admin:3,r5:2,r4:1};
+  const best=profiles.slice().sort((a,b)=>(order[b.role]||0)-(order[a.role]||0))[0];
+  myRole=best.role||'';
+  allianceId=best.alliance_id;
   if(!allianceId){document.getElementById('gate').textContent='Tu perfil no tiene alianza asignada.';return;}
 
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
+
+  applyRoleVisibility();
+  loadAllianceInfo();
+  if(['admin','r4','r5'].includes(myRole)) loadMembers();
+  if(myRole==='admin') loadAdminView();
+}
+
+async function loadAllianceInfo(){
+  const infoEl=document.getElementById('whoInfo');
+  const countsEl=document.getElementById('autoCounts');
+  try{
+    const{data:al}=await sb.from('alliances').select('tag,name,state_id').eq('id',allianceId).maybeSingle();
+    if(al){
+      allianceRegion = al.state_id ? String(al.state_id) : '';
+      infoEl.innerHTML=`<div style="font-weight:700;font-size:1.05rem;">[${al.tag}] ${al.name||''}</div>
+        <div style="font-size:.82rem;color:var(--text-dim);margin-top:2px;">Estado ${al.state_id||'?'}</div>`;
+    } else {
+      infoEl.textContent='No se pudo cargar la alianza.';
+    }
+
+    const{data:players}=await sb.from('players').select('governor_id').eq('alliance_id',allianceId);
+    const total=(players||[]).length;
+    const withId=(players||[]).filter(p=>p.governor_id).length;
+    countsEl.innerHTML = withId===total
+      ? `${withId} miembros con Governor ID guardado — todos entran en el canjeo automático.`
+      : `${withId} de ${total} miembros tienen Governor ID guardado. Los otros ${total-withId} no reciben códigos hasta que se les añada el ID en el panel de admin.`;
+  }catch(e){
+    infoEl.textContent='Error cargando los datos de la alianza.';
+  }
 }
 init();
 </script>
