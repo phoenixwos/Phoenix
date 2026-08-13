@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas · Phoenix</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a1420;--bg-deep:#060d16;--panel:#101f34;--panel-2:#16283f;--line:#223a54;
+    --ice:#7fd9ee;--ice-dim:#4f95a8;--ok:#3da76e;--warn:#f0b93d;--text:#eaf3f9;--text-dim:#86a0b7;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:radial-gradient(ellipse at top,#10233a 0%,var(--bg) 55%,var(--bg-deep) 100%);
+    color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px 14px 60px;}
+  h1{font-family:'Rajdhani',sans-serif;font-size:1.4rem;margin:0 0 4px;}
+  .wrap{max-width:560px;margin:0 auto;}
+  header{text-align:center;margin-bottom:16px;}
+  .eyebrow{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ice-dim);margin-bottom:4px;}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:14px;padding:16px;margin-bottom:14px;}
+  .panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ice-dim);
+    margin-bottom:12px;font-weight:600;}
+  .gate{max-width:420px;margin:80px auto;text-align:center;font-size:.9rem;color:var(--text-dim);}
+  #app{display:none;}
+
+  .stat-grid{display:flex;gap:10px;}
+  .stat{flex:1;background:var(--bg-deep);border-radius:10px;padding:14px 8px;text-align:center;}
+  .stat-num{font-family:'Rajdhani',sans-serif;font-size:1.7rem;font-weight:700;color:var(--ice);}
+  .stat-label{font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;}
+
+  .bar-row{margin-bottom:10px;}
+  .bar-head{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px;}
+  .bar-name{font-weight:500;}
+  .bar-val{color:var(--text-dim);font-size:.78rem;}
+  .bar-track{height:7px;background:var(--bg-deep);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--ice-dim),var(--ice));border-radius:4px;}
+
+  .range{display:flex;gap:6px;margin-bottom:14px;}
+  .range button{flex:1;background:var(--bg-deep);border:1px solid var(--line);color:var(--text-dim);
+    padding:8px;border-radius:8px;font-size:.8rem;cursor:pointer;font-family:inherit;}
+  .range button.on{background:var(--ice);color:#06222b;border-color:var(--ice);font-weight:700;}
+
+  .empty{text-align:center;color:var(--text-dim);font-size:.85rem;padding:16px 0;}
+  a.back{display:inline-block;color:var(--ice-dim);font-size:.82rem;text-decoration:none;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="gate" id="gate">Comprobando acceso…</div>
+
+<div class="wrap" id="app">
+  <a href="phoenix-tools.html" class="back" id="backLink">‹ Tools</a>
+  <header>
+    <div class="eyebrow">Phoenix · Admin</div>
+    <h1>📊 Estadísticas de uso</h1>
+  </header>
+
+  <div class="range">
+    <button data-days="1">Hoy</button>
+    <button data-days="7" class="on">7 días</button>
+    <button data-days="30">30 días</button>
+    <button data-days="90">90 días</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Resumen</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-num" id="statVisitors">–</div><div class="stat-label">Personas</div></div>
+      <div class="stat"><div class="stat-num" id="statViews">–</div><div class="stat-label">Visitas</div></div>
+      <div class="stat"><div class="stat-num" id="statActions">–</div><div class="stat-label">Acciones</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Herramientas más vistas</div>
+    <div id="toolList"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Qué hace la gente</div>
+    <div id="actionList"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Por estado</div>
+    <div id="stateList"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Actividad por día</div>
+    <div id="dayList"><div class="empty">Cargando…</div></div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL='https://vghutrfcrqgelvgdeesl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaHV0cmZjcnFnZWx2Z2RlZXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDQ4ODksImV4cCI6MjA5Nzc4MDg4OX0.uarvB0sTDPqS1AysfvDRJahRYRLiJaBO2kVIiyGaDAE';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentDays = 7;
+
+function el(id){return document.getElementById(id);}
+
+function renderBars(containerId, entries, emptyMsg){
+  const box=el(containerId);
+  box.innerHTML='';
+  if(entries.length===0){box.innerHTML=`<div class="empty">${emptyMsg}</div>`;return;}
+  const max=Math.max(...entries.map(e=>e[1]));
+  entries.forEach(([name,count])=>{
+    const row=document.createElement('div');
+    row.className='bar-row';
+    row.innerHTML=`<div class="bar-head"><span class="bar-name">${name}</span><span class="bar-val">${count}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div></div>`;
+    box.appendChild(row);
+  });
+}
+
+function prettyTool(t){
+  return t.replace(/^phoenix-/,'').replace(/\.html$/,'').replace(/-/g,' ') || t;
+}
+
+async function load(days){
+  currentDays=days;
+  document.querySelectorAll('.range button').forEach(b=>{
+    b.classList.toggle('on', Number(b.dataset.days)===days);
+  });
+
+  const since=new Date(Date.now()-days*24*60*60*1000).toISOString();
+  const{data,error}=await sb.from('phx_events')
+    .select('event,tool,detail,state,visitor,created_at')
+    .gte('created_at',since)
+    .order('created_at',{ascending:false})
+    .limit(10000);
+
+  if(error){
+    el('toolList').innerHTML=`<div class="empty">Error: ${error.message}</div>`;
+    return;
+  }
+
+  const rows=data||[];
+  const views=rows.filter(r=>r.event==='view');
+  const actions=rows.filter(r=>r.event==='action');
+
+  el('statVisitors').textContent=new Set(rows.map(r=>r.visitor)).size;
+  el('statViews').textContent=views.length;
+  el('statActions').textContent=actions.length;
+
+  const tally=(arr,key)=>{
+    const m={};
+    arr.forEach(r=>{const k=r[key]||'—'; m[k]=(m[k]||0)+1;});
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  };
+
+  renderBars('toolList', tally(views,'tool').slice(0,15).map(([t,c])=>[prettyTool(t),c]), 'Sin visitas todavía.');
+  renderBars('actionList', tally(actions,'detail').slice(0,15), 'Sin acciones registradas.');
+  renderBars('stateList', tally(views.filter(r=>r.state),'state').slice(0,10), 'Sin datos de estado.');
+
+  const byDay={};
+  views.forEach(r=>{
+    const d=new Date(r.created_at).toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+    byDay[d]=(byDay[d]||0)+1;
+  });
+  const dayEntries=Object.entries(byDay).reverse();
+  renderBars('dayList', dayEntries, 'Sin datos.');
+}
+
+document.querySelectorAll('.range button').forEach(b=>{
+  b.addEventListener('click',()=>load(Number(b.dataset.days)));
+});
+
+(function(){
+  const s=new URLSearchParams(location.search).get('s');
+  if(s&&/^\d{3,5}$/.test(s)) el('backLink').href='phoenix-tools.html?s='+s;
+})();
+
+(async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){el('gate').textContent='Inicia sesión en Phoenix primero.';return;}
+
+  const{data:rows}=await sb.from('players').select('role').eq('owner',session.user.id);
+  const isAdmin=(rows||[]).some(p=>p.role==='admin');
+  if(!isAdmin){el('gate').textContent='Esta página es solo para administradores.';return;}
+
+  el('gate').style.display='none';
+  el('app').style.display='block';
+  load(7);
+})();
+</script>
+</body>
+</html>

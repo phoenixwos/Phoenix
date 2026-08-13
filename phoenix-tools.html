@@ -195,6 +195,16 @@
     <div class="arr">›</div>
   </a>
 
+  <a class="card" id="cardStats">
+    <div class="emoji">📊</div>
+    <div class="body">
+      <h3>Usage Stats</h3>
+      <p>How many people visit Phoenix, which tools they use, and what they do there.</p>
+      <span class="tag">Admin only</span>
+    </div>
+    <div class="arr">›</div>
+  </a>
+
   <a class="card gold" id="cardSoloRedeem">
     <div class="emoji">🎁</div>
     <div class="body">
@@ -282,7 +292,7 @@
   }
   var S=getState();
   // Card destinations (tools carry the state too)
-  var dest={cardGuide:'phoenix-leader-guide.html', cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHeroGear:'phoenix-hero-gear-calc.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardAlerts:'phoenix-event-alerts.html', cardSoloRedeem:'phoenix-solo-redeem.html'};
+  var dest={cardGuide:'phoenix-leader-guide.html', cardBeginner:'phoenix-beginner-guide.html', cardHeroes:'phoenix-heroes.html', cardHeroGear:'phoenix-hero-gear-calc.html', cardHive:'hive-designer.html', cardWorld:'phoenix-world-map.html', cardTrackers:'phoenix-trackers.html', cardVP:'phoenix-vp-tracker.html', cardMap:'phoenix-castle-map.html', cardNumbers:'phoenix-castle-numbers.html', cardRedeem:'phoenix-redeem.html', cardRally:'phoenix-rally-sync.html', cardCopyPaste:'phoenix-copypaste.html', cardRatio:'phoenix-ratio-calc.html', cardCapacity:'phoenix-rally-capacity.html', cardMilestones:'phoenix-milestones.html', cardAlerts:'phoenix-event-alerts.html', cardSoloRedeem:'phoenix-solo-redeem.html', cardStats:'phoenix-stats.html'};
   Object.keys(dest).forEach(function(id){
     var el=document.getElementById(id); if(el) el.href=withState(dest[id]);
   });

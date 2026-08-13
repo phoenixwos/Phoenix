@@ -314,6 +314,7 @@ el('regBtn').onclick=async()=>{
 
   localStorage.setItem(LS_GID, gid);
   localStorage.setItem(LS_REGION, region);
+  if(window.PhxTrack) PhxTrack.action(r.alreadyRegistered ? 'signed back in' : 'registered for auto-redeem');
   hide('registerPanel');
   loadDashboard();
 };
@@ -525,5 +526,6 @@ el('adminLoadBtn').onclick=async()=>{
   }
 })();
 </script>
+<script src="phx-track.js"></script>
 </body>
 </html>
