@@ -302,20 +302,37 @@ async function loadAdminView(){
   const el=document.getElementById('adminList');
   const{data:als}=await sb.from('alliances').select('id,tag,name,state_id').order('state_id');
   if(!als||als.length===0){el.textContent='No hay alianzas.';return;}
+
   const{data:allMembers}=await sb.from('alliance_giftcode_members').select('alliance_id');
   const counts={};
   (allMembers||[]).forEach(m=>{counts[m.alliance_id]=(counts[m.alliance_id]||0)+1;});
 
+  // Only alliances that actually use the tool are worth listing; dozens of
+  // zero rows just bury the ones that matter.
+  const active=als.filter(a=>counts[a.id]>0);
+  const idle=als.length-active.length;
+
   el.innerHTML='';
-  als.forEach(a=>{
+  if(active.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);text-align:center;padding:14px 0;">Todavía ninguna alianza ha configurado su lista.</div>';
+  }
+  active.sort((a,b)=>(counts[b.id]||0)-(counts[a.id]||0));
+  active.forEach(a=>{
     const n=counts[a.id]||0;
     const row=document.createElement('div');
     row.className='mem-row';
     row.innerHTML=`<div class="mem-info"><div class="mem-name">[${a.tag}] ${a.name||''}</div>
       <div class="mem-gid">Estado ${a.state_id||'?'}</div></div>
-      <div style="font-weight:700;color:${n>0?'var(--ok)':'var(--text-dim)'};">${n}</div>`;
+      <div style="font-weight:700;color:var(--ok);">${n}</div>`;
     el.appendChild(row);
   });
+
+  if(idle>0){
+    const note=document.createElement('div');
+    note.style.cssText='font-size:.75rem;color:var(--text-dim);margin-top:12px;text-align:center;';
+    note.textContent=`Otras ${idle} alianzas todavía no han configurado su lista.`;
+    el.appendChild(note);
+  }
 }
 
 // ---------- manual redeem ----------
