@@ -437,15 +437,30 @@ async function init(){
   currentUser=session.user; accessToken=session.access_token;
 
   const{data:rows}=await sb.from('players').select('role,alliance_id').eq('owner',currentUser.id);
-  const profiles=rows||[];
+  const profiles=(rows||[]).filter(p=>p.alliance_id);
   if(profiles.length===0){document.getElementById('gate').textContent='Tu perfil no está en ninguna alianza.';return;}
 
-  // pick the highest-privilege profile
+  // Someone can hold profiles in several states (e.g. PXR in 3139 and 4501),
+  // so the state in the URL decides which one this page is about. Without this
+  // the page silently picks the wrong alliance and edits the wrong roster.
+  const wantedState = new URLSearchParams(location.search).get('s')
+    || localStorage.getItem('phx_state') || '';
+
+  let candidates = profiles;
+  if(wantedState){
+    const ids=[...new Set(profiles.map(p=>p.alliance_id))];
+    const{data:als}=await sb.from('alliances').select('id,state_id').in('id',ids);
+    const stateOf={};
+    (als||[]).forEach(a=>{stateOf[a.id]=String(a.state_id);});
+    const matching=profiles.filter(p=>stateOf[p.alliance_id]===String(wantedState));
+    if(matching.length) candidates=matching;
+  }
+
+  // among the candidates, use the highest-privilege one
   const order={admin:3,r5:2,r4:1};
-  const best=profiles.slice().sort((a,b)=>(order[b.role]||0)-(order[a.role]||0))[0];
+  const best=candidates.slice().sort((a,b)=>(order[b.role]||0)-(order[a.role]||0))[0];
   myRole=best.role||'';
   allianceId=best.alliance_id;
-  if(!allianceId){document.getElementById('gate').textContent='Tu perfil no tiene alianza asignada.';return;}
 
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
