@@ -97,7 +97,26 @@
 
   <div class="panel">
     <div class="panel-title" id="summaryTitle">Attendance summary</div>
+    <div class="tabs" id="rangeTabs" style="margin-bottom:10px;">
+      <div class="tab rangeTab on" data-range="all">All time</div>
+      <div class="tab rangeTab" data-range="30">Last 30 days</div>
+      <div class="tab rangeTab" data-range="14">Last 2 weeks</div>
+    </div>
+    <div class="tabs" id="btTrapTabs" style="margin-bottom:10px;display:none;">
+      <div class="tab btTrapSumTab on" data-trap="T1">🪤 Trampa 1</div>
+      <div class="tab btTrapSumTab" data-trap="T2">🪤 Trampa 2</div>
+    </div>
     <div id="summaryBox" class="instructions">Loading…</div>
+  </div>
+
+  <div class="panel" id="damagePanel" style="display:none;">
+    <div class="panel-title">Daño (importar manualmente)</div>
+    <div class="instructions" style="margin-bottom:8px;">Phoenix no guarda el daño automáticamente, solo la asistencia. Descarga la plantilla, rellena la columna Daño con los datos de tus capturas y vuelve a subirla — no duplica jugadores ni borra sesiones antiguas.</div>
+    <div class="row" style="margin-bottom:4px;">
+      <button class="btn" id="dmgTemplateBtn" style="flex:1;">⬇ Plantilla de daño</button>
+      <button class="btn" id="dmgImportBtn" style="flex:1;">⬆ Importar daño</button>
+      <input type="file" id="dmgImportFile" accept=".xlsx" style="display:none;">
+    </div>
   </div>
 
   <div class="panel">
@@ -106,7 +125,13 @@
       <button class="btn fire" id="newSessionBtn" style="flex:1;">＋ New session</button>
     </div>
     <div class="row" style="margin-bottom:4px;">
+      <select id="exportRangeSelect" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg-deep);color:var(--text);">
+        <option value="all">Histórico completo</option>
+        <option value="30">Último mes</option>
+      </select>
       <button class="btn" id="exportBtnBT" style="flex:1;">⬇ Excel</button>
+    </div>
+    <div class="row" style="margin-bottom:4px;">
       <button class="btn" id="templateBtn" style="flex:1;">⬇ Template</button>
       <button class="btn" id="importBtn" style="flex:1;">⬆ Import</button>
       <input type="file" id="importFile" accept=".xlsx" style="display:none;">
@@ -227,6 +252,35 @@ function renderAdminPicker(){
 
 /* ── STATE ─────────────────────────────────────────────────────── */
 var currentTab='bt'; // bt | foundry | canyon
+var summaryRangeDays=null; // null = all time, otherwise 30 or 14
+var summaryTrapFilter='T1'; // which trap the BT summary/rankings show
+function rangeCutoffDate(){
+  if(!summaryRangeDays) return null;
+  var d=new Date();
+  d.setDate(d.getDate()-summaryRangeDays);
+  return d.toISOString().slice(0,10); // 'YYYY-MM-DD'
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var tabs=document.querySelectorAll('.rangeTab');
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      tabs.forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on');
+      var v=t.dataset.range;
+      summaryRangeDays = (v==='all') ? null : parseInt(v,10);
+      renderSummary();
+    });
+  });
+  var trapTabs=document.querySelectorAll('.btTrapSumTab');
+  trapTabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      trapTabs.forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on');
+      summaryTrapFilter=t.dataset.trap;
+      renderBTSummary();
+    });
+  });
+});
 var entryTrap='T1';   // which trap the open session-entry form is for (bt only)
 var entryLegion='L1'; // which legion the open session-entry form is for (foundry only)
 var roster=[];        // [{id,name}]
@@ -242,6 +296,8 @@ async function boot(){
       document.querySelectorAll('.mainTab').forEach(function(x){x.classList.remove('on');});
       t.classList.add('on'); currentTab=t.dataset.t;
       document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
+      document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
+      document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
       document.getElementById('exportBtnBT').textContent='⬇ Excel';
       await loadRoster();
       showSummaryScreen();
@@ -262,6 +318,16 @@ async function boot(){
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
   document.getElementById('exportBtnBT').addEventListener('click',function(){
     if(currentTab==='bt') exportBTExcel(); else exportEventExcel();
+  });
+  document.getElementById('dmgTemplateBtn').addEventListener('click',downloadDamageTemplate);
+  document.getElementById('dmgImportBtn').addEventListener('click',function(){
+    document.getElementById('dmgImportFile').click();
+  });
+  document.getElementById('dmgImportFile').addEventListener('change',function(ev){
+    var file=ev.target.files[0];
+    ev.target.value='';
+    if(!file) return;
+    importDamageFile(file);
   });
   document.getElementById('templateBtn').addEventListener('click',downloadTemplate);
   document.getElementById('importBtn').addEventListener('click',function(){
@@ -293,6 +359,8 @@ async function boot(){
   document.getElementById('addPlayerBtn').addEventListener('click',addAdhocPlayer);
   document.getElementById('newPlayerName').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addAdhocPlayer();}});
   document.getElementById('addPlayerRow').style.display='flex';
+  document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
+  document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
   if(!canEdit){
     document.getElementById('newSessionBtn').style.display='none';
     document.getElementById('addPlayerRow').style.display='none';
@@ -376,9 +444,12 @@ async function renderEventSummary(){
   box.innerHTML='Loading…';
   document.getElementById('summaryTitle').textContent=tabLabel()+' — battle requests & attendance';
 
-  var r=await sb.from('event_sessions').select('id,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var evQuery=sb.from('event_sessions').select('id,label,session_date').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var cutoff=rangeCutoffDate();
+  if(cutoff) evQuery=evQuery.gte('session_date',cutoff);
+  var r=await evQuery;
   var sessRows=r.data||[];
-  if(!sessRows.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
+  if(!sessRows.length){ box.innerHTML='No sessions logged in this range. Try a wider range, or tap "＋ New session" to start.'; return; }
   var sessIds=sessRows.map(function(s){return s.id;});
   var labelBySession={}; sessRows.forEach(function(s){ labelBySession[s.id]=s.label||''; });
 
@@ -417,7 +488,8 @@ async function renderEventSummary(){
     return a.rate-b.rate || b.requested-a.requested;
   });
 
-  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' session'+(sessRows.length===1?'':'s')+' logged · sorted by no-show rate (worst first) · players who never request aren\'t penalized.</div>';
+  var rangeLabel2 = summaryRangeDays ? ('last '+summaryRangeDays+' days') : 'all time';
+  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' session'+(sessRows.length===1?'':'s')+' logged ('+rangeLabel2+') · sorted by no-show rate (worst first) · players who never request aren\'t penalized.</div>';
   var wrap=document.createElement('div');
   list.forEach(function(p){
     var row=document.createElement('div');
@@ -471,22 +543,29 @@ async function deleteEventPlayer(nameKey, name){
   renderEventSummary();
 }
 
-/* Bear Trap summary: Total / T1 / T2 / Prefers — mirrors the spreadsheet ranking, sorted by Total desc.
-   Every roster member appears, even with 0 attendance. R4/R5/admin can rename or remove a name inline. */
+/* Bear Trap summary: shows ONE trap at a time (T1 or T2, chosen via the sub-tabs) so
+   the two never get mixed together. For the selected trap it renders two separate
+   rankings — attendance count, and total recorded damage (damage is optional / manual,
+   see the Damage template panel). Every roster member appears in the attendance
+   ranking even with 0 attendance; the damage ranking only lists players who have at
+   least one recorded damage value. R4/R5/admin can rename or remove a name inline. */
 async function renderBTSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
-  document.getElementById('summaryTitle').textContent='Bear Trap — ranking (all traps combined)';
+  var trapName = summaryTrapFilter==='T2' ? 'Trampa 2' : 'Trampa 1';
+  document.getElementById('summaryTitle').textContent='Bear Trap — '+trapName;
+  document.querySelectorAll('.btTrapSumTab').forEach(function(t){ t.classList.toggle('on', t.dataset.trap===summaryTrapFilter); });
 
-  var {data:sessRows}=await sb.from('bt_sessions').select('id,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID);
+  var btQuery=sb.from('bt_sessions').select('id,trap,session_date').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('trap',summaryTrapFilter);
+  var cutoff=rangeCutoffDate();
+  if(cutoff) btQuery=btQuery.gte('session_date',cutoff);
+  var {data:sessRows}=await btQuery;
   sessRows=sessRows||[];
-  var trapBySession={};
-  sessRows.forEach(function(s){ trapBySession[s.id]=s.trap||'T1'; });
   var sessIds=sessRows.map(function(s){return s.id;});
 
   var entries=[];
   if(sessIds.length){
-    var er=await sb.from('bt_entries').select('session_id,player_name,attended').in('session_id',sessIds);
+    var er=await sb.from('bt_entries').select('session_id,player_name,attended,damage').in('session_id',sessIds);
     entries=er.data||[];
   }
 
@@ -495,39 +574,65 @@ async function renderBTSummary(){
     if(!e.attended) return;
     var key=(e.player_name||'').toLowerCase();
     if(!key) return;
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0};
-    byPlayer[key].total++;
-    var trap=trapBySession[e.session_id];
-    if(trap==='T1') byPlayer[key].t1++; else if(trap==='T2') byPlayer[key].t2++;
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,count:0,damage:0,hasDamage:false};
+    byPlayer[key].count++;
+    if(e.damage!=null && e.damage!==''){ byPlayer[key].damage+=Number(e.damage); byPlayer[key].hasDamage=true; }
   });
-  // every current roster member shows up, even with 0 attendance
   roster.forEach(function(p){
     var key=p.name.toLowerCase();
-    if(!byPlayer[key]) byPlayer[key]={name:p.name,total:0,t1:0,t2:0};
+    if(!byPlayer[key]) byPlayer[key]={name:p.name,count:0,damage:0,hasDamage:false};
   });
 
   var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
-  if(!list.length){ box.innerHTML='No sessions logged yet. Tap "＋ New session" to start.'; return; }
-  list.sort(function(a,b){ return b.total-a.total || a.name.localeCompare(b.name); });
+  var rangeLabel = summaryRangeDays ? ('últimos '+summaryRangeDays+' días') : 'histórico completo';
 
-  box.innerHTML='<div class="instructions" style="margin-bottom:8px;">'+sessRows.length+' Bear Trap'+(sessRows.length===1?'':'s')+' logged · '+list.length+' player'+(list.length===1?'':'s')+' · sorted by total attendance.</div>';
-  var wrap=document.createElement('div');
-  list.forEach(function(p){
-    var pref = p.total===0 ? '—' : (p.t1===p.t2 ? 'Even' : (p.t1>p.t2 ? 'Trap 1' : 'Trap 2'));
-    var row=document.createElement('div');
-    row.className='sumRow';
+  box.innerHTML='';
+  if(!sessRows.length && !list.length){
+    box.innerHTML='No hay sesiones de '+trapName+' registradas todavía.';
+    return;
+  }
+  var intro=document.createElement('div');
+  intro.className='instructions';
+  intro.style.marginBottom='10px';
+  intro.textContent=sessRows.length+' sesión'+(sessRows.length===1?'':'es')+' de '+trapName+' ('+rangeLabel+') · '+list.length+' jugador'+(list.length===1?'':'es')+'.';
+  box.appendChild(intro);
+
+  /* ── Attendance ranking ── */
+  var attList=list.slice().sort(function(a,b){ return b.count-a.count || a.name.localeCompare(b.name); });
+  var h1=document.createElement('div'); h1.className='panel-title'; h1.style.cssText='font-size:14px;margin:6px 0;padding:0;background:none;'; h1.textContent='🎯 Ranking de asistencia — '+trapName;
+  box.appendChild(h1);
+  attList.forEach(function(p){
+    var row=document.createElement('div'); row.className='sumRow';
     var editHtml=canEdit?'<div class="sumEdit"><button class="btEditName" title="Rename">✎</button><button class="btDelName" title="Remove">🗑</button></div>':'';
     row.innerHTML=
       '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
-      '<div class="sumDmg" style="width:auto;flex:1.2;text-align:left;">T1 '+p.t1+' · T2 '+p.t2+' · prefers '+pref+'</div>'+
-      '<div class="sumPct '+(p.total>0?'good':'bad')+'">'+p.total+'</div>'+editHtml;
+      '<div class="sumDmg" style="width:auto;flex:1;text-align:left;"></div>'+
+      '<div class="sumPct '+(p.count>0?'good':'bad')+'">'+p.count+'</div>'+editHtml;
     if(canEdit){
       row.querySelector('.btEditName').addEventListener('click',function(){ renameBTPlayer(p.name); });
       row.querySelector('.btDelName').addEventListener('click',function(){ deleteBTPlayer(p.name); });
     }
-    wrap.appendChild(row);
+    box.appendChild(row);
   });
-  box.appendChild(wrap);
+
+  /* ── Damage ranking ── */
+  var dmgList=list.filter(function(p){return p.hasDamage;}).sort(function(a,b){ return b.damage-a.damage; });
+  var h2=document.createElement('div'); h2.className='panel-title'; h2.style.cssText='font-size:14px;margin:18px 0 6px;padding:0;background:none;'; h2.textContent='💥 Ranking de daño — '+trapName;
+  box.appendChild(h2);
+  if(!dmgList.length){
+    var none=document.createElement('div'); none.className='instructions';
+    none.textContent='Todavía no hay datos de daño para '+trapName+'. Usa "⬇ Plantilla de daño" para rellenarlo desde tus capturas.';
+    box.appendChild(none);
+  }else{
+    dmgList.forEach(function(p){
+      var row=document.createElement('div'); row.className='sumRow';
+      row.innerHTML=
+        '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
+        '<div class="sumDmg" style="width:auto;flex:1;text-align:left;"></div>'+
+        '<div class="sumPct good">'+Math.round(p.damage).toLocaleString('es-ES')+'</div>';
+      box.appendChild(row);
+    });
+  }
 }
 
 async function deleteBTPlayer(name){
@@ -747,33 +852,42 @@ async function handleImportedAOA(aoa){
   }
 }
 
-/* Exports the full Bear Trap history as an .xlsx: one column per session (date + trap),
-   one row per roster member, "X" where they attended, plus Total/T1/T2/Prefers at the end. */
+/* Exports the Bear Trap history as an .xlsx: one column per session (date + trap),
+   one row per roster member, "X" where they attended, plus Total/T1/T2/Prefers/Damage.
+   A second sheet lists every (date, trap, player, damage) row for pivoting.
+   Range comes from the "Histórico completo / Último mes" select next to the button. */
 async function exportBTExcel(){
   if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
   toast('Building Excel…');
-  var {data:sessRows}=await sb.from('bt_sessions').select('id,session_date,trap,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('session_date',{ascending:true});
+  var rangeSel=document.getElementById('exportRangeSelect').value; // 'all' | '30'
+  var q=sb.from('bt_sessions').select('id,session_date,trap,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('session_date',{ascending:true});
+  if(rangeSel==='30'){
+    var d=new Date(); d.setDate(d.getDate()-30);
+    q=q.gte('session_date', d.toISOString().slice(0,10));
+  }
+  var {data:sessRows}=await q;
   sessRows=sessRows||[];
   sessRows.sort(function(a,b){ return a.session_date.localeCompare(b.session_date) || (a.trap||'T1').localeCompare(b.trap||'T1'); });
-  if(!sessRows.length){ toast('No sessions to export yet'); return; }
+  if(!sessRows.length){ toast('No sessions to export in this range'); return; }
   var sessIds=sessRows.map(function(s){return s.id;});
 
-  var {data:entries}=await sb.from('bt_entries').select('session_id,player_name,attended').in('session_id',sessIds);
+  var {data:entries}=await sb.from('bt_entries').select('session_id,player_name,attended,damage').in('session_id',sessIds);
   entries=entries||[];
 
-  var trapBySession={}; sessRows.forEach(function(s){ trapBySession[s.id]=s.trap||'T1'; });
+  var sessById={}; sessRows.forEach(function(s){ sessById[s.id]=s; });
   var attendKey={};
   entries.forEach(function(e){ if(e.attended) attendKey[(e.player_name||'').toLowerCase()+'|'+e.session_id]=true; });
 
   var byPlayer={};
-  roster.forEach(function(p){ byPlayer[p.name.toLowerCase()]={name:p.name,total:0,t1:0,t2:0}; });
+  roster.forEach(function(p){ byPlayer[p.name.toLowerCase()]={name:p.name,total:0,t1:0,t2:0,damage:0,hasDamage:false}; });
   entries.forEach(function(e){
     if(!e.attended) return;
     var key=(e.player_name||'').toLowerCase();
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0}; // historical name, no longer on roster
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,total:0,t1:0,t2:0,damage:0,hasDamage:false}; // historical name, no longer on roster
     byPlayer[key].total++;
-    var trap=trapBySession[e.session_id];
+    var trap=sessById[e.session_id]?(sessById[e.session_id].trap||'T1'):'T1';
     if(trap==='T1') byPlayer[key].t1++; else if(trap==='T2') byPlayer[key].t2++;
+    if(e.damage!=null && e.damage!==''){ byPlayer[key].damage+=Number(e.damage); byPlayer[key].hasDamage=true; }
   });
 
   var players=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
@@ -785,7 +899,7 @@ async function exportBTExcel(){
     var dm=d.slice(8,10)+'/'+d.slice(5,7);
     header.push(dm+' '+(s.trap||'T1')+(s.label?(' ('+s.label+')'):''));
   });
-  header.push('Total','T1','T2','Prefers');
+  header.push('Total','T1','T2','Prefers','Daño total');
 
   var aoa=[header];
   players.forEach(function(p){
@@ -794,21 +908,175 @@ async function exportBTExcel(){
       row.push(attendKey[p.name.toLowerCase()+'|'+s.id] ? 'X' : '');
     });
     var pref = p.total===0?'—':(p.t1===p.t2?'Even':(p.t1>p.t2?'Trap 1':'Trap 2'));
-    row.push(p.total,p.t1,p.t2,pref);
+    row.push(p.total,p.t1,p.t2,pref, p.hasDamage?Math.round(p.damage):'');
     aoa.push(row);
   });
 
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   var colWidths=[{wch:22}];
   sessRows.forEach(function(){colWidths.push({wch:13});});
-  colWidths.push({wch:8},{wch:6},{wch:6},{wch:10});
+  colWidths.push({wch:8},{wch:6},{wch:6},{wch:10},{wch:12});
   ws['!cols']=colWidths;
+
+  // second sheet: raw date/trap/player/damage log — easy to pivot in Excel
+  var dmgAoa=[['Date','Trap','Player','Attended','Damage']];
+  sessRows.forEach(function(s){
+    entries.filter(function(e){return e.session_id===s.id && e.attended;})
+      .sort(function(a,b){return (a.player_name||'').localeCompare(b.player_name||'');})
+      .forEach(function(e){
+        dmgAoa.push([s.session_date, s.trap||'T1', e.player_name, 'Sí', (e.damage!=null&&e.damage!=='')?e.damage:'']);
+      });
+  });
+  var ws2=XLSX.utils.aoa_to_sheet(dmgAoa);
+  ws2['!cols']=[{wch:12},{wch:8},{wch:24},{wch:10},{wch:14}];
 
   var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Bear Trap');
+  XLSX.utils.book_append_sheet(wb,ws2,'Log (daño)');
   var today=new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb,'bear_trap_attendance_'+today+'.xlsx');
+  var rangeTag=(rangeSel==='30')?'_ultimo_mes':'_historico';
+  XLSX.writeFile(wb,'bear_trap_attendance'+rangeTag+'_'+today+'.xlsx');
   toast('Downloaded ✓');
+}
+
+/* ── DAMAGE TEMPLATE / IMPORT ─────────────────────────────────────
+   Manual damage backfill, since the game doesn't expose it via API.
+   Download prefills every existing (date, trap, player) attendance row —
+   damage blank if not stored yet, or already-saved if re-downloaded later.
+   R4/R5 fills the Damage column from their screenshots and re-uploads.
+   Import UPSERTS by (session, player): existing rows get their damage
+   updated, new rows (new date/trap/player combos) get created — nothing
+   is duplicated or deleted. A name that doesn't match anyone existing is
+   asked about once (link to an existing player, or add as new) and the
+   choice is remembered in bt_name_aliases for every future import. */
+async function downloadDamageTemplate(){
+  if(!window.XLSX){ toast('Excel library failed to load — check connection'); return; }
+  toast('Building damage template…');
+  var {data:sessRows}=await sb.from('bt_sessions').select('id,session_date,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID).order('session_date',{ascending:true});
+  sessRows=sessRows||[];
+  if(!sessRows.length){ toast('No hay sesiones de Bear Trap todavía'); return; }
+  var sessById={}; sessRows.forEach(function(s){sessById[s.id]=s;});
+  var sessIds=sessRows.map(function(s){return s.id;});
+  var {data:entries}=await sb.from('bt_entries').select('session_id,player_name,attended,damage').in('session_id',sessIds);
+  entries=(entries||[]).filter(function(e){return e.attended;});
+  entries.sort(function(a,b){
+    var sa=sessById[a.session_id], sbb=sessById[b.session_id];
+    return sa.session_date.localeCompare(sbb.session_date) || (sa.trap||'T1').localeCompare(sbb.trap||'T1') || (a.player_name||'').localeCompare(b.player_name||'');
+  });
+  var aoa=[
+    ['PHOENIX — Plantilla de importación de daño (Bear Trap)'],
+    ['Rellena la columna Daño (solo números; da igual "12500000" que "12.500.000") y vuelve a subir el archivo con "⬆ Importar daño".'],
+    ['¿Jugador o fecha nueva que no está aquí? Añade una fila nueva con Fecha, Trampa, Jugador y Daño — se crea sola.'],
+    [],
+    ['Fecha (YYYY-MM-DD)','Trampa (T1/T2)','Jugador','Daño']
+  ];
+  entries.forEach(function(e){
+    var s=sessById[e.session_id];
+    aoa.push([s.session_date, s.trap||'T1', e.player_name, (e.damage!=null&&e.damage!=='')?e.damage:'']);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:16},{wch:12},{wch:26},{wch:14}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Daño');
+  XLSX.writeFile(wb,'bt_damage_template.xlsx');
+  toast('Downloaded ✓');
+}
+
+/* Resolves a name typed in the damage template to the canonical name already used
+   in bt_entries. Exact case-insensitive match first, then known alias, then — only
+   if truly new — asks once via prompt() and saves the answer as an alias so it's
+   never asked again. */
+async function resolvePlayerName(rawName, knownNamesLower, aliasMap){
+  var key=rawName.trim();
+  var lower=key.toLowerCase();
+  if(knownNamesLower[lower]) return knownNamesLower[lower];
+  if(aliasMap[lower]) return aliasMap[lower];
+  var pick=prompt('No reconozco el nombre "'+key+'".\n\nSi es el mismo jugador que ya existe con otro nombre, escribe aquí el nombre EXACTO que ya usamos en la web.\n\nSi es un jugador nuevo, deja esto vacío y pulsa Aceptar.', '');
+  if(pick && pick.trim()){
+    var canon=pick.trim();
+    await sb.from('bt_name_aliases').insert({alliance_id:ACTIVE_ALLIANCE_ID, alias_name:key, canonical_name:canon});
+    aliasMap[lower]=canon;
+    return canon;
+  }
+  knownNamesLower[lower]=key; // treat as its own canonical name from now on
+  return key;
+}
+
+async function importDamageFile(file){
+  if(!window.XLSX){ toast('Excel library failed to load'); return; }
+  toast('Leyendo archivo…');
+  var buf=await file.arrayBuffer();
+  var wbk=XLSX.read(buf,{type:'array'});
+  var ws=wbk.Sheets[wbk.SheetNames[0]];
+  var aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  var headerIdx=-1;
+  for(var i=0;i<aoa.length;i++){
+    if((aoa[i][0]||'').toString().trim().toLowerCase().indexOf('fecha')===0 || (aoa[i][0]||'').toString().trim().toLowerCase().indexOf('date')===0){ headerIdx=i; break; }
+  }
+  if(headerIdx<0){ toast("Esto no parece la plantilla de daño"); return; }
+
+  var {data:sessRows}=await sb.from('bt_sessions').select('id,session_date,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID);
+  sessRows=sessRows||[];
+  var sessKey={}; sessRows.forEach(function(s){ sessKey[s.session_date+'|'+(s.trap||'T1')]=s.id; });
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var entries=[];
+  if(sessIds.length){
+    var er=await sb.from('bt_entries').select('id,session_id,player_name').in('session_id',sessIds);
+    entries=er.data||[];
+  }
+  var entryKey={}; var knownNamesLower={};
+  entries.forEach(function(e){
+    entryKey[e.session_id+'|'+(e.player_name||'').toLowerCase()]=e.id;
+    knownNamesLower[(e.player_name||'').toLowerCase()]=e.player_name;
+  });
+
+  var {data:aliasRows}=await sb.from('bt_name_aliases').select('alias_name,canonical_name').eq('alliance_id',ACTIVE_ALLIANCE_ID);
+  var aliasMap={}; (aliasRows||[]).forEach(function(a){ aliasMap[(a.alias_name||'').toLowerCase()]=a.canonical_name; });
+
+  var toInsert=[], toUpdateCount=0, newSessCount=0, skipped=0, ok=0;
+
+  for(var r=headerIdx+1;r<aoa.length;r++){
+    var row=aoa[r]||[];
+    var dateRaw=(row[0]||'').toString().trim();
+    var trapRaw=(row[1]||'').toString().trim().toUpperCase();
+    var nameRaw=(row[2]||'').toString().trim();
+    var dmgRaw=(row[3]||'').toString().trim();
+    if(!dateRaw || !nameRaw || !dmgRaw){ continue; }
+    var d=new Date(dateRaw);
+    var isoDate=/^\d{4}-\d{2}-\d{2}$/.test(dateRaw)?dateRaw:(isNaN(d)?null:d.toISOString().slice(0,10));
+    if(!isoDate){ skipped++; continue; }
+    var trap=(trapRaw.indexOf('2')>=0)?'T2':'T1';
+    var dmg=parseInt(dmgRaw.replace(/[.,\s]/g,''),10);
+    if(isNaN(dmg)){ skipped++; continue; }
+
+    var sk=isoDate+'|'+trap;
+    var sessionId=sessKey[sk];
+    if(!sessionId){
+      var ins=await sb.from('bt_sessions').insert({alliance_id:ACTIVE_ALLIANCE_ID,session_date:isoDate,label:trap,trap:trap}).select('id').single();
+      if(ins.error || !ins.data){ skipped++; continue; }
+      sessionId=ins.data.id;
+      sessKey[sk]=sessionId;
+      newSessCount++;
+    }
+
+    var canonName=await resolvePlayerName(nameRaw, knownNamesLower, aliasMap);
+    var ek=sessionId+'|'+canonName.toLowerCase();
+    if(entryKey[ek] && entryKey[ek]!=='pending'){
+      await sb.from('bt_entries').update({damage:dmg, attended:true}).eq('id',entryKey[ek]);
+      toUpdateCount++;
+    }else{
+      toInsert.push({session_id:sessionId, player_name:canonName, attended:true, damage:dmg});
+      entryKey[ek]='pending';
+    }
+    ok++;
+  }
+
+  if(toInsert.length) await sb.from('bt_entries').insert(toInsert);
+
+  toast('Daño: '+toUpdateCount+' actualizados, '+toInsert.length+' nuevos'+(newSessCount?(' · '+newSessCount+' sesión(es) nueva(s)'):'')+(skipped?(' · '+skipped+' fila(s) ignoradas'):'')+' ✓');
+  await loadRoster();
+  showSummaryScreen();
 }
 
 /* ── SESSIONS LIST ─────────────────────────────────────────────── */
