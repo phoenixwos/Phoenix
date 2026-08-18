@@ -95,6 +95,16 @@
 
 
 
+  <div class="panel" id="playerSearchPanel" style="display:none;">
+    <div class="panel-title">🔍 Player lookup</div>
+    <div class="instructions" style="margin-bottom:8px;">Attendance to both traps, plus the exact damage recorded session by session (never summed — a total would just reward whoever showed up most).</div>
+    <div class="row" style="margin-bottom:8px;">
+      <input id="playerSearchInput" placeholder="Type a player name…" style="flex:1;padding:9px;border-radius:10px;">
+      <button class="btn" id="playerSearchBtn">Search</button>
+    </div>
+    <div id="playerSearchResult"></div>
+  </div>
+
   <div class="panel">
     <div class="panel-title" id="summaryTitle">Attendance summary</div>
     <div class="tabs" id="rangeTabs" style="margin-bottom:10px;">
@@ -300,6 +310,7 @@ async function boot(){
       document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
       document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
       document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
+      document.getElementById('playerSearchPanel').style.display=(currentTab==='bt')?'block':'none';
       document.getElementById('exportBtnBT').textContent='⬇ Excel';
       await loadRoster();
       showSummaryScreen();
@@ -320,6 +331,10 @@ async function boot(){
   document.getElementById('newSessionBtn').addEventListener('click',function(){openEntry(null);});
   document.getElementById('exportBtnBT').addEventListener('click',function(){
     if(currentTab==='bt') exportBTExcel(); else exportEventExcel();
+  });
+  document.getElementById('playerSearchBtn').addEventListener('click',searchPlayerBT);
+  document.getElementById('playerSearchInput').addEventListener('keydown',function(ev){
+    if(ev.key==='Enter') searchPlayerBT();
   });
   document.getElementById('dmgTemplateBtn').addEventListener('click',downloadDamageTemplate);
   document.getElementById('dmgImportBtn').addEventListener('click',function(){
@@ -363,6 +378,7 @@ async function boot(){
   document.getElementById('addPlayerRow').style.display='flex';
   document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
   document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
+  document.getElementById('playerSearchPanel').style.display=(currentTab==='bt')?'block':'none';
   if(!canEdit){
     document.getElementById('newSessionBtn').style.display='none';
     document.getElementById('addPlayerRow').style.display='none';
@@ -545,12 +561,101 @@ async function deleteEventPlayer(nameKey, name){
   renderEventSummary();
 }
 
+/* ── PLAYER LOOKUP ─────────────────────────────────────────────
+   Looks a single name up across the WHOLE Bear Trap history (ignores the
+   All time / Last 30 days tabs on purpose — a profile lookup should show
+   everything). Shows, per trap: sessions attended out of sessions logged,
+   and the exact damage for each session it was recorded — never a sum,
+   since a running total just rewards whoever showed up most, not who hits
+   hardest. */
+async function searchPlayerBT(){
+  var raw=(document.getElementById('playerSearchInput').value||'').trim();
+  var box=document.getElementById('playerSearchResult');
+  if(!raw){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="instructions">Searching…</div>';
+
+  var {data:sessRows}=await sb.from('bt_sessions').select('id,session_date,trap').eq('alliance_id',ACTIVE_ALLIANCE_ID);
+  sessRows=sessRows||[];
+  if(!sessRows.length){ box.innerHTML='<div class="instructions">No Bear Trap sessions logged yet.</div>'; return; }
+  var sessById={}; sessRows.forEach(function(s){ sessById[s.id]=s; });
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var er=await sb.from('bt_entries').select('session_id,player_name,attended,damage').in('session_id',sessIds);
+  var entries = er.error
+    ? (await sb.from('bt_entries').select('session_id,player_name,attended').in('session_id',sessIds)).data||[]
+    : (er.data||[]);
+
+  var lower=raw.toLowerCase();
+  var exactNames={};
+  entries.forEach(function(e){ if((e.player_name||'').toLowerCase()===lower) exactNames[e.player_name]=true; });
+  var matchNames=Object.keys(exactNames);
+  if(!matchNames.length){
+    var partial={};
+    entries.forEach(function(e){ if((e.player_name||'').toLowerCase().indexOf(lower)>=0) partial[e.player_name]=true; });
+    matchNames=Object.keys(partial);
+  }
+
+  if(!matchNames.length){
+    box.innerHTML='<div class="instructions">No player found matching "'+escapeHtml(raw)+'".</div>';
+    return;
+  }
+  if(matchNames.length>1){
+    box.innerHTML='<div class="instructions" style="margin-bottom:6px;">Multiple matches — tap one:</div>';
+    matchNames.sort().forEach(function(n){
+      var b=document.createElement('button');
+      b.className='btn';
+      b.style.cssText='display:block;width:100%;margin-bottom:6px;text-align:left;';
+      b.textContent=n;
+      b.addEventListener('click',function(){ document.getElementById('playerSearchInput').value=n; searchPlayerBT(); });
+      box.appendChild(b);
+    });
+    return;
+  }
+  renderPlayerCard(matchNames[0], sessRows, sessById, entries);
+}
+
+function renderPlayerCard(name, sessRows, sessById, entries){
+  var box=document.getElementById('playerSearchResult');
+  var nameLower=name.toLowerCase();
+  var totalsByTrap={T1:0,T2:0};
+  sessRows.forEach(function(s){ var t=s.trap||'T1'; if(totalsByTrap[t]!=null) totalsByTrap[t]++; });
+
+  var byTrap={T1:[],T2:[]};
+  entries.filter(function(e){ return e.attended && (e.player_name||'').toLowerCase()===nameLower; })
+    .forEach(function(e){
+      var s=sessById[e.session_id]; if(!s) return;
+      var t=s.trap||'T1'; if(!byTrap[t]) return;
+      byTrap[t].push({date:s.session_date, damage:(e.damage!=null&&e.damage!=='')?Number(e.damage):null});
+    });
+  ['T1','T2'].forEach(function(t){ byTrap[t].sort(function(a,b){ return a.date.localeCompare(b.date); }); });
+
+  var html='<div class="panel-title" style="font-size:16px;margin:4px 0 12px;padding:0;background:none;">'+escapeHtml(name)+'</div>';
+  ['T1','T2'].forEach(function(t){
+    var rows=byTrap[t];
+    var withDmg=rows.filter(function(r){return r.damage!=null;});
+    var avg = withDmg.length ? Math.round(withDmg.reduce(function(a,r){return a+r.damage;},0)/withDmg.length) : null;
+    html+='<div style="margin-bottom:16px;">';
+    html+='<div style="font-weight:700;margin-bottom:4px;">🪤 Trap '+t.slice(1)+'</div>';
+    html+='<div class="instructions" style="margin-bottom:6px;">Attended '+rows.length+' of '+totalsByTrap[t]+' logged session'+(totalsByTrap[t]===1?'':'s')+(avg!=null?(' · avg '+avg.toLocaleString('es-ES')+' dmg/session'):'')+'</div>';
+    if(rows.length){
+      html+='<div style="font-size:.82rem;color:var(--text-dim);">';
+      rows.forEach(function(r){
+        html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line);">'+
+              '<span>'+r.date+'</span><span>'+(r.damage!=null?r.damage.toLocaleString('es-ES'):'—')+'</span></div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+
 /* Bear Trap summary: shows ONE trap at a time (T1 or T2, chosen via the sub-tabs) so
    the two never get mixed together. For the selected trap it renders two separate
-   rankings — attendance count, and total recorded damage (damage is optional / manual,
-   see the Damage template panel). Every roster member appears in the attendance
-   ranking even with 0 attendance; the damage ranking only lists players who have at
-   least one recorded damage value. R4/R5/admin can rename or remove a name inline. */
+   rankings — attendance count, and average damage per session (see below — never a
+   sum). Every roster member appears in the attendance ranking even with 0 attendance;
+   the damage ranking only lists players who have at least one recorded damage value.
+   R4/R5/admin can rename or remove a name inline. */
 async function renderBTSummary(){
   var box=document.getElementById('summaryBox');
   box.innerHTML='Loading…';
@@ -585,13 +690,13 @@ async function renderBTSummary(){
     if(!e.attended) return;
     var key=(e.player_name||'').toLowerCase();
     if(!key) return;
-    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,count:0,damage:0,hasDamage:false};
+    if(!byPlayer[key]) byPlayer[key]={name:e.player_name,count:0,dmgSessions:0,dmgSum:0,hasDamage:false};
     byPlayer[key].count++;
-    if(e.damage!=null && e.damage!==''){ byPlayer[key].damage+=Number(e.damage); byPlayer[key].hasDamage=true; }
+    if(e.damage!=null && e.damage!==''){ byPlayer[key].dmgSum+=Number(e.damage); byPlayer[key].dmgSessions++; byPlayer[key].hasDamage=true; }
   });
   roster.forEach(function(p){
     var key=p.name.toLowerCase();
-    if(!byPlayer[key]) byPlayer[key]={name:p.name,count:0,damage:0,hasDamage:false};
+    if(!byPlayer[key]) byPlayer[key]={name:p.name,count:0,dmgSessions:0,dmgSum:0,hasDamage:false};
   });
 
   var list=Object.keys(byPlayer).map(function(k){return byPlayer[k];});
@@ -626,9 +731,16 @@ async function renderBTSummary(){
     box.appendChild(row);
   });
 
-  /* ── Damage ranking ── */
-  var dmgList=list.filter(function(p){return p.hasDamage;}).sort(function(a,b){ return b.damage-a.damage; });
-  var h2=document.createElement('div'); h2.className='panel-title'; h2.style.cssText='font-size:14px;margin:18px 0 6px;padding:0;background:none;'; h2.textContent='💥 Damage ranking — '+trapName;
+  /* ── Damage ranking ──
+     Damage is NOT summed across sessions — one big total just rewards whoever
+     showed up most, not who hits hardest. This ranks by AVERAGE damage per
+     session where damage was recorded, which is a fair "how hard do they hit"
+     picture. The exact per-session numbers are always visible in Player lookup
+     below, and in the "⬇ Excel" / "Damage log" sheet, for full transparency. */
+  var dmgList=list.filter(function(p){return p.hasDamage;})
+    .map(function(p){ p.avg = p.dmgSum/p.dmgSessions; return p; })
+    .sort(function(a,b){ return b.avg-a.avg; });
+  var h2=document.createElement('div'); h2.className='panel-title'; h2.style.cssText='font-size:14px;margin:18px 0 6px;padding:0;background:none;'; h2.textContent='💥 Damage ranking (avg/session) — '+trapName;
   box.appendChild(h2);
   if(!dmgList.length){
     var none=document.createElement('div'); none.className='instructions';
@@ -641,8 +753,8 @@ async function renderBTSummary(){
       var row=document.createElement('div'); row.className='sumRow';
       row.innerHTML=
         '<div class="sumName">'+escapeHtml(p.name)+'</div>'+
-        '<div class="sumDmg" style="width:auto;flex:1;text-align:left;"></div>'+
-        '<div class="sumPct good">'+Math.round(p.damage).toLocaleString('es-ES')+'</div>';
+        '<div class="sumDmg" style="width:auto;flex:1;text-align:left;">'+p.dmgSessions+' session'+(p.dmgSessions===1?'':'s')+' w/ damage</div>'+
+        '<div class="sumPct good">'+Math.round(p.avg).toLocaleString('es-ES')+'</div>';
       box.appendChild(row);
     });
   }
