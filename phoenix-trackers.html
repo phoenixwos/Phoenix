@@ -97,7 +97,7 @@
 
   <div class="panel" id="playerSearchPanel" style="display:none;">
     <div class="panel-title">🔍 Player lookup</div>
-    <div class="instructions" style="margin-bottom:8px;">Attendance to both traps, plus the exact damage recorded session by session (never summed — a total would just reward whoever showed up most).</div>
+    <div class="instructions" style="margin-bottom:8px;" id="playerSearchInstructions">Attendance to both traps, plus the exact damage recorded session by session (never summed — a total would just reward whoever showed up most).</div>
     <div class="row" style="margin-bottom:8px;">
       <input id="playerSearchInput" placeholder="Type a player name…" style="flex:1;padding:9px;border-radius:10px;">
       <button class="btn" id="playerSearchBtn">Search</button>
@@ -310,7 +310,10 @@ async function boot(){
       document.getElementById('addPlayerRow').style.display=(currentTab==='bt')?'flex':'none';
       document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
       document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
-      document.getElementById('playerSearchPanel').style.display=(currentTab==='bt')?'block':'none';
+      document.getElementById('playerSearchPanel').style.display='block';
+      updateSearchPanelText();
+      document.getElementById('playerSearchInput').value='';
+      document.getElementById('playerSearchResult').innerHTML='';
       document.getElementById('exportBtnBT').textContent='⬇ Excel';
       await loadRoster();
       showSummaryScreen();
@@ -332,9 +335,9 @@ async function boot(){
   document.getElementById('exportBtnBT').addEventListener('click',function(){
     if(currentTab==='bt') exportBTExcel(); else exportEventExcel();
   });
-  document.getElementById('playerSearchBtn').addEventListener('click',searchPlayerBT);
+  document.getElementById('playerSearchBtn').addEventListener('click',searchPlayer);
   document.getElementById('playerSearchInput').addEventListener('keydown',function(ev){
-    if(ev.key==='Enter') searchPlayerBT();
+    if(ev.key==='Enter') searchPlayer();
   });
   document.getElementById('dmgTemplateBtn').addEventListener('click',downloadDamageTemplate);
   document.getElementById('dmgImportBtn').addEventListener('click',function(){
@@ -378,7 +381,8 @@ async function boot(){
   document.getElementById('addPlayerRow').style.display='flex';
   document.getElementById('btTrapTabs').style.display=(currentTab==='bt')?'flex':'none';
   document.getElementById('damagePanel').style.display=(currentTab==='bt'&&canEdit)?'block':'none';
-  document.getElementById('playerSearchPanel').style.display=(currentTab==='bt')?'block':'none';
+  document.getElementById('playerSearchPanel').style.display='block';
+  updateSearchPanelText();
   if(!canEdit){
     document.getElementById('newSessionBtn').style.display='none';
     document.getElementById('addPlayerRow').style.display='none';
@@ -568,6 +572,20 @@ async function deleteEventPlayer(nameKey, name){
    and the exact damage for each session it was recorded — never a sum,
    since a running total just rewards whoever showed up most, not who hits
    hardest. */
+function updateSearchPanelText(){
+  var box=document.getElementById('playerSearchInstructions');
+  if(currentTab==='bt'){
+    box.textContent='Attendance to both traps, plus the exact damage recorded session by session (never summed — a total would just reward whoever showed up most).';
+  }else{
+    box.textContent='Whether they requested battle and whether they showed up, session by session — for '+tabLabel()+'.';
+  }
+}
+
+function searchPlayer(){
+  if(currentTab==='bt') return searchPlayerBT();
+  return searchPlayerEvent();
+}
+
 async function searchPlayerBT(){
   var raw=(document.getElementById('playerSearchInput').value||'').trim();
   var box=document.getElementById('playerSearchResult');
@@ -647,6 +665,87 @@ function renderPlayerCard(name, sessRows, sessById, entries){
     }
     html+='</div>';
   });
+  box.innerHTML=html;
+}
+
+/* Same lookup as Bear Trap's, but for Foundry/Canyon: shows every session where the
+   player requested and/or showed up, plus the overall requested/showed/no-show tally.
+   Uses the WHOLE history for the active event type, ignoring the All time/30/14 range
+   tabs, same reasoning as the Bear Trap lookup. */
+async function searchPlayerEvent(){
+  var raw=(document.getElementById('playerSearchInput').value||'').trim();
+  var box=document.getElementById('playerSearchResult');
+  if(!raw){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="instructions">Searching…</div>';
+
+  var sr=await sb.from('event_sessions').select('id,session_date,label').eq('alliance_id',ACTIVE_ALLIANCE_ID).eq('event_type',currentTab);
+  var sessRows=sr.data||[];
+  if(!sessRows.length){ box.innerHTML='<div class="instructions">No '+tabLabel()+' sessions logged yet.</div>'; return; }
+  var sessById={}; sessRows.forEach(function(s){ sessById[s.id]=s; });
+  var sessIds=sessRows.map(function(s){return s.id;});
+
+  var er=await sb.from('event_entries').select('session_id,player_name,requested,attended').in('session_id',sessIds);
+  var entries=er.data||[];
+
+  var lower=raw.toLowerCase();
+  var exactNames={};
+  entries.forEach(function(e){ if((e.player_name||'').toLowerCase()===lower) exactNames[e.player_name]=true; });
+  var matchNames=Object.keys(exactNames);
+  if(!matchNames.length){
+    var partial={};
+    entries.forEach(function(e){ if((e.player_name||'').toLowerCase().indexOf(lower)>=0) partial[e.player_name]=true; });
+    matchNames=Object.keys(partial);
+  }
+
+  if(!matchNames.length){
+    box.innerHTML='<div class="instructions">No player found matching "'+escapeHtml(raw)+'".</div>';
+    return;
+  }
+  if(matchNames.length>1){
+    box.innerHTML='<div class="instructions" style="margin-bottom:6px;">Multiple matches — tap one:</div>';
+    matchNames.sort().forEach(function(n){
+      var b=document.createElement('button');
+      b.className='btn';
+      b.style.cssText='display:block;width:100%;margin-bottom:6px;text-align:left;';
+      b.textContent=n;
+      b.addEventListener('click',function(){ document.getElementById('playerSearchInput').value=n; searchPlayerEvent(); });
+      box.appendChild(b);
+    });
+    return;
+  }
+  renderPlayerCardEvent(matchNames[0], sessRows, sessById, entries);
+}
+
+function renderPlayerCardEvent(name, sessRows, sessById, entries){
+  var box=document.getElementById('playerSearchResult');
+  var nameLower=name.toLowerCase();
+  var rows=entries.filter(function(e){ return (e.player_name||'').toLowerCase()===nameLower; })
+    .map(function(e){
+      var s=sessById[e.session_id];
+      return s ? {date:s.session_date, label:s.label||'', requested:!!e.requested, attended:!!e.attended} : null;
+    }).filter(Boolean);
+  rows.sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  var requested=rows.filter(function(r){return r.requested;});
+  var showedUp=requested.filter(function(r){return r.attended;}).length;
+  var noShow=requested.length-showedUp;
+  var bonus=rows.filter(function(r){return !r.requested&&r.attended;}).length;
+  var rate=requested.length ? Math.round(showedUp/requested.length*100) : null;
+
+  var html='<div class="panel-title" style="font-size:16px;margin:4px 0 12px;padding:0;background:none;">'+escapeHtml(name)+'</div>';
+  html+='<div class="instructions" style="margin-bottom:6px;">'+
+    (requested.length ? ('Requested '+requested.length+' · Showed up '+showedUp+' · No-show '+noShow+(rate!=null?(' · '+rate+'%'):'')) : 'Never requested battle')+
+    (bonus?(' · +'+bonus+' extra (attended without requesting)'):'')+
+    '</div>';
+  if(rows.length){
+    html+='<div style="font-size:.82rem;color:var(--text-dim);">';
+    rows.forEach(function(r){
+      var status = r.requested ? (r.attended?'✅ showed up':'❌ no-show') : (r.attended?'➕ attended (no request)':'—');
+      html+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line);">'+
+            '<span>'+r.date+(r.label?(' · '+escapeHtml(r.label)):'')+'</span><span>'+status+'</span></div>';
+    });
+    html+='</div>';
+  }
   box.innerHTML=html;
 }
 
